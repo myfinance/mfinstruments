@@ -1,3 +1,7 @@
+image:
+  file: .gitpod.Dockerfile
+tasks:
+  - init: mvn install -DskipTests=false
 
 vscode:
   extensions:

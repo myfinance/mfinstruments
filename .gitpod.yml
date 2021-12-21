@@ -1,0 +1,13 @@
+
+vscode:
+  extensions:
+    - redhat.fabric8-analytics
+    - redhat.java
+    - vscjava.vscode-java-debug
+    - sonarsource.sonarlint-vscode
+    - github.vscode-pull-request-github
+    - vscjava.vscode-spring-boot-dashboard
+    - pivotal.vscode-spring-boot
+    - vscjava.vscode-spring-initializr
+    - vscjava.vscode-java-test
+    - vscjava.vscode-java-pack

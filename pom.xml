@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>de.hf.myfinance.instrumentservice</groupId>
-    <artifactId>root</artifactId>
+    <groupId>de.hf.myfinance.mfinstruments</groupId>
+    <artifactId>instrumentservice</artifactId>
     <version>0.0.0-0-SNAPSHOT</version>
-    <packaging>pom</packaging>
     <name>MyFinance</name>
     <parent>
 		<groupId>org.springframework.boot</groupId>
@@ -38,10 +37,18 @@
         <jar-plugin.version>3.0.2</jar-plugin.version>
     </properties>
 
-    <modules>
-        <module>application</module>
+	<dependencies>
+        <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
 
-    </modules>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
 
 
@@ -83,6 +90,10 @@
             </plugins>
         </pluginManagement>
         <plugins>
+        	<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -131,6 +142,23 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.1.4</version>
+                <configuration>
+                <from>
+                    <image>eclipse-temurin:17.0.1_12-jdk-alpine</image>
+                </from>
+                <to>
+                    <image>192.168.100.73:31001/holgerfischer/myfinance-mfinstruments:${project.version}</image>
+                </to>
+                <container>
+                    <mainClass>de.hf.myfinance.instrumentservice.InstrumentserviceApplication</mainClass>
+                </container>
+                <allowInsecureRegistries>true</allowInsecureRegistries>
+                </configuration>
+            </plugin>            
         </plugins>
     </build>
     <distributionManagement>

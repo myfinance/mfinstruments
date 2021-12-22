@@ -10,7 +10,6 @@ vscode:
     - vscjava.vscode-java-debug
     - sonarsource.sonarlint-vscode
     - github.vscode-pull-request-github
-    - vscjava.vscode-spring-boot-dashboard
     - pivotal.vscode-spring-boot
     - vscjava.vscode-spring-initializr
     - vscjava.vscode-java-test

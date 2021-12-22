@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myfinance
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.mfinstruments.mf_name }}    
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mfinstruments.mf_name }}    
+    spec:
+      containers:
+        - name: {{ .Values.mfinstruments.mf_name }}      
+          image: "{{ .Values.image.repository }}mfinstruments:{{ .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}      
+          tty: true     
+          volumeMounts:
+           - name: myfinanceconfig
+             mountPath: /MyFinance/envconfig           
+      volumes:
+        - name: myfinanceconfig
+          persistentVolumeClaim:
+              claimName: {{ .Values.stage }}-{{ .Values.pv.configpvc }}                                    

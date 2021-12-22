@@ -26,8 +26,7 @@ pipeline {
    stage('preperation'){
     agent {
         docker {
-            //image 'maven:3.8.4-eclipse-temurin-17-alpine'
-            image 'maven:3.6.3-jdk-11'
+            image 'maven:3.8.4-eclipse-temurin-17-alpine'
         }
     }      
      steps {
@@ -38,8 +37,7 @@ pipeline {
    stage('build'){
     agent {
         docker {
-            //image 'maven:3.8.4-eclipse-temurin-17-alpine'
-            image 'maven:3.6.3-jdk-11'
+            image 'maven:3.8.4-eclipse-temurin-17-alpine'
         }
     }      
      steps {

@@ -23,6 +23,12 @@
         <sonar.jacoco.reportPaths>${project.build.directory}/jacoco-ut.exec</sonar.jacoco.reportPaths>
         <sonar.jacoco.itReportPath>${project.build.directory}/jacoco-it.exec</sonar.jacoco.itReportPath>
         <jacoco.version>0.8.6</jacoco.version>
+
+        <!-- properties for container image. -->
+        <jib.baseimage>eclipse-temurin:17.0.1_12-jdk-alpine</jib.baseimage>
+        <jib-maven-plugin.version>3.1.4</jib-maven-plugin.version>
+        <!-- jib.image-tag is only thedefaul. the value will be set in the jenkinsfile-->
+        <jib.image-tag>192.168.100.73:31003/repository/mydockerrepo/holgerfischer/myfinance-mfinstruments:${project.version}</jib.image-tag>
  
 
         <assembly-plugin.version>3.1.0</assembly-plugin.version>
@@ -145,13 +151,13 @@
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
-                <version>3.1.4</version>
+                <version>${jib-maven-plugin.version}</version>
                 <configuration>
                 <from>
-                    <image>eclipse-temurin:17.0.1_12-jdk-alpine</image>
+                    <image>${jib.baseimage}</image>
                 </from>
                 <to>
-                    <image>192.168.100.73:31001/holgerfischer/myfinance-mfinstruments:${project.version}</image>
+                    <image>${jib.image-tag}</image>
                 </to>
                 <container>
                     <mainClass>de.hf.myfinance.instrumentservice.InstrumentserviceApplication</mainClass>

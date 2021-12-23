@@ -12,7 +12,7 @@ image:
 
 pv:
   mntpath: /mnt/data/mf/
-  configpvc: mfconfigpvc
+  configpvc: mfinstconfigpvc
   configstorage: _config/
   configstoragesize: 1Mi
 

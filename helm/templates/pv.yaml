@@ -3,7 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ .Values.stage }}-{{ .Values.pv.configpvc }}
 spec:
-  storageClassName: {{ .Values.stage }}-mfconfigstorage
+  storageClassName: {{ .Values.stage }}-mfinstconfigstorage
   accessModes:
     - ReadOnlyMany
   resources:
@@ -15,9 +15,9 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ .Values.stage }}-nfsstorage
+  name: {{ .Values.stage }}-nfsinststorage
 spec:
-  storageClassName: {{ .Values.stage }}-mfconfigstorage
+  storageClassName: {{ .Values.stage }}-mfinstconfigstorage
   accessModes:
     - ReadOnlyMany
   capacity:

@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: myfinance
+  name: {{ .Values.mfinstruments.mf_name }} 
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -18,9 +18,9 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}      
           tty: true     
           volumeMounts:
-           - name: myfinanceconfig
+           - name: mfinstrumentsconfig
              mountPath: /MyFinance/envconfig           
       volumes:
-        - name: myfinanceconfig
+        - name: mfinstrumentsconfig
           persistentVolumeClaim:
               claimName: {{ .Values.stage }}-{{ .Values.pv.configpvc }}                                    

@@ -19,6 +19,6 @@ pv:
 mfinstruments:
   mf_http_port_ext: 30024
   mf_http_port: 8080
-  mf_name: myfinance
+  mf_name: mfinstruments
 
   

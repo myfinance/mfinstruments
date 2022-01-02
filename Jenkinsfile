@@ -41,9 +41,9 @@ pipeline {
         }
     }      
      steps {
-       sh '''mvn versions:set -DnewVersion=${VERSION}'''
-       sh '''mvn clean deploy -DtargetRepository=${MVN_REPO} -Pjacoco -Dsonar.jacoco.reportPaths=./jacoco-ut.exec -Dsonar.jacoco.itReportPath=./jacoco-it.exec org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=mfinstruments -Dsonar.organization=myfinance -Dsonar.host.url=${SONAR} -Dsonar.login=d48202ac4b86df8e851d5429983b0205916352ca'''
-       sh '''mvn compile jib:build -Djib.image-tag=${DOCKER_REPO}${REPOSITORY_TAG}'''
+       sh '''mvn versions:set -DnewVersion=${VERSION} --settings ./settings.xml'''
+       sh '''mvn clean deploy -DtargetRepository=${MVN_REPO} -Pjacoco -Dsonar.jacoco.reportPaths=./jacoco-ut.exec -Dsonar.jacoco.itReportPath=./jacoco-it.exec org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=mfinstruments -Dsonar.organization=myfinance -Dsonar.host.url=${SONAR} -Dsonar.login=d48202ac4b86df8e851d5429983b0205916352ca --settings ./settings.xml'''
+       sh '''mvn compile jib:build -Djib.image-tag=${DOCKER_REPO}${REPOSITORY_TAG} --settings ./settings.xml'''
      }
    } 
 

@@ -8,7 +8,7 @@
     <parent>
 		<groupId>de.hf.myfinance</groupId>
 		<artifactId>root</artifactId>
-		<version>0.21.0-alpha.6</version>
+		<version>0.21.0-alpha.10</version>
 		<relativePath/> 
 	</parent>
     <properties>
@@ -41,8 +41,39 @@
 			<scope>test</scope>
 		</dependency>-->
 
+        <dependency>
+			<groupId>de.hf.myfinance</groupId>
+			<artifactId>mfframework</artifactId>
+            <version>0.21.0-alpha.10</version>
+		</dependency>
+
 	</dependencies>
 
+    <build>
+        <plugins>
+        	<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>${jib-maven-plugin.version}</version>
+                <configuration>
+                <from>
+                    <image>${jib.baseimage}</image>
+                </from>
+                <to>
+                    <image>${jib.image-tag}</image>
+                </to>
+                <container>
+                    <mainClass>de.hf.myfinance.instrumentservice.InstrumentserviceApplication</mainClass>
+                </container>
+                <allowInsecureRegistries>true</allowInsecureRegistries>
+                </configuration>
+            </plugin>            
+        </plugins>
+    </build>
 
     <repositories>
      <repository>

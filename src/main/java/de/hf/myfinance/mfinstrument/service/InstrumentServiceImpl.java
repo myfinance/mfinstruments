@@ -3,9 +3,9 @@ package de.hf.myfinance.mfinstrument.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
+import de.hf.framework.utils.ServiceUtil;
 import de.hf.myfinance.restapi.InstrumentService;
 import de.hf.myfinance.restmodel.Instrument;
-import de.hf.myfinance.utils.ServiceUtil;
 
 @RestController
 public class InstrumentServiceImpl implements InstrumentService {
@@ -22,7 +22,7 @@ public class InstrumentServiceImpl implements InstrumentService {
     }
 
     @Override
-    public Instrument getProduct(int instrumentId) {
+    public Instrument getInstrument(int instrumentId) {
         return new Instrument(instrumentId, "name-" + instrumentId, serviceUtil.getServiceAddress());
     }
 

@@ -18,7 +18,7 @@ pv:
 
 mfinstruments:
   mf_http_port_ext: 30024
-  mf_http_port: 8080
+  mf_http_port: 7001
   mf_name: mfinstruments
 
   

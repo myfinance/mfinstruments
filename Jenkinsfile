@@ -70,5 +70,12 @@ pipeline {
      }
    }
 
+      stage('test'){
+        agent any
+        steps {
+          sh 'HOST=${K8N_IP} PORT=30024 ./deploymenttest.sh'
+        }
+      }
+
  }
 }

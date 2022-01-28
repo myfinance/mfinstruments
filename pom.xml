@@ -74,7 +74,7 @@
                     <image>${jib.image-tag}</image>
                 </to>
                 <container>
-                    <mainClass>de.hf.myfinance.instrumentservice.InstrumentserviceApplication</mainClass>
+                    <mainClass>de.hf.myfinance.mfinstrument.InstrumentserviceApplication</mainClass>
                 </container>
                 <allowInsecureRegistries>true</allowInsecureRegistries>
                 </configuration>

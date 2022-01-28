@@ -1,12 +1,12 @@
-package de.hf.myfinance.instrumentservice;
+package de.hf.myfinance.mfinstrument;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-//@SpringBootTest
+@SpringBootTest
 class InstrumentserviceApplicationTests {
 
-	//@Test
+	@Test
 	void contextLoads() {
 	}
 

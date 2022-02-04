@@ -16,11 +16,4 @@ spec:
         - name: {{ .Values.mfinstruments.mf_name }}      
           image: "{{ .Values.image.repository }}mfinstruments:{{ .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}      
-          tty: true     
-          volumeMounts:
-           - name: mfinstrumentsconfig
-             mountPath: /MyFinance/envconfig           
-      volumes:
-        - name: mfinstrumentsconfig
-          persistentVolumeClaim:
-              claimName: {{ .Values.stage }}-{{ .Values.pv.configpvc }}                                    
+          tty: true

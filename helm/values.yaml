@@ -10,12 +10,6 @@ image:
   pullPolicy: IfNotPresent
 
 
-pv:
-  mntpath: /mnt/data/mf/
-  configpvc: mfinstconfigpvc
-  configstorage: _config/
-  configstoragesize: 1Mi
-
 mfinstruments:
   mf_http_port_ext: 30024
   mf_http_port: 7001

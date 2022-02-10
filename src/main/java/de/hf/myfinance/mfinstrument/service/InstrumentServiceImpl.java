@@ -18,7 +18,7 @@ public class InstrumentServiceImpl implements InstrumentService {
 
     @Override
     public String index() {
-        return "Hello my spring";
+        return "Hello my InstrumentService";
     }
 
     @Override

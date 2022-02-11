@@ -1,18 +1,18 @@
-package de.hf.myfinance.mfinstrument.service;
+package de.hf.myfinance.instruments.api;
 
+import de.hf.myfinance.restapi.InstrumentApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
 import de.hf.framework.utils.ServiceUtil;
-import de.hf.myfinance.restapi.InstrumentService;
 import de.hf.myfinance.restmodel.Instrument;
 
 @RestController
-public class InstrumentServiceImpl implements InstrumentService {
+public class InstrumentApiImpl implements InstrumentApi {
     ServiceUtil serviceUtil;
 
     @Autowired
-    public InstrumentServiceImpl(ServiceUtil serviceUtil) {
+    public InstrumentApiImpl(ServiceUtil serviceUtil) {
         this.serviceUtil = serviceUtil;
     }
 

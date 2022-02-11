@@ -1,4 +1,4 @@
-package de.hf.myfinance.mfinstrument;
+package de.hf.myfinance.instruments;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

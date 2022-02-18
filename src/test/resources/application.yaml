@@ -1,0 +1,22 @@
+server.port: 8080
+spring:
+  datasource:
+    url:
+      jdbc:h2:mem:testdb
+    hibernate:
+      hbm2ddl:
+        auto=create
+  jpa:
+    database-platform=org.hibernate.dialect.PostgreSQL95Dialect
+api:
+
+  common:
+    version: 1.0.0
+    title: MF instruments API
+    description: REST API to create update and read instruments.
+
+  responseCodes:
+    ok.description: OK
+    badRequest.description: Bad Request, invalid format of the request. See response message for more information
+    notFound.description: Not found, the specified id does not exist
+    unprocessableEntity.description: Unprocessable entity, input parameters caused the processing to fail. See response message for more information

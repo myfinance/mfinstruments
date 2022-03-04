@@ -8,12 +8,12 @@
     <parent>
 		<groupId>de.hf.myfinance</groupId>
 		<artifactId>root</artifactId>
-		<version>0.21.0-alpha.37</version>
+		<version>0.21.0-alpha.42</version>
 		<relativePath/> 
 	</parent>
     <properties>
         <NEXUS_URL>192.168.100.73:31001</NEXUS_URL>
-        <MFFrameWork.Version>0.21.0-alpha.37</MFFrameWork.Version>
+        <MFFrameWork.Version>0.21.0-alpha.42</MFFrameWork.Version>
     </properties>
 
 	<dependencies>
@@ -51,8 +51,14 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <version>1.4.200</version>
+            <version>${h2.version}</version>
             <scope>test</scope>
+        </dependency>
+        <!--list helper-->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
 
         <!--<dependency>

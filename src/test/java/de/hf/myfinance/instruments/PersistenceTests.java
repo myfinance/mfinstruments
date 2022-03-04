@@ -1,7 +1,8 @@
 package de.hf.myfinance.instruments;
 
-import de.hf.myfinance.instruments.persistence.TenantEntity;
-import de.hf.myfinance.instruments.persistence.TenantRepository;
+import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
+import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
+import de.hf.myfinance.restmodel.InstrumentType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -14,12 +15,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class PersistenceTests{
 
     @Autowired
-    private TenantRepository repository;
+    private InstrumentRepository repository;
 
     @Test
     void create() {
 
-        var newEntity = new TenantEntity("aTest", true, LocalDateTime.now());
+        var newEntity = new InstrumentEntity(InstrumentType.TENANT, "aTest", true, LocalDateTime.now());
         repository.save(newEntity);
 
         var foundEntity = repository.findById(newEntity.getInstrumentid()).get();
@@ -28,8 +29,9 @@ public class PersistenceTests{
         assertEquals(1, repository.count());
     }
 
-    private void assertEqualsTenant(TenantEntity expectedEntity, TenantEntity actualEntity) {
+    private void assertEqualsTenant(InstrumentEntity expectedEntity, InstrumentEntity actualEntity) {
         assertEquals(expectedEntity.getInstrumentid(),        actualEntity.getInstrumentid());
+        assertEquals(expectedEntity.getInstrumentType(),        actualEntity.getInstrumentType());
         assertEquals(expectedEntity.getBusinesskey(),   actualEntity.getBusinesskey());
         assertEquals(expectedEntity.getDescription(), actualEntity.getDescription());
         assertEquals(expectedEntity.isIsactive(),  actualEntity.isIsactive());

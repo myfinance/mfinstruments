@@ -10,6 +10,7 @@ import de.hf.framework.utils.ServiceUtil;
 import de.hf.myfinance.restmodel.Instrument;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 public class InstrumentApiImpl implements InstrumentApi {
@@ -36,8 +37,17 @@ public class InstrumentApiImpl implements InstrumentApi {
     }
 
     @Override
-    public void saveTenant(Tenant tenant) {
-        instrumentService.saveTenant(tenant);
+    public List<Instrument> listInstruments() {
+        return null;
     }
 
+    @Override
+    public List<Tenant> listTenants() {
+        return null;
+    }
+
+    @Override
+    public void addTenant(String description) {
+        instrumentService.newTenant(description);
+    }
 }

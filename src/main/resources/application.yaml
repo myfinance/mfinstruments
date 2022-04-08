@@ -10,6 +10,14 @@ spring.datasource:
   username: postgres
   password: vulkan
 
+spring.data.mongodb:
+  host: 192.168.100.73
+  port: 30029
+  database: instrument-db
+  authentication-database: admin
+  username: root
+  password: vulkan
+
 springdoc:
   swagger-ui.path: /openapi/swagger-ui.html
   api-docs.path: /openapi/v3/api-docs
@@ -36,3 +44,8 @@ spring.datasource:
   url: jdbc:postgresql://mfdb:30020/marketdata
   username: postgres
   password: vulkan
+
+spring.data.mongodb:
+  host: mfmongo
+  port: 30029
+  database: instrument-db

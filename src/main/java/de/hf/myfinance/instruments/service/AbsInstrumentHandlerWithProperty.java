@@ -18,7 +18,7 @@ public abstract class AbsInstrumentHandlerWithProperty extends AbsInstrumentHand
         super(instrumentRepository, auditService, description, businesskey);
     }
 
-    protected AbsInstrumentHandlerWithProperty(InstrumentRepository instrumentRepository, AuditService auditService, int instrumentId) {
+    protected AbsInstrumentHandlerWithProperty(InstrumentRepository instrumentRepository, AuditService auditService, String instrumentId) {
         super(instrumentRepository, auditService, instrumentId);
     }
 
@@ -40,22 +40,22 @@ public abstract class AbsInstrumentHandlerWithProperty extends AbsInstrumentHand
         return getInstrumentProperties().stream().filter(i->i.getPropertyname().equals(instrumentPropertyType.name())).collect(Collectors.toList());
     }
 
-    protected void addProperty(InstrumentPropertyType instrumentPropertyType, String value, LocalDate validFrom, LocalDate validUntil) {
+    protected void addProperty(InstrumentPropertyType instrumentPropertyType, String value, LocalDate validFrom) {
         checkInitStatus();
         var properties = domainObject.getInstrumentProperties();
-        properties.add(new InstrumentPropertiesEntity(instrumentPropertyType.name(), instrumentId, value, instrumentPropertyType.getValueType(), validFrom, validUntil));
+        properties.add(new InstrumentPropertiesEntity(instrumentPropertyType.name(), value, instrumentPropertyType.getValueType(), validFrom));
     }
 
     protected void addProperty(InstrumentPropertyType instrumentPropertyType, ValuePerDate value) {
         checkInitStatus();
         var properties = domainObject.getInstrumentProperties();
-        properties.add(new InstrumentPropertiesEntity(instrumentPropertyType.name(), instrumentId, String.valueOf(value.getValue()), instrumentPropertyType.getValueType(), value.getDate(), null));
+        properties.add(new InstrumentPropertiesEntity(instrumentPropertyType.name(), String.valueOf(value.getValue()), instrumentPropertyType.getValueType(), value.getDate()));
    }
 
    protected void addProperty(InstrumentPropertyType instrumentPropertyType, int value) {
         checkInitStatus();
         var properties = domainObject.getInstrumentProperties();
-        properties.add(new InstrumentPropertiesEntity(instrumentPropertyType.name(), instrumentId, String.valueOf(value), instrumentPropertyType.getValueType(), null, null));
+        properties.add(new InstrumentPropertiesEntity(instrumentPropertyType.name(), String.valueOf(value), instrumentPropertyType.getValueType(), null));
     }
 
     protected void savePropertyList(InstrumentPropertyType instrumentPropertyType, List<ValuePerDate> values) {
@@ -67,7 +67,7 @@ public abstract class AbsInstrumentHandlerWithProperty extends AbsInstrumentHand
     protected void deleteInstrumentPropertyList() {
         var instrumentProperties = domainObject.getInstrumentProperties();
         for (InstrumentPropertiesEntity instrumentProperty : instrumentProperties) {
-            String msg = "instrumentProperty for instrument "+instrumentProperty.getInstrumentid()+" ,type: '"+instrumentProperty.getPropertyname()+
+            String msg = "instrumentProperty for instrument "+instrumentId+" ,type: '"+instrumentProperty.getPropertyname()+
                     "' ,value:" + instrumentProperty.getValue() +
                     "' ,validfrom:" + instrumentProperty.getValidfrom() + " deleted";
             auditService.saveMessage(msg,
@@ -80,7 +80,7 @@ public abstract class AbsInstrumentHandlerWithProperty extends AbsInstrumentHand
         var instrumentProperties = domainObject.getInstrumentProperties();
         for (InstrumentPropertiesEntity instrumentProperty : instrumentProperties) {
             if(instrumentProperty.getPropertyname().equals(propertyType.name())) {
-                String msg = "instrumentProperty for instrument "+instrumentProperty.getInstrumentid()+" ,type: '"+instrumentProperty.getPropertyname()+
+                String msg = "instrumentProperty for instrument "+instrumentId+" ,type: '"+instrumentProperty.getPropertyname()+
                         "' ,value:" + instrumentProperty.getValue() +
                         "' ,validfrom:" + instrumentProperty.getValidfrom() + " deleted";
                 auditService.saveMessage(msg,

@@ -6,7 +6,6 @@ import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.InstrumentFactory;
 import de.hf.myfinance.restmodel.InstrumentType;
-import de.hf.myfinance.restmodel.Tenant;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,13 +18,13 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
     private static final String DEFAULT_BUDGETGROUP_PREFIX = "budgetGroup_";
     
 
-    public TenantHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentFactory instrumentFactory, int tenantId) {
+    public TenantHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String tenantId, InstrumentFactory instrumentFactory) {
         super(instrumentRepository, instrumentGraphRepository, auditService, tenantId);
         this.instrumentFactory = instrumentFactory;
     }
 
     public TenantHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentFactory instrumentFactory, String description) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, description, -1, description);
+        super(instrumentRepository, instrumentGraphRepository, auditService, description, null, description);
         this.instrumentFactory = instrumentFactory;
     }
 
@@ -34,16 +33,14 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
         this.instrumentFactory = instrumentFactory;
     }
 
+
+
     protected void updateParent() {
         setParent(instrumentId, false);
     } 
 
     @Override
     protected void saveNewInstrument() {
-        if(this.businesskey.length()>6) {
-            this.businesskey = this.businesskey.substring(0, 6);
-            domainObject.setBusinesskey(this.businesskey);
-        }
         super.saveNewInstrument();
 
         var budgetPortfolioHandler = instrumentFactory.getInstrumentHandler(InstrumentType.BUDGETPORTFOLIO, DEFAULT_BUDGETPF_PREFIX+domainObject.getDescription(), instrumentId, DEFAULT_BUDGETPF_PREFIX+domainObject.getBusinesskey());
@@ -110,7 +107,7 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
         renameDefaultTenantChild(instrumentId, description, oldDesc, DEFAULT_ACCPF_PREFIX, instruments); 
     }
 
-    private void renameDefaultTenantChild(int instrumentId, String newDesc, String oldDesc, String defaultDescPrefix, List<InstrumentEntity> instruments) {
+    private void renameDefaultTenantChild(String instrumentId, String newDesc, String oldDesc, String defaultDescPrefix, List<InstrumentEntity> instruments) {
         //look by description for default instruments of the tenant to rename
         instruments.stream().filter(i->i.getDescription().equals(defaultDescPrefix+oldDesc)).forEach(i->{
             var handler = instrumentFactory.getInstrumentHandler(i.getInstrumentid());

@@ -23,27 +23,27 @@ import java.util.Optional;
  */
 public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandlerWithProperty implements AccountableInstrumentHandler{
     protected final InstrumentGraphHandler instrumentGraphHandler;
-    private int parentId;
+    private String parentId;
 
-    protected AbsAccountableInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String description, int parentId, String businesskey) {
+    protected AbsAccountableInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String description, String parentId, String businesskey) {
         this(instrumentRepository, instrumentGraphRepository, auditService, description, parentId, false, businesskey);
     }
 
-    protected AbsAccountableInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String description, int parentId, boolean addToAccountPf, String businesskey) {
+    protected AbsAccountableInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String description, String parentId, boolean addToAccountPf, String businesskey) {
         super(instrumentRepository, auditService, description, businesskey);
-        this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentGraphRepository);
+        this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentGraphRepository, instrumentRepository);
         setParent(parentId, addToAccountPf);
         validateParent();
     }
 
-    protected AbsAccountableInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, int instrumentId) {
+    protected AbsAccountableInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String instrumentId) {
         super(instrumentRepository, auditService, instrumentId);
-        this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentGraphRepository);
+        this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentGraphRepository, instrumentRepository);
     }
 
     protected AbsAccountableInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentEntity instrument) {
         super(instrumentRepository, auditService, instrument);
-        this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentGraphRepository);
+        this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentGraphRepository, instrumentRepository);
     }
 
     protected void saveNewInstrument() {
@@ -63,7 +63,7 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
         }
     }
 
-    protected void setParent(int parentId, boolean addToAccountPf) {
+    protected void setParent(String parentId, boolean addToAccountPf) {
         this.parentId = parentId;
         if(addToAccountPf) setParentToAccountPf();
     }
@@ -87,7 +87,7 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
     }
 
 
-    public Optional<InstrumentEntity> getTenant() {
+    public Optional<String> getTenant() {
         checkInitStatus();
         return instrumentGraphHandler.getRootInstrument(instrumentId, EdgeType.TENANTGRAPH);
     }
@@ -97,13 +97,18 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
         return instrumentGraphHandler.getInstrumentChilds(instrumentId, edgeType, pathlength);
     }
 
-    public List<Integer> getAncestorIds() {
+    public List<String> getInstrumentChildIds(EdgeType edgeType, int pathlength){
         checkInitStatus();
-        var ids = new ArrayList<Integer>();
+        return instrumentGraphHandler.getInstrumentChildIds(instrumentId, edgeType, pathlength);
+    }
+
+    public List<String> getAncestorIds() {
+        checkInitStatus();
+        var ids = new ArrayList<String>();
         final List<InstrumentGraphEntry> ancestorGraphEntries = instrumentGraphHandler.getAncestors(instrumentId, EdgeType.TENANTGRAPH);
         if (ancestorGraphEntries != null && !ancestorGraphEntries.isEmpty()) {
             for (final InstrumentGraphEntry entry : ancestorGraphEntries) {
-                ids.add(entry.getId().getAncestor());
+                ids.add(entry.getAncestor());
             }
         }                
         return ids;
@@ -112,7 +117,7 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
     @Override
     protected void validateInstrument(InstrumentEntity instrument, InstrumentType instrumentType, String errMsg) {
         super.validateInstrument(instrument, instrumentType, errMsg);
-        Optional<InstrumentEntity> tenantOfInstrument = instrumentGraphHandler.getRootInstrument(instrument.getInstrumentid(), EdgeType.TENANTGRAPH);
+        Optional<String> tenantOfInstrument = instrumentGraphHandler.getRootInstrument(instrument.getInstrumentid(), EdgeType.TENANTGRAPH);
         if(!tenantOfInstrument.isPresent()){
             throw new MFException(MFMsgKey.WRONG_TENENT_EXCEPTION,  errMsg+" instrument has not the same tenant");
         }
@@ -120,8 +125,6 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
             if(!tenantOfInstrument.get().equals(getTenant().get())) {
                 throw new MFException(MFMsgKey.WRONG_TENENT_EXCEPTION,  errMsg+" instrument has not the same tenant");
             }
-        } else if(tenantOfInstrument.get().equals(parentId)) {
-            throw new MFException(MFMsgKey.WRONG_TENENT_EXCEPTION,  errMsg+" instrument has not the same tenant");
         }
     }
 }

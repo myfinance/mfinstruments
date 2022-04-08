@@ -11,10 +11,10 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@DataJpaTest
+//@DataJpaTest
 public class PersistenceTests{
 
-    @Autowired
+    /*@Autowired
     private InstrumentRepository repository;
 
     @Test
@@ -36,5 +36,5 @@ public class PersistenceTests{
         assertEquals(expectedEntity.getDescription(), actualEntity.getDescription());
         assertEquals(expectedEntity.isIsactive(),  actualEntity.isIsactive());
         assertEquals(expectedEntity.getTreelastchanged(),    actualEntity.getTreelastchanged());
-    }
+    }*/
 }

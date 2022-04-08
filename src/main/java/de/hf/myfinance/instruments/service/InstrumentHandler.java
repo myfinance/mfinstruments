@@ -11,7 +11,7 @@ import de.hf.myfinance.restmodel.InstrumentPropertyType;
 public interface InstrumentHandler {
     InstrumentEntity getInstrument();
     InstrumentEntity getInstrument(String errMsg);
-    int getInstrumentId();
+    String getInstrumentId();
     List<InstrumentPropertiesEntity> getInstrumentProperties();
     List<InstrumentPropertiesEntity> getInstrumentProperties(InstrumentPropertyType instrumentPropertyType);
     void validateInstrument();

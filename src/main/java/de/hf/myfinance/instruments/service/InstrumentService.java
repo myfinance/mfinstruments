@@ -31,7 +31,7 @@ public class InstrumentService {
     }
 
     public void newTenant(String description) {
-        var tenantHandler = instrumentFactory.getInstrumentHandler(InstrumentType.TENANT, description, -1, null);
+        var tenantHandler = instrumentFactory.getInstrumentHandler(InstrumentType.TENANT, description, null, null);
         tenantHandler.save();
     }
 

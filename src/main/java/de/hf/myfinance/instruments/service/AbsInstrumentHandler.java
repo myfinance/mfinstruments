@@ -16,7 +16,7 @@ import de.hf.myfinance.restmodel.InstrumentType;
  */
 public abstract class AbsInstrumentHandler {
     protected InstrumentRepository instrumentRepository;
-    protected int instrumentId;
+    protected String instrumentId;
     protected boolean initialized = false;
     protected boolean existenceChecked = false;
     protected boolean exists = false;
@@ -44,7 +44,7 @@ public abstract class AbsInstrumentHandler {
         }
     }
 
-    protected AbsInstrumentHandler(InstrumentRepository instrumentRepository, AuditService auditService, int instrumentId) {
+    protected AbsInstrumentHandler(InstrumentRepository instrumentRepository, AuditService auditService, String instrumentId) {
         setBaseValues(instrumentRepository, auditService);
         setInstrumentId(instrumentId);
     }
@@ -90,11 +90,11 @@ public abstract class AbsInstrumentHandler {
         this.ts = ts;
     }
     
-    public void setInstrumentId(int instrumentId) {
+    public void setInstrumentId(String instrumentId) {
         initialized = true;
         this.instrumentId = instrumentId;
     }
-    public int getInstrumentId() {
+    public String getInstrumentId() {
         return this.instrumentId;
     }
 
@@ -111,11 +111,11 @@ public abstract class AbsInstrumentHandler {
     }
 
     public InstrumentEntity getInstrument(String errMsg) {
-        return getInstrument(instrumentId, errMsg);
+        return getInstrumentById(instrumentId, errMsg);
     }
 
     public InstrumentEntity getInstrument() {
-        return getInstrument(instrumentId, "");
+        return getInstrumentById(instrumentId, "");
     }
 
     protected void loadInstrument() {
@@ -132,11 +132,11 @@ public abstract class AbsInstrumentHandler {
      * @param instrumentId the id
      * @return the instrument for the id
      */
-    protected InstrumentEntity getInstrument(int instrumentId) {
-        return getInstrument(instrumentId, "");
+    protected InstrumentEntity getInstrumentById(String instrumentId) {
+        return getInstrumentById(instrumentId, "");
     }
 
-    protected InstrumentEntity getInstrument(int instrumentId, String errMsg) {
+    protected InstrumentEntity getInstrumentById(String instrumentId, String errMsg) {
         var instrument = instrumentRepository.findById(instrumentId);
         if(!instrument.isPresent()){
             throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION, errMsg + " Instrument for id:"+instrumentId + " not found");

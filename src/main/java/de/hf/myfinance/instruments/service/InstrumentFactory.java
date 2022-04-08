@@ -37,7 +37,7 @@ public class InstrumentFactory {
      * @param instrumentId the id of the instrument
      * @return the BaseAccountableInstrumentHandler
      */
-    public BaseAccountableInstrumentHandler getBaseInstrumentHandler(int instrumentId) {
+    public BaseAccountableInstrumentHandler getBaseInstrumentHandler(String instrumentId) {
         return new BaseAccountableInstrumentHandlerImpl(instrumentRepository, instrumentGraphRepository, auditService, instrumentId);
     }
 
@@ -48,7 +48,7 @@ public class InstrumentFactory {
      * @param parentId the id of the parent
      * @return Instrumenthandler for the instrumenttype of the new instrument
      */
-    public InstrumentHandler getInstrumentHandler(InstrumentType instrumentType, String description, int parentId, String businesskey) {
+    public InstrumentHandler getInstrumentHandler(InstrumentType instrumentType, String description, String parentId, String businesskey) {
         switch(instrumentType){
             case TENANT:
                 return new TenantHandler(instrumentRepository, instrumentGraphRepository, auditService, this, description);
@@ -63,7 +63,7 @@ public class InstrumentFactory {
      * @param instrumentId the id of the instrument
      * @return Instrumenthandler for the instrumenttype of the new instrument
      */
-    public InstrumentHandler getInstrumentHandler(int instrumentId) {
+    public InstrumentHandler getInstrumentHandler(String instrumentId) {
         var instrument =  getBaseInstrumentHandler(instrumentId).getInstrument();
         switch(instrument.getInstrumentType()){
             case TENANT:
@@ -81,8 +81,8 @@ public class InstrumentFactory {
      * @param validate true if you want to validate that the type of the instrument and the expected type fits together (should be true in case you plan write operations with this instrument. Otherwise it is faster without validation)
      * @return TenantHandler
      */
-    public TenantHandler getTenantHandler(int instrumentId, boolean validate) {
-        var handler = new TenantHandler(instrumentRepository, instrumentGraphRepository, auditService, this, instrumentId);
+    public TenantHandler getTenantHandler(String instrumentId, boolean validate) {
+        var handler = new TenantHandler(instrumentRepository, instrumentGraphRepository, auditService, instrumentId, this);
         if(validate) handler.validateInstrument();
         return handler;
     }

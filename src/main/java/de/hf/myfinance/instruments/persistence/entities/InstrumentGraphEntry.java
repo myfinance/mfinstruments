@@ -1,61 +1,77 @@
 package de.hf.myfinance.instruments.persistence.entities;
 
-import javax.persistence.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(
-        name="mf_instrumentgraph")
+
+@Document(collection = "instrumentgraph")
+@CompoundIndex(name = "graphid", unique = true, def = "{'ancestor': 1, 'descendant' : 1, 'edgetype' : 1}")
 public class InstrumentGraphEntry implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
+    @Id
+    private String instrumentGraphid;
+    @Version
+    private Integer version;
 
-    private InstrumentGraphId id;
+    private String ancestor;
+    private String descendant;
+    private EdgeType edgetype;
     private int pathlength;
-    private InstrumentEntity ancestor;
-    private InstrumentEntity descendant;
 
     public InstrumentGraphEntry() {
     }
 
-    public InstrumentGraphEntry(int ancestorId, int descendantId, EdgeType edgeType) {
-        this.id = new InstrumentGraphId(ancestorId, descendantId, edgeType);
+    public InstrumentGraphEntry(String ancestorId, String descendantId, EdgeType edgeType) {
+        this.ancestor = ancestor;
+        this.descendant = descendant;
+        this.edgetype = edgetype;
         this.pathlength = pathlength;
     }
 
-    @EmbeddedId
-    @AttributeOverrides( {
-            @AttributeOverride(name="ancestor", column=@Column(name="ancestor", nullable=false) ),
-            @AttributeOverride(name="descendant", column=@Column(name="descendant", nullable=false) ),
-            @AttributeOverride(name="edgetype", column=@Column(name="edgetype", nullable=false) ) } )
-    public InstrumentGraphId getId() {
-        return this.id;
-    }
-    public void setId(InstrumentGraphId id) {
-        this.id = id;
+    public String getInstrumentGraphid() {
+        return instrumentGraphid;
     }
 
+    public void setInstrumentGraphid(String instrumentGraphid) {
+        this.instrumentGraphid = instrumentGraphid;
+    }
 
-    @Column(name="pathlength", nullable=false)
     public int getPathlength() {
         return this.pathlength;
     }
-    public void setPathlength(int pathlength) {
+    public void setPathlength(int pathlength){
         this.pathlength = pathlength;
     }
 
-    @OneToOne(fetch=FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "ancestor", referencedColumnName = "instrumentid", insertable = false, updatable = false)
-    public InstrumentEntity getAncestor() {
-        return this.ancestor;
+    public String getAncestor() {
+        return ancestor;
     }
-    public void setAncestor(InstrumentEntity i) {
+    public void setAncestor(String ancestor) {
+        this.ancestor = ancestor;
     }
 
-    @OneToOne(fetch=FetchType.EAGER, cascade = CascadeType.ALL)
-    @JoinColumn(name = "descendant", referencedColumnName = "instrumentid", insertable = false, updatable = false)
-    public InstrumentEntity getDescendant() {
-        return this.descendant;
+    public String getDescendant() {
+        return descendant;
     }
-    public void setDescendant(InstrumentEntity i) {}
+    public void setDescendant(String descendant) {
+        this.descendant = descendant;
+    }
+
+    public EdgeType getEdgetype() {
+        return edgetype;
+    }
+    public void setEdgetype(EdgeType edgetype) {
+        this.edgetype = edgetype;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+    public void setVersion(Integer version) {
+        this.version = version;
+    }
 }
 

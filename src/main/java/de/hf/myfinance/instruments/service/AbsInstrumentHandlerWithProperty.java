@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import de.hf.framework.audit.AuditService;
 import de.hf.framework.audit.Severity;
-import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentPropertiesEntity;
 import de.hf.myfinance.restmodel.InstrumentPropertyType;
@@ -18,12 +17,8 @@ public abstract class AbsInstrumentHandlerWithProperty extends AbsInstrumentHand
         super(instrumentRepository, auditService, description, businesskey);
     }
 
-    protected AbsInstrumentHandlerWithProperty(InstrumentRepository instrumentRepository, AuditService auditService, String instrumentId) {
-        super(instrumentRepository, auditService, instrumentId);
-    }
-
-    protected AbsInstrumentHandlerWithProperty(InstrumentRepository instrumentRepository, AuditService auditService, InstrumentEntity instrument) {
-        super(instrumentRepository, auditService, instrument);
+    protected AbsInstrumentHandlerWithProperty(InstrumentRepository instrumentRepository, AuditService auditService, String businesskey) {
+        super(instrumentRepository, auditService, businesskey);
     }
 
     private List<InstrumentPropertiesEntity> properties;

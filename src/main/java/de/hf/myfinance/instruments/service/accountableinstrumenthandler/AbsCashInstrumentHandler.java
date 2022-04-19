@@ -1,8 +1,6 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
-
 import de.hf.framework.audit.AuditService;
-import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 
@@ -14,12 +12,8 @@ public abstract class AbsCashInstrumentHandler extends AbsAccountableInstrumentH
 
     }
 
-    public AbsCashInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentEntity cashInstrument) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, cashInstrument);
-    }
-
-    public AbsCashInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String instrumentId) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, instrumentId);
+    public AbsCashInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String businesskey) {
+        super(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
     }
 
     protected AbsCashInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String description, String tenantId, boolean addToAccountPf, String businesskey) {

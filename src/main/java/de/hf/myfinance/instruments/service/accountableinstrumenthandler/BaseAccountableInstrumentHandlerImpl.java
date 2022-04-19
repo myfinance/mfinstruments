@@ -15,8 +15,8 @@ import java.time.LocalDateTime;
 public final class BaseAccountableInstrumentHandlerImpl extends AbsAccountableInstrumentHandler implements BaseAccountableInstrumentHandler{
 
 
-    public BaseAccountableInstrumentHandlerImpl(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String instrumentId) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, instrumentId);
+    public BaseAccountableInstrumentHandlerImpl(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String businesskey) {
+        super(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
     }
 
     @Override

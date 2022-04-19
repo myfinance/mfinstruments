@@ -44,6 +44,6 @@ public class InstrumentService {
     }
 
     public List<Instrument> listInstruments(String tenantkey){
-        return instrumentMapper.entityListToApiList(Lists.newArrayList(instrumentFactory.getTenantHandler(tenantkey, false).listInstruments()));
+        return instrumentMapper.entityListToApiList(Lists.newArrayList(instrumentFactory.getTenantHandler(tenantkey).listInstruments()));
     }
 }

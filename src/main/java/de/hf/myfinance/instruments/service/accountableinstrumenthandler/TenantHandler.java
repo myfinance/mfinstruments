@@ -13,27 +13,20 @@ import java.util.List;
 public class TenantHandler extends AbsAccountableInstrumentHandler {
     private InstrumentFactory instrumentFactory;
 
-    private static final String DEFAULT_ACCPF_PREFIX = "accountPf_";
-    private static final String DEFAULT_BUDGETPF_PREFIX = "budgetPf_";
-    private static final String DEFAULT_BUDGETGROUP_PREFIX = "budgetGroup_";
+    private static final String DEFAULT_ACCPF_PREFIX = "accPf_";
+    private static final String DEFAULT_BUDGETPF_PREFIX = "bgtPf_";
+    private static final String DEFAULT_BUDGETGROUP_PREFIX = "bgtGrp_";
     
 
-    public TenantHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String tenantId, InstrumentFactory instrumentFactory) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, tenantId);
+    public TenantHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentFactory instrumentFactory, String businesskey) {
+        super(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
         this.instrumentFactory = instrumentFactory;
     }
 
-    public TenantHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentFactory instrumentFactory, String description) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, description, null, description);
+    public TenantHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentFactory instrumentFactory, String description, String businesskey) {
+        super(instrumentRepository, instrumentGraphRepository, auditService, description, null, businesskey);
         this.instrumentFactory = instrumentFactory;
     }
-
-    public TenantHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentFactory instrumentFactory, InstrumentEntity tenant) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, tenant);
-        this.instrumentFactory = instrumentFactory;
-    }
-
-
 
     protected void updateParent() {
         setParent(instrumentId, false);
@@ -43,14 +36,14 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
     protected void saveNewInstrument() {
         super.saveNewInstrument();
 
-        var budgetPortfolioHandler = instrumentFactory.getInstrumentHandler(InstrumentType.BUDGETPORTFOLIO, DEFAULT_BUDGETPF_PREFIX+domainObject.getDescription(), instrumentId, DEFAULT_BUDGETPF_PREFIX+domainObject.getBusinesskey());
+        var budgetPortfolioHandler = instrumentFactory.getInstrumentHandler(InstrumentType.BUDGETPORTFOLIO, DEFAULT_BUDGETPF_PREFIX+domainObject.getDescription(), instrumentId, null);
         budgetPortfolioHandler.setTreeLastChanged(ts);
         budgetPortfolioHandler.save();
-        var budgetGroupHandler = instrumentFactory.getInstrumentHandler(InstrumentType.BUDGETGROUP, DEFAULT_BUDGETGROUP_PREFIX+domainObject.getDescription(), budgetPortfolioHandler.getInstrumentId(), DEFAULT_BUDGETGROUP_PREFIX+domainObject.getBusinesskey());
+        var budgetGroupHandler = instrumentFactory.getInstrumentHandler(InstrumentType.BUDGETGROUP, DEFAULT_BUDGETGROUP_PREFIX+domainObject.getDescription(), budgetPortfolioHandler.getInstrumentId(), null);
         budgetGroupHandler.setTreeLastChanged(ts);
         budgetGroupHandler.save();
 
-        var accPortfolioHandler = instrumentFactory.getInstrumentHandler(InstrumentType.ACCOUNTPORTFOLIO, DEFAULT_ACCPF_PREFIX+domainObject.getDescription(), instrumentId, DEFAULT_ACCPF_PREFIX+domainObject.getBusinesskey());
+        var accPortfolioHandler = instrumentFactory.getInstrumentHandler(InstrumentType.ACCOUNTPORTFOLIO, DEFAULT_ACCPF_PREFIX+domainObject.getDescription(), instrumentId, null);
         accPortfolioHandler.setTreeLastChanged(ts);
         accPortfolioHandler.save();
     }

@@ -12,12 +12,8 @@ public class BudgetHandler extends AbsCashInstrumentHandler {
         super(instrumentRepository, instrumentGraphRepository, auditService, description, budgetGroupId, businesskey);
     }
 
-    public BudgetHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentEntity budget) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, budget);
-    }
-
-    public BudgetHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String instrumentId) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, instrumentId);
+    public BudgetHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String businesskey) {
+        super(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
     }
 
     @Override

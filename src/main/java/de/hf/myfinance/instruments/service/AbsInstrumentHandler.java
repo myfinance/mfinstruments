@@ -31,40 +31,22 @@ public abstract class AbsInstrumentHandler {
     protected String oldDesc;
     protected boolean isActive = true;
 
+    private final int MAX_BUSINESSKEY_SIZE = 32;
+
     protected AbsInstrumentHandler(InstrumentRepository instrumentRepository, AuditService auditService, String description, String businesskey) {
+        setBaseValues(instrumentRepository, auditService);
         setDescription(description);
         setBusinesskey(businesskey);
+        loadInstrumentByBusinesskey();
+    }
+
+    protected AbsInstrumentHandler(InstrumentRepository instrumentRepository, AuditService auditService, String businesskey) {
         setBaseValues(instrumentRepository, auditService);
-        domainObject = getExistingObject();
+        setBusinesskey(businesskey);
+        loadInstrumentByBusinesskey();
         if(!exists) {
-            createDomainObject();
-            domainObject.setBusinesskey(this.businesskey);
-        } else {
-            validateInstrument();
+            throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION, "Instrument for businesskey:"+businesskey + " does not exists. You can only create existing instruments with just a businesskey");
         }
-    }
-
-    protected AbsInstrumentHandler(InstrumentRepository instrumentRepository, AuditService auditService, String instrumentId) {
-        setBaseValues(instrumentRepository, auditService);
-        setInstrumentId(instrumentId);
-    }
-
-    protected AbsInstrumentHandler(InstrumentRepository instrumentRepository, AuditService auditService, InstrumentEntity instrument) {
-        this(instrumentRepository, auditService, instrument.getInstrumentid());
-        domainObject = instrument;
-        validateInstrument();
-        // the existience of these object has to be check before in the InstrumentFactory
-        existenceChecked = true;
-        exists = true;
-    }
-
-    /**
-    * default behavior is to create allways new objects(if initialized with description and not with id or instrument), because the businesskey for the most objects is the description and this is not very distinctive.
-    * you can allways identify the right object via instrumentid and rename it again.
-    * if it is realy anoying then a check for an object with the same desc has to be added hear but it costs another select
-    */    
-    protected InstrumentEntity getExistingObject() {
-        return null;
     }
 
     private void setBaseValues(InstrumentRepository instrumentRepository, AuditService auditService) {
@@ -73,8 +55,7 @@ public abstract class AbsInstrumentHandler {
         ts = LocalDateTime.now();
     }
 
-    public void validateInstrument() {
-        loadInstrument();
+    protected void validateInstrument() {
         if(!domainObject.getInstrumentType().equals(getInstrumentType())) {
             throw new MFException(MFMsgKey.WRONG_INSTRUMENTTYPE_EXCEPTION, "can not create instrumenthandler for instrumentid:"+instrumentId);
         }
@@ -110,20 +91,21 @@ public abstract class AbsInstrumentHandler {
         }
     }
 
-    public InstrumentEntity getInstrument(String errMsg) {
-        return getInstrumentById(instrumentId, errMsg);
+    protected void loadInstrumentByBusinesskey() {
+        this.domainObject = instrumentRepository.findByBusinesskey(businesskey);
+        loadInstrument();
     }
 
-    public InstrumentEntity getInstrument() {
-        return getInstrumentById(instrumentId, "");
-    }
-
-    protected void loadInstrument() {
-        if(this.domainObject==null) {
-            checkInitStatus();
-            domainObject = getInstrument();
-            existenceChecked = true;
+    private void loadInstrument() {
+        this.domainObject = instrumentRepository.findByBusinesskey(businesskey);
+        existenceChecked = true;
+        if(this.domainObject!=null) {
             exists = true;
+            setInstrumentId(this.domainObject.getInstrumentid());
+            validateInstrument();
+        } else {
+            createDomainObject();
+            domainObject.setBusinesskey(this.businesskey);
         }
     }
 
@@ -176,7 +158,7 @@ public abstract class AbsInstrumentHandler {
     protected void updateInstrument() {
         checkInstrumentInactivation(domainObject.isIsactive(), isActive);
         oldDesc = domainObject.getDescription();
-        if(description.equals("")) {
+        if(description==null || description.equals("")) {
             description = domainObject.getDescription();
         }
         if(businesskey.equals("")) {
@@ -201,7 +183,8 @@ public abstract class AbsInstrumentHandler {
             this.businesskey = businesskey.trim();
         }
         this.businesskey = this.businesskey.replace(" ", "");
-        if(this.businesskey.length()>31) this.businesskey = this.businesskey.substring(0, 31);
+        if(this.businesskey.length()> MAX_BUSINESSKEY_SIZE) this.businesskey = this.businesskey.substring(0, MAX_BUSINESSKEY_SIZE);
+        this.businesskey = this.businesskey+"@"+getInstrumentType().getValue();
     }
 
     public Optional<InstrumentEntity> getSavedDomainObject() {

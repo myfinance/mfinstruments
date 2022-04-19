@@ -9,12 +9,9 @@ import de.hf.myfinance.instruments.persistence.entities.InstrumentPropertiesEnti
 import de.hf.myfinance.restmodel.InstrumentPropertyType;
 
 public interface InstrumentHandler {
-    InstrumentEntity getInstrument();
-    InstrumentEntity getInstrument(String errMsg);
     String getInstrumentId();
     List<InstrumentPropertiesEntity> getInstrumentProperties();
     List<InstrumentPropertiesEntity> getInstrumentProperties(InstrumentPropertyType instrumentPropertyType);
-    void validateInstrument();
     void setTreeLastChanged(LocalDateTime ts);
     void save();
     void setActive(boolean isActive);

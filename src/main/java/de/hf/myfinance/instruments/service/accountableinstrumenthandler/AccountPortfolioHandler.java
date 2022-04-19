@@ -14,12 +14,8 @@ public class AccountPortfolioHandler extends AbsAccountableInstrumentHandler {
         super(instrumentRepository, instrumentGraphRepository, auditService, description, tenantId, businesskey);
     }
 
-    public AccountPortfolioHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentEntity accountPortfolio) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, accountPortfolio);
-    }
-
-    public AccountPortfolioHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String instrumentId) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, instrumentId);
+    public AccountPortfolioHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String businesskey) {
+        super(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
     }
 
     @Override

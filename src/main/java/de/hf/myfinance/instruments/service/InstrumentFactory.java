@@ -49,7 +49,7 @@ public class InstrumentFactory {
     public InstrumentHandler getInstrumentHandler(InstrumentType instrumentType, String description, String parentId, String businesskey) {
         switch(instrumentType){
             case TENANT:
-                return new TenantHandler(instrumentRepository, instrumentGraphRepository, auditService, this, description);
+                return new TenantHandler(instrumentRepository, instrumentGraphRepository, auditService, this, description, businesskey);
             case BUDGETPORTFOLIO:
                 return new BudgetPortfolioHandler(instrumentRepository, instrumentGraphRepository, auditService, description, parentId, businesskey);
             case ACCOUNTPORTFOLIO:
@@ -67,24 +67,30 @@ public class InstrumentFactory {
     /**
      * loads the instrument for the instrumentId and returns an InstrumentHandler for the type of the instrument.
      * use this if you do not know the type of the instrument and the InstrumentHandler Interface is suffitioned for your purpose (so you do not need type spezific functions)
-     * @param instrumentId the id of the instrument
+     * @param businesskey the businesskey of the instrument
      * @return Instrumenthandler for the instrumenttype of the new instrument
      */
-    public InstrumentHandler getInstrumentHandler(String instrumentId) {
-        var instrument =  getBaseInstrumentHandler(instrumentId).getInstrument();
-        switch(instrument.getInstrumentType()){
+    public InstrumentHandler getInstrumentHandler(String businesskey) {
+        InstrumentType instrumentType = InstrumentType.UNKNOWN;
+        try {
+            int typeId = Integer.parseInt(businesskey.substring(businesskey.lastIndexOf("@")));
+            InstrumentType.getInstrumentTypeById(typeId);
+        } catch (Exception e) {
+            throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, " no valid businesskey, the Instrumenttype seems not to be included:"+businesskey);
+        }
+        switch(instrumentType){
             case TENANT:
-                return new TenantHandler(instrumentRepository, instrumentGraphRepository, auditService, this, instrument);
+                return new TenantHandler(instrumentRepository, instrumentGraphRepository, auditService, this, businesskey);
             case BUDGETPORTFOLIO:
-                return new BudgetPortfolioHandler(instrumentRepository, instrumentGraphRepository, auditService, instrument);
+                return new BudgetPortfolioHandler(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
             case ACCOUNTPORTFOLIO:
-                return new AccountPortfolioHandler(instrumentRepository, instrumentGraphRepository, auditService, instrument);
+                return new AccountPortfolioHandler(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
             case BUDGETGROUP:
-                return new BudgetGroupHandler(instrumentRepository, instrumentGraphRepository, auditService, this, instrument);
+                return new BudgetGroupHandler(instrumentRepository, instrumentGraphRepository, auditService, this, businesskey);
             case BUDGET:
-                return new BudgetHandler(instrumentRepository, instrumentGraphRepository, auditService, instrument);
+                return new BudgetHandler(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
             default:
-                throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:"+instrument.getInstrumentType());
+                throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:"+instrumentType);
         }
     }
 
@@ -92,14 +98,11 @@ public class InstrumentFactory {
      * returns an TenantHandler. 
      * use this or the following InstrumentHandlerType-Spezific functions, if you know exactly what kind of instrumenthandler you want and if it matters. 
      * E.G. The TenantHandler has spezific public functions. You can only use them if you know that the instrumentId is a Tenant and you get the handler for this
-     * @param instrumentId the instrument id
-     * @param validate true if you want to validate that the type of the instrument and the expected type fits together (should be true in case you plan write operations with this instrument. Otherwise it is faster without validation)
+     * @param businesskey the businesskey of the tenant
      * @return TenantHandler
      */
-    public TenantHandler getTenantHandler(String instrumentId, boolean validate) {
-        var handler = new TenantHandler(instrumentRepository, instrumentGraphRepository, auditService, instrumentId, this);
-        if(validate) handler.validateInstrument();
-        return handler;
+    public TenantHandler getTenantHandler(String businesskey) {
+        return new TenantHandler(instrumentRepository, instrumentGraphRepository, auditService, this, businesskey);
     }
 
     public Iterable<InstrumentEntity> listInstruments() {

@@ -12,12 +12,8 @@ public class BudgetPortfolioHandler extends AbsAccountableInstrumentHandler {
         super(instrumentRepository, instrumentGraphRepository, auditService, description, tenantId, businesskey);
     }
 
-    public BudgetPortfolioHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentEntity budgetPortfolio) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, budgetPortfolio);
-    }
-
-    public BudgetPortfolioHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String instrumentId) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, instrumentId);
+    public BudgetPortfolioHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String businesskey) {
+        super(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
     }
 
     @Override

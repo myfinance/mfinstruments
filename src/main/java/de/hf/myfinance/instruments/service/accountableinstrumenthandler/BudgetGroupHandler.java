@@ -16,15 +16,10 @@ import java.util.Optional;
 
 public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
     private  final InstrumentFactory instrumentFactory;
-    private static final String DEFAULT_INCOMEBUDGET_PREFIX = "incomeBudget_";
+    private static final String DEFAULT_INCOMEBUDGET_PREFIX = "incomeBgt_";
 
-    public BudgetGroupHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentFactory instrumentFactory, String budgetGroupId) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, budgetGroupId);
-        this.instrumentFactory = instrumentFactory;
-    }
-
-    public BudgetGroupHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentFactory instrumentFactory, InstrumentEntity budgetGroup) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, budgetGroup);
+    public BudgetGroupHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentFactory instrumentFactory, String businesskey) {
+        super(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
         this.instrumentFactory = instrumentFactory;
     }
 
@@ -51,7 +46,7 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
     @Override
     protected void saveNewInstrument(){
         super.saveNewInstrument();
-        var budgetHandler = instrumentFactory.getInstrumentHandler(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX + domainObject.getDescription(), instrumentId, DEFAULT_INCOMEBUDGET_PREFIX + domainObject.getBusinesskey());
+        var budgetHandler = instrumentFactory.getInstrumentHandler(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX + domainObject.getDescription(), instrumentId, null);
         budgetHandler.setTreeLastChanged(ts);
         budgetHandler.save();
         addProperty(InstrumentPropertyType.INCOMEBUDGETID, budgetHandler.getInstrumentId());

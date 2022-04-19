@@ -36,13 +36,8 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
         validateParent();
     }
 
-    protected AbsAccountableInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String instrumentId) {
-        super(instrumentRepository, auditService, instrumentId);
-        this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentGraphRepository, instrumentRepository);
-    }
-
-    protected AbsAccountableInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentEntity instrument) {
-        super(instrumentRepository, auditService, instrument);
+    protected AbsAccountableInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String businesskey) {
+        super(instrumentRepository, auditService, businesskey);
         this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentGraphRepository, instrumentRepository);
     }
 

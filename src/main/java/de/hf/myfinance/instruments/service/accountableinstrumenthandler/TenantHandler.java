@@ -92,25 +92,6 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
     }
 
     @Override
-    protected void updateInstrument() {
-        super.updateInstrument();
-        List<InstrumentEntity> instruments = instrumentGraphHandler.getAllInstrumentChilds(instrumentId);
-        renameDefaultTenantChild(instrumentId, description, oldDesc, DEFAULT_BUDGETPF_PREFIX, instruments);
-        renameDefaultTenantChild(instrumentId, description, oldDesc, DEFAULT_BUDGETGROUP_PREFIX, instruments);
-        renameDefaultTenantChild(instrumentId, description, oldDesc, DEFAULT_ACCPF_PREFIX, instruments); 
-    }
-
-    private void renameDefaultTenantChild(String instrumentId, String newDesc, String oldDesc, String defaultDescPrefix, List<InstrumentEntity> instruments) {
-        //look by description for default instruments of the tenant to rename
-        instruments.stream().filter(i->i.getDescription().equals(defaultDescPrefix+oldDesc)).forEach(i->{
-            var handler = instrumentFactory.getInstrumentHandler(i.getInstrumentid());
-            handler.setDescription(newDesc);
-            handler.setActive(true);
-            handler.save();
-        });
-    }
-
-    @Override
     protected void validateParent() {
         //Tenants have no parents
     }

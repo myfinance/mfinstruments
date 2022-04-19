@@ -8,12 +8,12 @@
     <parent>
 		<groupId>de.hf.myfinance</groupId>
 		<artifactId>root</artifactId>
-		<version>0.21.0-alpha.44</version>
+		<version>0.21.0-alpha.47</version>
 		<relativePath/> 
 	</parent>
     <properties>
         <NEXUS_URL>192.168.100.73:31001</NEXUS_URL>
-        <MFFrameWork.Version>0.21.0-alpha.44</MFFrameWork.Version>
+        <MFFrameWork.Version>0.21.0-alpha.47</MFFrameWork.Version>
     </properties>
 
 	<dependencies>

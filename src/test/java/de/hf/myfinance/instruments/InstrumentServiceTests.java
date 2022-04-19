@@ -1,9 +1,8 @@
 package de.hf.myfinance.instruments;
 
-import de.hf.framework.audit.AuditService;
+import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
-import de.hf.myfinance.instruments.service.InstrumentFactory;
 import de.hf.myfinance.instruments.service.InstrumentService;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,21 +11,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @DataMongoTest
 @Testcontainers
-public class TenantTests  extends MongoDbTestBase{
+class InstrumentServiceTests extends MongoDbTestBase{
 
     @Autowired
-    private InstrumentService instrumentService;
+    InstrumentService instrumentService;
     @Autowired
-    private InstrumentRepository instrumentRepository;
+    InstrumentRepository instrumentRepository;
     @Autowired
-    private InstrumentGraphRepository instrumentGraphRepository;
-    @Autowired
-    private InstrumentFactory instrumentFactory;
+    InstrumentGraphRepository instrumentGraphRepository;
 
     @BeforeEach
     void setupDb() {
@@ -35,7 +31,7 @@ public class TenantTests  extends MongoDbTestBase{
     }
 
     @Test
-    void create() {
+    void createTenant() {
         instrumentService.newTenant("aTest");
         var instruments = instrumentService.listInstruments();
         assertEquals(5, instruments.size());
@@ -91,6 +87,36 @@ public class TenantTests  extends MongoDbTestBase{
         assertTrue(tenant.isPresent());
         assertEquals("aTest@6", tenant.get().getBusinesskey());
         assertEquals("aTest", tenant.get().getDescription());
+        assertTrue(tenant.get().isIsactive());
+    }
+
+    @Test
+    void createInstrumentHandlerWithInvalidBusinesskey() {
+        assertThrows(MFException.class, () -> {
+            instrumentService.getInstrument("bla");
+        });
+    }
+
+    @Test
+    void updateTenant() {
+        instrumentService.newTenant("aTest");
+        var instruments = instrumentService.listInstruments();
+        assertEquals(5, instruments.size());
+
+        var tenant = instruments.stream().filter(i->i.getInstrumentType().equals(InstrumentType.TENANT)).findFirst();
+        assertTrue(tenant.isPresent());
+        assertEquals("aTest@6", tenant.get().getBusinesskey());
+        assertEquals("aTest", tenant.get().getDescription());
+        assertTrue(tenant.get().isIsactive());
+
+        instrumentService.updateInstrument("aTest@6", "newTenantDesc", true);
+        instruments = instrumentService.listInstruments();
+        assertEquals(5, instruments.size());
+
+        tenant = instruments.stream().filter(i->i.getInstrumentType().equals(InstrumentType.TENANT)).findFirst();
+        assertTrue(tenant.isPresent());
+        assertEquals("aTest@6", tenant.get().getBusinesskey());
+        assertEquals("newTenantDesc", tenant.get().getDescription());
         assertTrue(tenant.get().isIsactive());
     }
 }

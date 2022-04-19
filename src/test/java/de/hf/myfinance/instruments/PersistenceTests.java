@@ -3,6 +3,7 @@ package de.hf.myfinance.instruments;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.restmodel.InstrumentType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
@@ -17,6 +18,11 @@ public class PersistenceTests extends MongoDbTestBase{
 
     @Autowired
     private InstrumentRepository repository;
+
+    @BeforeEach
+    void setupDb() {
+        repository.deleteAll();
+    }
 
     @Test
     void create() {

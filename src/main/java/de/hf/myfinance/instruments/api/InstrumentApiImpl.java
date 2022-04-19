@@ -29,25 +29,34 @@ public class InstrumentApiImpl implements InstrumentApi {
     }
 
     @Override
-    public Instrument getInstrument(int instrumentId) {
-        var tenant = new Tenant("testkey", "desc", true);
-        tenant.setServiceAddress(serviceUtil.getServiceAddress());
-        tenant.setTreelastchanged(LocalDateTime.now());
-        return tenant;
+    public Instrument getInstrument(String businesskey) {
+        var instrument = instrumentService.getInstrument(businesskey);
+        instrument.setServiceAddress(serviceUtil.getServiceAddress());
+        return instrument;
     }
 
     @Override
     public List<Instrument> listInstruments() {
-        return null;
+        return instrumentService.listInstruments();
     }
 
     @Override
-    public List<Tenant> listTenants() {
-        return null;
+    public List<Instrument> listInstrumentsForTenant(String businesskey) {
+        return instrumentService.listInstruments(businesskey);
+    }
+
+    @Override
+    public List<Instrument> listTenants() {
+        return instrumentService.listTenants();
     }
 
     @Override
     public void addTenant(String description) {
         instrumentService.newTenant(description);
+    }
+
+    @Override
+    public void updateInstrument(String description, String businesskey, boolean isactive) {
+        instrumentService.updateInstrument(description, businesskey, isactive);
     }
 }

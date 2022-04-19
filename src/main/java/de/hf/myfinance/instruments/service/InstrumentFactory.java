@@ -73,8 +73,8 @@ public class InstrumentFactory {
     public InstrumentHandler getInstrumentHandler(String businesskey) {
         InstrumentType instrumentType = InstrumentType.UNKNOWN;
         try {
-            int typeId = Integer.parseInt(businesskey.substring(businesskey.lastIndexOf("@")));
-            InstrumentType.getInstrumentTypeById(typeId);
+            int typeId = Integer.parseInt(businesskey.substring(businesskey.lastIndexOf("@")+1));
+            instrumentType = InstrumentType.getInstrumentTypeById(typeId);
         } catch (Exception e) {
             throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, " no valid businesskey, the Instrumenttype seems not to be included:"+businesskey);
         }

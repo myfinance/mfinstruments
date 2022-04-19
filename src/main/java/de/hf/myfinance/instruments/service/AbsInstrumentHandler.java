@@ -37,13 +37,13 @@ public abstract class AbsInstrumentHandler {
         setBaseValues(instrumentRepository, auditService);
         setDescription(description);
         setBusinesskey(businesskey);
-        loadInstrumentByBusinesskey();
+        loadInstrument();
     }
 
     protected AbsInstrumentHandler(InstrumentRepository instrumentRepository, AuditService auditService, String businesskey) {
         setBaseValues(instrumentRepository, auditService);
-        setBusinesskey(businesskey);
-        loadInstrumentByBusinesskey();
+        this.businesskey = businesskey;
+        loadInstrument();
         if(!exists) {
             throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION, "Instrument for businesskey:"+businesskey + " does not exists. You can only create existing instruments with just a businesskey");
         }
@@ -91,12 +91,7 @@ public abstract class AbsInstrumentHandler {
         }
     }
 
-    protected void loadInstrumentByBusinesskey() {
-        this.domainObject = instrumentRepository.findByBusinesskey(businesskey);
-        loadInstrument();
-    }
-
-    private void loadInstrument() {
+    protected void loadInstrument() {
         this.domainObject = instrumentRepository.findByBusinesskey(businesskey);
         existenceChecked = true;
         if(this.domainObject!=null) {
@@ -152,20 +147,17 @@ public abstract class AbsInstrumentHandler {
         checkDomainObjectInitStatus();
         instrumentRepository.save(domainObject);
         setInstrumentId(domainObject.getInstrumentid());
-        auditService.saveMessage(domainObjectName+" inserted:" + domainObject.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
+        auditService.saveMessage(domainObjectName+" inserted: businesskey=" + domainObject.getBusinesskey() + " desc=" + domainObject.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
     }
 
     protected void updateInstrument() {
         checkInstrumentInactivation(domainObject.isIsactive(), isActive);
         oldDesc = domainObject.getDescription();
-        if(description==null || description.equals("")) {
-            description = domainObject.getDescription();
+        if(description!=null && !description.equals("")) {
+            domainObject.setDescription(description);
         }
-        if(businesskey.equals("")) {
-            businesskey = domainObject.getBusinesskey();
-        }
-        //instrumentRepository.updateInstrument(instrumentId, description, isActive, businesskey);
-        auditService.saveMessage(domainObjectName+" updated:" + domainObject.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
+        instrumentRepository.save(domainObject);
+        auditService.saveMessage(domainObjectName+" updated:businesskey=" + domainObject.getBusinesskey() + " desc=" + domainObject.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
     }
 
     public void setActive(boolean isActive) {

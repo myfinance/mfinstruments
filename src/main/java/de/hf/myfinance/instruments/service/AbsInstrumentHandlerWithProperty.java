@@ -52,10 +52,14 @@ public abstract class AbsInstrumentHandlerWithProperty extends AbsInstrumentHand
         properties.add(new InstrumentPropertiesEntity(instrumentPropertyType.name(), String.valueOf(value.getValue()), instrumentPropertyType.getValueType(), value.getDate()));
    }
 
-   protected void addProperty(InstrumentPropertyType instrumentPropertyType, int value) {
+   protected void addProperty(InstrumentPropertyType instrumentPropertyType, String value) {
         checkInitStatus();
         var properties = domainObject.getInstrumentProperties();
-        properties.add(new InstrumentPropertiesEntity(instrumentPropertyType.name(), String.valueOf(value), instrumentPropertyType.getValueType(), null));
+        properties.add(new InstrumentPropertiesEntity(instrumentPropertyType.name(), value, instrumentPropertyType.getValueType(), null));
+    }
+
+    protected void addProperty(InstrumentPropertyType instrumentPropertyType, int value) {
+        addProperty(instrumentPropertyType, String.valueOf(value));
     }
 
     protected void savePropertyList(InstrumentPropertyType instrumentPropertyType, List<ValuePerDate> values) {

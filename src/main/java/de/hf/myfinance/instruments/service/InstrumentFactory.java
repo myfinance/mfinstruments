@@ -10,9 +10,7 @@ import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
-import de.hf.myfinance.instruments.service.accountableinstrumenthandler.BaseAccountableInstrumentHandler;
-import de.hf.myfinance.instruments.service.accountableinstrumenthandler.BaseAccountableInstrumentHandlerImpl;
-import de.hf.myfinance.instruments.service.accountableinstrumenthandler.TenantHandler;
+import de.hf.myfinance.instruments.service.accountableinstrumenthandler.*;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -52,6 +50,15 @@ public class InstrumentFactory {
         switch(instrumentType){
             case TENANT:
                 return new TenantHandler(instrumentRepository, instrumentGraphRepository, auditService, this, description);
+            case BUDGETPORTFOLIO:
+                return new BudgetPortfolioHandler(instrumentRepository, instrumentGraphRepository, auditService, description, parentId, businesskey);
+            case ACCOUNTPORTFOLIO:
+                return new AccountPortfolioHandler(instrumentRepository, instrumentGraphRepository, auditService, description, parentId, businesskey);
+            case BUDGETGROUP:
+                return new BudgetGroupHandler(instrumentRepository, instrumentGraphRepository, auditService, this, description, parentId, businesskey);
+            case BUDGET:
+                return new BudgetHandler(instrumentRepository, instrumentGraphRepository, auditService, description, parentId, businesskey);
+
             default:
                 throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:"+instrumentType);
         }
@@ -68,6 +75,14 @@ public class InstrumentFactory {
         switch(instrument.getInstrumentType()){
             case TENANT:
                 return new TenantHandler(instrumentRepository, instrumentGraphRepository, auditService, this, instrument);
+            case BUDGETPORTFOLIO:
+                return new BudgetPortfolioHandler(instrumentRepository, instrumentGraphRepository, auditService, instrument);
+            case ACCOUNTPORTFOLIO:
+                return new AccountPortfolioHandler(instrumentRepository, instrumentGraphRepository, auditService, instrument);
+            case BUDGETGROUP:
+                return new BudgetGroupHandler(instrumentRepository, instrumentGraphRepository, auditService, this, instrument);
+            case BUDGET:
+                return new BudgetHandler(instrumentRepository, instrumentGraphRepository, auditService, instrument);
             default:
                 throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:"+instrument.getInstrumentType());
         }

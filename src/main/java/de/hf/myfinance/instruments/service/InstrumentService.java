@@ -43,5 +43,7 @@ public class InstrumentService {
         return instrumentMapper.entityListToApiList(instrumentFactory.listTenants());
     }
 
-
+    public List<Instrument> listInstruments(String tenantkey){
+        return instrumentMapper.entityListToApiList(Lists.newArrayList(instrumentFactory.getTenantHandler(tenantkey, false).listInstruments()));
+    }
 }

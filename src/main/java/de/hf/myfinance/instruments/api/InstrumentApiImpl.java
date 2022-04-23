@@ -1,5 +1,7 @@
 package de.hf.myfinance.instruments.api;
 
+import de.hf.framework.exceptions.MFException;
+import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.service.InstrumentService;
 import de.hf.myfinance.restapi.InstrumentApi;
 import de.hf.myfinance.restmodel.InstrumentType;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import de.hf.framework.utils.ServiceUtil;
 import de.hf.myfinance.restmodel.Instrument;
 
+import java.lang.reflect.Method;
 import java.util.List;
 
 @RestController
@@ -29,9 +32,16 @@ public class InstrumentApiImpl implements InstrumentApi {
 
     @Override
     public Instrument getInstrument(String businesskey) {
-        var instrument = instrumentService.getInstrument(businesskey);
-        instrument.setServiceAddress(serviceUtil.getServiceAddress());
-        return instrument;
+        try{
+            var instrument = instrumentService.getInstrument(businesskey);
+            instrument.setServiceAddress(serviceUtil.getServiceAddress());
+            return instrument;
+        } catch(MFException e) {
+            throw e;
+        }
+        catch(Exception e) {
+            throw new MFException(MFMsgKey.UNSPECIFIED, e.getMessage());
+        }
     }
 
     @Override

@@ -25,9 +25,9 @@ public class InstrumentGraphEntry implements java.io.Serializable {
     }
 
     public InstrumentGraphEntry(String ancestorId, String descendantId, EdgeType edgeType) {
-        this.ancestor = ancestor;
-        this.descendant = descendant;
-        this.edgetype = edgetype;
+        this.ancestor = ancestorId;
+        this.descendant = descendantId;
+        this.edgetype = edgeType;
         this.pathlength = pathlength;
     }
 

@@ -65,6 +65,9 @@ class InstrumentServiceTests extends MongoDbTestBase{
         assertEquals("incomeBgt_bgtGrp_aTest@5", budget.get().getBusinesskey());
         assertEquals("incomeBgt_bgtGrp_aTest", budget.get().getDescription());
         assertTrue(budget.get().isIsactive());
+
+        var instrument4Tenant = instrumentService.listInstruments(tenant.get().getBusinesskey());
+        assertEquals(4, instrument4Tenant.size());
     }
 
     @Test

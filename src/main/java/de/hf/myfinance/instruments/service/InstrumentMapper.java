@@ -2,7 +2,6 @@ package de.hf.myfinance.instruments.service;
 
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.restmodel.Instrument;
-import de.hf.myfinance.restmodel.Tenant;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -26,6 +25,6 @@ public interface InstrumentMapper {
     List<InstrumentEntity> apiListToEntityList(List<Instrument> api);
 
     default Instrument createInstrument() {
-        return new Tenant();
+        return new Instrument();
     }
 }

@@ -11,5 +11,5 @@ public interface BaseAccountableInstrumentHandler {
     List<String> getAncestorIds();
     List<InstrumentEntity> getInstrumentChilds(EdgeType edgeType, int pathlength);
     Optional<String> getTenant();
-    List<InstrumentPropertiesEntity> getInstrumentProperties();
+    //List<InstrumentPropertiesEntity> getInstrumentProperties();
 }

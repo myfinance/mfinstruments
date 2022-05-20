@@ -1,10 +1,8 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
-import de.hf.framework.audit.AuditService;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.InstrumentFactory;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraphAndFactory;
 import de.hf.myfinance.restmodel.InstrumentType;
 
 import java.util.ArrayList;
@@ -16,16 +14,11 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
     private static final String DEFAULT_ACCPF_PREFIX = "accPf_";
     private static final String DEFAULT_BUDGETPF_PREFIX = "bgtPf_";
     private static final String DEFAULT_BUDGETGROUP_PREFIX = "bgtGrp_";
-    
 
-    public TenantHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentFactory instrumentFactory, String businesskey) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
-        this.instrumentFactory = instrumentFactory;
-    }
 
-    public TenantHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentFactory instrumentFactory, String description, String businesskey) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, description, null, businesskey);
-        this.instrumentFactory = instrumentFactory;
+    public TenantHandler(InstrumentEnvironmentWithGraphAndFactory instrumentEnvironment, String description, String businesskey, boolean isNewInstrument) {
+        super(instrumentEnvironment, description, null, businesskey, isNewInstrument);
+        this.instrumentFactory = instrumentEnvironment.getInstrumentFactory();
     }
 
     protected void updateParent() {
@@ -33,17 +26,17 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
     } 
 
     @Override
-    protected void saveNewInstrument() {
-        super.saveNewInstrument();
+    protected void saveNewInstrument(InstrumentEntity instrumentEntity) {
+        super.saveNewInstrument(instrumentEntity);
 
-        var budgetPortfolioHandler = instrumentFactory.getInstrumentHandler(InstrumentType.BUDGETPORTFOLIO, DEFAULT_BUDGETPF_PREFIX+domainObject.getDescription(), instrumentId, null);
+        var budgetPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETPORTFOLIO, DEFAULT_BUDGETPF_PREFIX+instrumentEntity.getDescription(), instrumentId);
         budgetPortfolioHandler.setTreeLastChanged(ts);
         budgetPortfolioHandler.save();
-        var budgetGroupHandler = instrumentFactory.getInstrumentHandler(InstrumentType.BUDGETGROUP, DEFAULT_BUDGETGROUP_PREFIX+domainObject.getDescription(), budgetPortfolioHandler.getInstrumentId(), null);
+        var budgetGroupHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETGROUP, DEFAULT_BUDGETGROUP_PREFIX+instrumentEntity.getDescription(), budgetPortfolioHandler.getInstrumentId());
         budgetGroupHandler.setTreeLastChanged(ts);
         budgetGroupHandler.save();
 
-        var accPortfolioHandler = instrumentFactory.getInstrumentHandler(InstrumentType.ACCOUNTPORTFOLIO, DEFAULT_ACCPF_PREFIX+domainObject.getDescription(), instrumentId, null);
+        var accPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.ACCOUNTPORTFOLIO, DEFAULT_ACCPF_PREFIX+instrumentEntity.getDescription(), instrumentId);
         accPortfolioHandler.setTreeLastChanged(ts);
         accPortfolioHandler.save();
     }
@@ -77,13 +70,8 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
     }
 
     @Override
-    protected void createDomainObject() {
-        domainObject = new InstrumentEntity(InstrumentType.TENANT, description, true, ts);
-    }
-
-    @Override
-    protected void setDomainObjectName() {
-        domainObjectName = "Tenant";
+    protected InstrumentEntity createDomainObject() {
+        return new InstrumentEntity(InstrumentType.TENANT, description, true, ts);
     }
 
     @Override

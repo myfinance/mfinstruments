@@ -1,29 +1,18 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
-import de.hf.framework.audit.AuditService;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraph;
 import de.hf.myfinance.restmodel.InstrumentType;
 
 public class BudgetPortfolioHandler extends AbsAccountableInstrumentHandler {
     
-    public BudgetPortfolioHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String description, String tenantId, String businesskey) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, description, tenantId, businesskey);
-    }
-
-    public BudgetPortfolioHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String businesskey) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
+    public BudgetPortfolioHandler(InstrumentEnvironmentWithGraph instrumentEnvironment, String description, String tenantId, String businesskey, boolean isNewInstrument) {
+        super(instrumentEnvironment, description, tenantId, businesskey, isNewInstrument);
     }
 
     @Override
-    protected void createDomainObject() {
-        domainObject = new InstrumentEntity(InstrumentType.BUDGETPORTFOLIO, description, true, ts);
-    }
-
-    @Override
-    protected void setDomainObjectName() {
-        domainObjectName = "BudgetPortfolio";
+    protected InstrumentEntity createDomainObject() {
+        return new InstrumentEntity(InstrumentType.BUDGETPORTFOLIO, description, true, ts);
     }
 
     @Override

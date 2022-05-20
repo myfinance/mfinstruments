@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Testcontainers
 class InstrumentServiceTests extends MongoDbTestBase{
 
-    @Autowired
+    /*@Autowired
     InstrumentService instrumentService;
     @Autowired
     InstrumentRepository instrumentRepository;
@@ -121,5 +121,5 @@ class InstrumentServiceTests extends MongoDbTestBase{
         assertEquals("aTest@6", tenant.get().getBusinesskey());
         assertEquals("newTenantDesc", tenant.get().getDescription());
         assertTrue(tenant.get().isIsactive());
-    }
+    }*/
 }

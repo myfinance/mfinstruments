@@ -3,8 +3,7 @@ package de.hf.myfinance.instruments.service.instrumentgraphhandler;
 
 import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraph;
 import de.hf.myfinance.restmodel.InstrumentType;
 
 import java.util.List;
@@ -12,8 +11,8 @@ import java.util.Optional;
 
 public class InstrumentGraphHandlerImpl extends InstrumentGraphHandlerBase{
 
-    public InstrumentGraphHandlerImpl(final InstrumentGraphRepository instrumentGraphRepository, InstrumentRepository instrumentRepository) {
-        super(instrumentGraphRepository, instrumentRepository);
+    public InstrumentGraphHandlerImpl(final InstrumentEnvironmentWithGraph instrumentEnvironment) {
+        super(instrumentEnvironment);
     }
 
     @Override

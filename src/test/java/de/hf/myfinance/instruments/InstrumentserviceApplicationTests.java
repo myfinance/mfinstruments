@@ -20,7 +20,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 @Testcontainers
 class InstrumentserviceApplicationTests extends MongoDbTestBase{
 
-	@Autowired
+	/*@Autowired
 	private WebTestClient client;
 
 	@Autowired
@@ -59,7 +59,7 @@ class InstrumentserviceApplicationTests extends MongoDbTestBase{
 				.expectStatus().isEqualTo(expectedStatus)
 				.expectHeader().contentType(APPLICATION_JSON)
 				.expectBody();
-	}
+	}*/
 
 
 

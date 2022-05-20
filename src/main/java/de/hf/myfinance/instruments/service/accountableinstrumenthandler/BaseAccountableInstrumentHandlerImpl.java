@@ -1,10 +1,9 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
-import de.hf.framework.audit.AuditService;
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
+import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraph;
 import de.hf.myfinance.restmodel.InstrumentType;
 
 import java.time.LocalDateTime;
@@ -15,19 +14,13 @@ import java.time.LocalDateTime;
 public final class BaseAccountableInstrumentHandlerImpl extends AbsAccountableInstrumentHandler implements BaseAccountableInstrumentHandler{
 
 
-    public BaseAccountableInstrumentHandlerImpl(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String businesskey) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
+    public BaseAccountableInstrumentHandlerImpl(InstrumentEnvironmentWithGraph instrumentEnvironment, String businesskey) {
+        super(instrumentEnvironment, businesskey);
     }
 
     @Override
-    protected void createDomainObject() {
+    protected InstrumentEntity createDomainObject() {
         throw new MFException(MFMsgKey.WRONG_OPERATION_EXCEPTION,  " domainobject can not be spezified for BaseAccountableInstrumentHandler");
-    }
-
-    @Override
-    protected void setDomainObjectName() {
-        throw new MFException(MFMsgKey.WRONG_OPERATION_EXCEPTION,  " domainobject can not be spezified for BaseAccountableInstrumentHandler");
-
     }
 
     @Override

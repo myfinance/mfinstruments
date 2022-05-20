@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import de.hf.framework.utils.ServiceUtil;
 import de.hf.myfinance.restmodel.Instrument;
+import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -31,9 +32,22 @@ public class InstrumentApiImpl implements InstrumentApi {
     }
 
     @Override
-    public Instrument getInstrument(String businesskey) {
+    public Mono<Instrument> getInstrument(String businesskey) {
         try{
-            var instrument = instrumentService.getInstrument(businesskey);
+            var instrument = instrumentService.getInstrument(businesskey).map(e -> setServiceAddress(e));
+            return instrument;
+        } catch(MFException e) {
+            throw e;
+        }
+        catch(Exception e) {
+            throw new MFException(MFMsgKey.UNSPECIFIED, e.getMessage());
+        }
+    }
+
+    @Override
+    public Instrument getInstrumentBlocking(String businesskey) {
+        try{
+            var instrument = instrumentService.getInstrument(businesskey).block();
             instrument.setServiceAddress(serviceUtil.getServiceAddress());
             return instrument;
         } catch(MFException e) {
@@ -69,5 +83,9 @@ public class InstrumentApiImpl implements InstrumentApi {
     @Override
     public void updateInstrument(Instrument instrument) {
         instrumentService.updateInstrument(instrument.getDescription(), instrument.getBusinesskey(), instrument.isIsactive());
+    }
+    private Instrument setServiceAddress(Instrument e) {
+        e.setServiceAddress(serviceUtil.getServiceAddress());
+        return e;
     }
 }

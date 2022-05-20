@@ -1,6 +1,5 @@
 package de.hf.myfinance.instruments.service.instrumentgraphhandler;
 
-import com.google.common.collect.Lists;
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.persistence.entities.EdgeType;
@@ -8,6 +7,7 @@ import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentGraphEntry;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraph;
 import de.hf.myfinance.restmodel.InstrumentType;
 
 import java.util.ArrayList;
@@ -19,9 +19,9 @@ public abstract class InstrumentGraphHandlerBase implements InstrumentGraphHandl
     final InstrumentGraphRepository instrumentGraphRepository;
     final InstrumentRepository instrumentRepository;
 
-    public InstrumentGraphHandlerBase(InstrumentGraphRepository instrumentGraphRepository, InstrumentRepository instrumentRepository) {
-            this.instrumentGraphRepository = instrumentGraphRepository;
-            this.instrumentRepository = instrumentRepository;
+    public InstrumentGraphHandlerBase(InstrumentEnvironmentWithGraph instrumentEnvironment) {
+            this.instrumentGraphRepository = instrumentEnvironment.getInstrumentGraphRepository();
+            this.instrumentRepository = instrumentEnvironment.getInstrumentRepository();
     }
 
     @Override
@@ -80,12 +80,13 @@ public abstract class InstrumentGraphHandlerBase implements InstrumentGraphHandl
 
     @Override
     public List<InstrumentEntity> getInstrumentChilds(final String instrumentId, final EdgeType edgeType, final int pathlength){
-        Iterable<String>  childIds = getInstrumentChildIds(instrumentId, edgeType, pathlength);
+        /*Iterable<String>  childIds = getInstrumentChildIds(instrumentId, edgeType, pathlength);
         if(childIds==null) {
             return new ArrayList<>();
         }
         ArrayList<InstrumentEntity> childs = Lists.newArrayList(instrumentRepository.findAllById(childIds));
-        return childs;
+        return childs;*/
+        return null;
     }
 
     @Override

@@ -6,6 +6,7 @@ import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -22,12 +23,14 @@ public class InstrumentService {
         this.instrumentFactory = instrumentFactory;
     }
 
-    public Instrument getInstrument(String businesskey) {
-        return instrumentMapper.entityToApi(instrumentFactory.getInstrumentHandler(businesskey).getSavedDomainObject().get());
+    public Mono<Instrument> getInstrument(String businesskey) {
+        var instrumentHandler = instrumentFactory.getInstrumentHandlerForExistingInstrument(businesskey);
+        return instrumentHandler.getSavedDomainObject()
+                .map(e-> instrumentMapper.entityToApi(e));
     }
 
     public void newTenant(String description) {
-        var tenantHandler = instrumentFactory.getInstrumentHandler(InstrumentType.TENANT, description, null, null);
+        var tenantHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.TENANT, description, null);
         tenantHandler.save();
     }
 
@@ -44,7 +47,7 @@ public class InstrumentService {
     }
 
     public void updateInstrument(String businesskey, String description, boolean isActive) {
-        var instrumentHandler = instrumentFactory.getInstrumentHandler(businesskey);
+        var instrumentHandler = instrumentFactory.getInstrumentHandlerForExistingInstrument(businesskey);
         instrumentHandler.setActive(isActive);
         instrumentHandler.setDescription(description);
         instrumentHandler.save();

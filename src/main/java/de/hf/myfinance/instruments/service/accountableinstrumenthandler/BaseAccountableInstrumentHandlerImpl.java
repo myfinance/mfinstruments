@@ -5,6 +5,7 @@ import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraph;
 import de.hf.myfinance.restmodel.InstrumentType;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 
@@ -28,7 +29,7 @@ public final class BaseAccountableInstrumentHandlerImpl extends AbsAccountableIn
         throw new MFException(MFMsgKey.WRONG_OPERATION_EXCEPTION,  " instrumenttype can not be spezified for BaseAccountableInstrumentHandler");
     }
 
-    public void save() {
+    public Mono<InstrumentEntity> save() {
         throw new MFException(MFMsgKey.WRONG_OPERATION_EXCEPTION,  "BaseAccountableInstrumentHandler can not be saved");
     }
 

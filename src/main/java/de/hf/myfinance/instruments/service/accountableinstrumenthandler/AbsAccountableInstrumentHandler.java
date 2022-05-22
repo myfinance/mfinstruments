@@ -40,10 +40,10 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
         this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentEnvironment);
     }
 
-    protected void saveNewInstrument(InstrumentEntity instrumentEntity) {
-        super.saveNewInstrument(instrumentEntity);
-        updateParent();
-        instrumentGraphHandler.addInstrumentToGraph(instrumentId, parentId);
+    protected Mono<InstrumentEntity> saveNewInstrument(InstrumentEntity instrumentEntity) {
+        return super.saveNewInstrument(instrumentEntity);
+        //updateParent();
+        //instrumentGraphHandler.addInstrumentToGraph(instrumentId, parentId);
     }
 
 

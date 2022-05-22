@@ -4,6 +4,7 @@ import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.InstrumentFactory;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraphAndFactory;
 import de.hf.myfinance.restmodel.InstrumentType;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,10 +27,10 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
     } 
 
     @Override
-    protected void saveNewInstrument(InstrumentEntity instrumentEntity) {
-        super.saveNewInstrument(instrumentEntity);
+    protected Mono<InstrumentEntity> saveNewInstrument(InstrumentEntity instrumentEntity) {
+        return super.saveNewInstrument(instrumentEntity);
 
-        var budgetPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETPORTFOLIO, DEFAULT_BUDGETPF_PREFIX+instrumentEntity.getDescription(), instrumentId);
+        /*var budgetPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETPORTFOLIO, DEFAULT_BUDGETPF_PREFIX+instrumentEntity.getDescription(), instrumentId);
         budgetPortfolioHandler.setTreeLastChanged(ts);
         budgetPortfolioHandler.save();
         var budgetGroupHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETGROUP, DEFAULT_BUDGETGROUP_PREFIX+instrumentEntity.getDescription(), budgetPortfolioHandler.getInstrumentId());
@@ -38,7 +39,7 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
 
         var accPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.ACCOUNTPORTFOLIO, DEFAULT_ACCPF_PREFIX+instrumentEntity.getDescription(), instrumentId);
         accPortfolioHandler.setTreeLastChanged(ts);
-        accPortfolioHandler.save();
+        accPortfolioHandler.save();*/
     }
 
     public List<InstrumentEntity> listInstruments() {

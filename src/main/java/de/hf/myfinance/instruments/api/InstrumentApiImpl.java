@@ -2,6 +2,7 @@ package de.hf.myfinance.instruments.api;
 
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
+import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.InstrumentService;
 import de.hf.myfinance.restapi.InstrumentApi;
 import de.hf.myfinance.restmodel.InstrumentType;
@@ -12,7 +13,6 @@ import de.hf.framework.utils.ServiceUtil;
 import de.hf.myfinance.restmodel.Instrument;
 import reactor.core.publisher.Mono;
 
-import java.lang.reflect.Method;
 import java.util.List;
 
 @RestController
@@ -74,10 +74,8 @@ public class InstrumentApiImpl implements InstrumentApi {
     }
 
     @Override
-    public void addInstrument(Instrument instrument) {
-        if(instrument.getInstrumentType().equals(InstrumentType.TENANT)) {
-            instrumentService.newTenant(instrument.getDescription());
-        }
+    public Mono<Instrument> addInstrument(Instrument instrument) {
+        return instrumentService.addInstrument(instrument).map(e -> setServiceAddress(e));
     }
 
     @Override

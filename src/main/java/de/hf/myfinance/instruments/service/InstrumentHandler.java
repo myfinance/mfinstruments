@@ -14,7 +14,7 @@ public interface InstrumentHandler {
     //List<InstrumentPropertiesEntity> getInstrumentProperties();
     //List<InstrumentPropertiesEntity> getInstrumentProperties(InstrumentPropertyType instrumentPropertyType);
     void setTreeLastChanged(LocalDateTime ts);
-    void save();
+    Mono<InstrumentEntity> save();
     void setActive(boolean isActive);
     void setDescription(String description);
     Mono<InstrumentEntity> getSavedDomainObject() ;

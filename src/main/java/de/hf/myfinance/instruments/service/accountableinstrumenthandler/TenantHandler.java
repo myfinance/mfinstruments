@@ -6,9 +6,6 @@ import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWith
 import de.hf.myfinance.restmodel.InstrumentType;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class TenantHandler extends AbsAccountableInstrumentHandler {
     private InstrumentFactory instrumentFactory;
 
@@ -20,11 +17,8 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
     public TenantHandler(InstrumentEnvironmentWithGraphAndFactory instrumentEnvironment, String description, String businesskey, boolean isNewInstrument) {
         super(instrumentEnvironment, description, null, businesskey, isNewInstrument);
         this.instrumentFactory = instrumentEnvironment.getInstrumentFactory();
+        isRootElement = true;
     }
-
-    protected void updateParent() {
-        setParent(instrumentId, false);
-    } 
 
     @Override
     protected Mono<InstrumentEntity> saveNewInstrument(InstrumentEntity instrumentEntity) {
@@ -42,7 +36,7 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
         accPortfolioHandler.save();*/
     }
 
-    public List<InstrumentEntity> listInstruments() {
+    /*public List<InstrumentEntity> listInstruments() {
         return instrumentGraphHandler.getAllInstrumentChilds(instrumentId);
     }
 
@@ -68,7 +62,7 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
             return new ArrayList<>();
         }
         return instrumentGraphHandler.getInstrumentFirstLevelChilds(accPF.getInstrumentid());
-    }
+    }*/
 
     @Override
     protected InstrumentEntity createDomainObject() {
@@ -78,10 +72,5 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
     @Override
     protected InstrumentType getInstrumentType() {
         return InstrumentType.TENANT;
-    }
-
-    @Override
-    protected void validateParent() {
-        //Tenants have no parents
     }
 }

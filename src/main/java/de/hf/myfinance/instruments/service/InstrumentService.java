@@ -28,7 +28,7 @@ public class InstrumentService {
 
     public Mono<Instrument> getInstrument(String businesskey) {
         var instrumentHandler = instrumentFactory.getInstrumentHandlerForExistingInstrument(businesskey);
-        return instrumentHandler.getSavedDomainObject()
+        return instrumentHandler.loadInstrument()
                 .map(e-> instrumentMapper.entityToApi(e));
     }
 
@@ -56,7 +56,8 @@ public class InstrumentService {
     }
 
     public List<Instrument> listInstruments(String tenantkey){
-        return instrumentMapper.entityListToApiList(Lists.newArrayList(instrumentFactory.getTenantHandler(tenantkey).listInstruments()));
+        //return instrumentMapper.entityListToApiList(Lists.newArrayList(instrumentFactory.getTenantHandler(tenantkey).listInstruments()));
+        return null;
     }
 
     public void updateInstrument(String businesskey, String description, boolean isActive) {

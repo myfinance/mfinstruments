@@ -17,5 +17,5 @@ public interface InstrumentHandler {
     Mono<InstrumentEntity> save();
     void setActive(boolean isActive);
     void setDescription(String description);
-    Mono<InstrumentEntity> getSavedDomainObject() ;
+    Mono<InstrumentEntity> loadInstrument();
 }

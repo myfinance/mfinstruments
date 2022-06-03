@@ -21,7 +21,6 @@ public abstract class AbsInstrumentHandler {
     protected String instrumentId;
     protected boolean initialized = false;
     protected boolean exists = true;
-    protected Mono<InstrumentEntity> domainObjectMono;
     protected boolean isPropertyInit = false;
     protected LocalDateTime ts;
     protected static final String AUDIT_MSG_TYPE="InstrumentHandler_User_Event";
@@ -42,17 +41,15 @@ public abstract class AbsInstrumentHandler {
         this.businesskey = businesskey;
         this.isNewInstrument = isNewInstrument;
         setBusinesskey();
-        loadInstrument(isNewInstrument);
     }
 
-    protected void loadInstrument(boolean isNewInstrument) {
-        this.domainObjectMono = instrumentRepository.findByBusinesskey(businesskey)
+    public Mono<InstrumentEntity> loadInstrument() {
+        return instrumentRepository.findByBusinesskey(businesskey)
                 .switchIfEmpty(handleNotExistingInstrument(isNewInstrument))
                 .map(e -> {
                     validateInstrument(e, getInstrumentType(), "");
                     return e;
-                })
-                .log();
+                });
     }
 
     private Mono<InstrumentEntity> handleNotExistingInstrument(boolean isNewInstrument){
@@ -77,7 +74,7 @@ public abstract class AbsInstrumentHandler {
     }
 
     public Mono<InstrumentEntity> save() {
-        return domainObjectMono.flatMap(this::saveOrUpdate);
+        return loadInstrument().flatMap(this::saveOrUpdate);
     }
 
     private Mono<InstrumentEntity> saveOrUpdate(InstrumentEntity instrumentEntity) {
@@ -158,10 +155,6 @@ public abstract class AbsInstrumentHandler {
     public void setInstrumentId(String instrumentId) {
         initialized = true;
         this.instrumentId = instrumentId;
-    }
-
-    public Mono<InstrumentEntity> getSavedDomainObject() {
-        return domainObjectMono;
     }
 
     abstract protected InstrumentEntity createDomainObject();

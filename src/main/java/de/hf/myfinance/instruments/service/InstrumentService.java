@@ -14,6 +14,7 @@ import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
@@ -55,23 +56,15 @@ public class InstrumentService {
         return tenantHandler.save();
     }
 
-    public List<Instrument> listInstruments() {
-        return instrumentMapper.entityListToApiList(Lists.newArrayList(instrumentFactory.listInstruments()));
+    public Flux<Instrument> listInstruments() {
+        return instrumentFactory.listInstruments().map(e-> instrumentMapper.entityToApi(e));
     }
 
-    public List<Instrument> listTenants(){
-        return instrumentMapper.entityListToApiList(instrumentFactory.listTenants());
+    public Flux<Instrument> listTenants(){
+        return instrumentFactory.listTenants().map(e-> instrumentMapper.entityToApi(e));
     }
 
-    public List<Instrument> listInstruments(String tenantkey){
-        //return instrumentMapper.entityListToApiList(Lists.newArrayList(instrumentFactory.getTenantHandler(tenantkey).listInstruments()));
-        return null;
-    }
-
-    public void updateInstrument(String businesskey, String description, boolean isActive) {
-        var instrumentHandler = instrumentFactory.getInstrumentHandlerForExistingInstrument(businesskey);
-        instrumentHandler.setActive(isActive);
-        instrumentHandler.setDescription(description);
-        instrumentHandler.save();
+    public Flux<Instrument> listInstruments(String tenantkey){
+        return instrumentFactory.getTenantHandler(tenantkey).listInstrumentChilds().map(e-> instrumentMapper.entityToApi(e));
     }
 }

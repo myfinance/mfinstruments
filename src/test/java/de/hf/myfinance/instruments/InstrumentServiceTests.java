@@ -4,12 +4,14 @@ import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.service.InstrumentService;
+import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import reactor.test.StepVerifier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Testcontainers
 class InstrumentServiceTests extends MongoDbTestBase{
 
-    /*@Autowired
+    @Autowired
     InstrumentService instrumentService;
     @Autowired
     InstrumentRepository instrumentRepository;
@@ -32,11 +34,12 @@ class InstrumentServiceTests extends MongoDbTestBase{
 
     @Test
     void createTenant() {
-        instrumentService.newTenant("aTest");
+        var newTenant = new Instrument("aTest", InstrumentType.TENANT);
+        instrumentService.addInstrument(newTenant).subscribe();
         var instruments = instrumentService.listInstruments();
-        assertEquals(5, instruments.size());
+        StepVerifier.create(instruments).expectNextCount(5).verifyComplete();
 
-        var tenant = instruments.stream().filter(i->i.getInstrumentType().equals(InstrumentType.TENANT)).findFirst();
+        /*var tenant = instruments.stream().filter(i->i.getInstrumentType().equals(InstrumentType.TENANT)).findFirst();
         assertTrue(tenant.isPresent());
         assertEquals("aTest@6", tenant.get().getBusinesskey());
         assertEquals("aTest", tenant.get().getDescription());
@@ -67,12 +70,13 @@ class InstrumentServiceTests extends MongoDbTestBase{
         assertTrue(budget.get().isIsactive());
 
         var instrument4Tenant = instrumentService.listInstruments(tenant.get().getBusinesskey());
-        assertEquals(4, instrument4Tenant.size());
+        assertEquals(4, instrument4Tenant.size());*/
     }
 
-    @Test
+    /*@Test
     void createDuplicate() {
-        instrumentService.newTenant("aTest");
+        var newTenant = new Instrument("aTest", InstrumentType.TENANT);
+        instrumentService.addInstrument(newTenant);
         var instruments = instrumentService.listInstruments();
         assertEquals(5, instruments.size());
 
@@ -82,7 +86,7 @@ class InstrumentServiceTests extends MongoDbTestBase{
         assertEquals("aTest", tenant.get().getDescription());
         assertTrue(tenant.get().isIsactive());
 
-        instrumentService.newTenant("aTest");
+        instrumentService.addInstrument(newTenant);
         instruments = instrumentService.listInstruments();
         assertEquals(5, instruments.size());
 
@@ -102,7 +106,8 @@ class InstrumentServiceTests extends MongoDbTestBase{
 
     @Test
     void updateTenant() {
-        instrumentService.newTenant("aTest");
+        var newTenant = new Instrument("aTest", InstrumentType.TENANT);
+        instrumentService.addInstrument(newTenant);
         var instruments = instrumentService.listInstruments();
         assertEquals(5, instruments.size());
 

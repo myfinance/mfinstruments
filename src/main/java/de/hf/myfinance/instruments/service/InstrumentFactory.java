@@ -16,6 +16,7 @@ import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWith
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 @Component
 public class InstrumentFactory {
@@ -103,11 +104,11 @@ public class InstrumentFactory {
         return new TenantHandler(instrumentEnvironment, null, businesskey, false);
     }
 
-    public Iterable<InstrumentEntity> listInstruments() {
-        return null;//instrumentRepository.findAll();
+    public Flux<InstrumentEntity> listInstruments() {
+        return instrumentEnvironment.getInstrumentRepository().findAll();
     }
 
-    public List<InstrumentEntity> listTenants(){
-        return StreamSupport.stream(listInstruments().spliterator(), false).filter(i->i.getInstrumentType().equals(InstrumentType.TENANT)).collect(Collectors.toList());
+    public Flux<InstrumentEntity> listTenants(){
+        return listInstruments().filter(i->i.getInstrumentType().equals(InstrumentType.TENANT));
     }
 }

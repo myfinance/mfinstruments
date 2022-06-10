@@ -124,11 +124,59 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
                 });
     }
 
-    public Flux<String> getInstrumentChildIds(EdgeType edgeType, int pathlength){
-        return instrumentGraphHandler.getInstrumentChildIds(instrumentId, edgeType, pathlength);
-    }
-
     public Flux<String> getAncestorIds() {
         return instrumentGraphHandler.getAncestors(instrumentId, EdgeType.TENANTGRAPH).map(e->e.getAncestor());
+    }
+
+    public Flux<InstrumentEntity> listInstrumentChilds(String instrumentId) {
+        return listInstrumentChilds(getInstrumentById(instrumentId, "instrument not found:"+instrumentId));
+    }
+
+    public Flux<InstrumentEntity> listInstrumentChilds() {
+        return listInstrumentChilds(loadInstrument());
+    }
+
+    public Flux<InstrumentEntity> listFirstLevelInstrumentChilds() {
+        return listInstrumentChilds(loadInstrument(), 1);
+    }
+
+    public Flux<InstrumentEntity> listFirstLevelInstrumentChilds(InstrumentType instrumentType, boolean onlyActive) {
+        return filterInstrumentChilds(listInstrumentChilds(instrumentType, onlyActive), true, instrumentType, onlyActive);
+    }
+
+    public Flux<InstrumentEntity> listActiveInstrumentChilds() {
+        return filterInstrumentChilds(listInstrumentChilds(), false, null, true);
+    }
+
+    public Flux<InstrumentEntity> listInstrumentChilds(InstrumentType instrumentType, boolean onlyActive) {
+        return filterInstrumentChilds(listInstrumentChilds(), true, instrumentType, onlyActive);
+    }
+
+    private Flux<InstrumentEntity> listInstrumentChilds(Mono<InstrumentEntity> instrument){
+        return listInstrumentChilds(instrument, 0);
+    }
+
+    protected Flux<InstrumentEntity> listInstrumentChilds(Mono<InstrumentEntity> instrument, int pathlength) {
+        return instrument.flatMapMany(e->instrumentGraphHandler.getInstrumentChildIds(e.getInstrumentid(), EdgeType.TENANTGRAPH, pathlength))
+                .reduce(new ArrayList<String>(), (result, element) -> {
+                    result.add(element);
+                    return result;
+                })
+                .flatMapMany(instrumentIds -> instrumentRepository.findAllById(instrumentIds));
+    }
+
+    protected Flux<InstrumentEntity> filterActiveInstrumentChilds(Flux<InstrumentEntity> childs) {
+        return filterInstrumentChilds(childs, false, null, true);
+    }
+
+    protected Flux<InstrumentEntity> filterInstrumentChilds(Flux<InstrumentEntity> childs, boolean filterInstrumentType, InstrumentType instrumentType, boolean onlyActive) {
+        Flux<InstrumentEntity> instruments = childs;
+        if(onlyActive) {
+            instruments = childs.filter(i->i.isIsactive()==true);
+        }
+        if(filterInstrumentType) {
+            instruments.filter(i->i.getInstrumentType().equals(instrumentType));
+        }
+        return instruments;
     }
 }

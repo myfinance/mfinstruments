@@ -11,9 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import de.hf.framework.utils.ServiceUtil;
 import de.hf.myfinance.restmodel.Instrument;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 @RestController
 public class InstrumentApiImpl implements InstrumentApi {
@@ -59,29 +58,25 @@ public class InstrumentApiImpl implements InstrumentApi {
     }
 
     @Override
-    public List<Instrument> listInstruments() {
+    public Flux<Instrument> listInstruments() {
         return instrumentService.listInstruments();
     }
 
     @Override
-    public List<Instrument> listInstrumentsForTenant(String businesskey) {
+    public Flux<Instrument> listInstrumentsForTenant(String businesskey) {
         return instrumentService.listInstruments(businesskey);
     }
 
     @Override
-    public List<Instrument> listTenants() {
+    public Flux<Instrument> listTenants() {
         return instrumentService.listTenants();
     }
 
     @Override
-    public Mono<Instrument> addInstrument(Instrument instrument) {
+    public Mono<Instrument> saveInstrument(Instrument instrument) {
         return instrumentService.addInstrument(instrument).map(e -> setServiceAddress(e));
     }
 
-    @Override
-    public void updateInstrument(Instrument instrument) {
-        instrumentService.updateInstrument(instrument.getDescription(), instrument.getBusinesskey(), instrument.isIsactive());
-    }
     private Instrument setServiceAddress(Instrument e) {
         e.setServiceAddress(serviceUtil.getServiceAddress());
         return e;

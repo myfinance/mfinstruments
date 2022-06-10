@@ -20,7 +20,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 @Testcontainers
 class InstrumentserviceApplicationTests extends MongoDbTestBase{
 
-	/*@Autowired
+	@Autowired
 	private WebTestClient client;
 
 	@Autowired
@@ -34,7 +34,7 @@ class InstrumentserviceApplicationTests extends MongoDbTestBase{
 	void getTenantById() {
 		var tenant = new Instrument("testTenant", InstrumentType.TENANT);
 		postAndVerifyTenant(tenant, OK);
-		var savedTenant = instrumentRepository.findByBusinesskey("testTenant@6");
+		var savedTenant = instrumentRepository.findByBusinesskey("testTenant@6").block();
 
 		getAndVerifyInstrument(savedTenant.getBusinesskey(), OK).jsonPath("$.description").isEqualTo(tenant.getDescription());
 	}
@@ -59,7 +59,7 @@ class InstrumentserviceApplicationTests extends MongoDbTestBase{
 				.expectStatus().isEqualTo(expectedStatus)
 				.expectHeader().contentType(APPLICATION_JSON)
 				.expectBody();
-	}*/
+	}
 
 
 

@@ -5,6 +5,7 @@ import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.InstrumentFactory;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraphAndFactory;
 import de.hf.myfinance.restmodel.InstrumentType;
+import reactor.core.publisher.Mono;
 
 
 public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
@@ -32,13 +33,21 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
         return null;
     } 
 
-    //@Override
-    protected void saveNewInstrument(){
+    @Override
+    protected Mono<InstrumentEntity> saveNewInstrument(InstrumentEntity instrumentEntity){
         /*super.saveNewInstrument();
         var budgetHandler = instrumentFactory.getInstrumentHandler(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX + domainObject.getDescription(), instrumentId, null);
         budgetHandler.setTreeLastChanged(ts);
         budgetHandler.save();
         addProperty(InstrumentPropertyType.INCOMEBUDGETID, budgetHandler.getInstrumentId());*/
+        return super.saveNewInstrument(instrumentEntity)
+                .flatMap(e->{
+                    var budgetHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX+e.getDescription(), e.getInstrumentid());
+                    budgetHandler.setTreeLastChanged(ts);
+                    return budgetHandler.save()
+                            // Return again the mono of the tenant
+                            .flatMap(bpf-> Mono.just(e));
+                });
     }
 
     @Override

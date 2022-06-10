@@ -74,12 +74,14 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
     }
 
     protected Mono<InstrumentEntity> saveNewInstrument(InstrumentEntity instrumentEntity) {
-        return super.saveNewInstrument(instrumentEntity).flatMapMany(this::saveGraph).then(this.loadInstrument());
+        return super.saveNewInstrument(instrumentEntity).flatMap(e-> saveGraph(e)
+        // Return again the mono of the tenant
+        .flatMap(bpf-> Mono.just(e)));
     }
 
 
 
-    protected Flux<InstrumentGraphEntry> saveGraph(InstrumentEntity instrumentEntity) {
+    protected Mono<InstrumentGraphEntry> saveGraph(InstrumentEntity instrumentEntity) {
         this.instrumentId = instrumentEntity.getInstrumentid();
         if(isRootElement) parentId = instrumentId;
         return instrumentGraphHandler.addInstrumentToGraph(instrumentId, parentId);

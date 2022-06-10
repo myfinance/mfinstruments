@@ -22,11 +22,12 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
 
     @Override
     protected Mono<InstrumentEntity> saveNewInstrument(InstrumentEntity instrumentEntity) {
-        return super.saveNewInstrument(instrumentEntity);
+
 
         /*var budgetPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETPORTFOLIO, DEFAULT_BUDGETPF_PREFIX+instrumentEntity.getDescription(), instrumentId);
         budgetPortfolioHandler.setTreeLastChanged(ts);
         budgetPortfolioHandler.save();
+
         var budgetGroupHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETGROUP, DEFAULT_BUDGETGROUP_PREFIX+instrumentEntity.getDescription(), budgetPortfolioHandler.getInstrumentId());
         budgetGroupHandler.setTreeLastChanged(ts);
         budgetGroupHandler.save();
@@ -34,6 +35,27 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
         var accPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.ACCOUNTPORTFOLIO, DEFAULT_ACCPF_PREFIX+instrumentEntity.getDescription(), instrumentId);
         accPortfolioHandler.setTreeLastChanged(ts);
         accPortfolioHandler.save();*/
+
+        return super.saveNewInstrument(instrumentEntity)
+                .flatMap(e->{
+                    var budgetPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETPORTFOLIO, DEFAULT_BUDGETPF_PREFIX+e.getDescription(), e.getInstrumentid());
+                    budgetPortfolioHandler.setTreeLastChanged(ts);
+                    return budgetPortfolioHandler.save()
+                            .flatMap(bpf-> {
+                                var budgetGroupHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETGROUP, DEFAULT_BUDGETGROUP_PREFIX+e.getDescription(), bpf.getInstrumentid());
+                                budgetGroupHandler.setTreeLastChanged(ts);
+                                return budgetGroupHandler.save();
+                            })
+                            // Return again the mono of the tenant
+                            .flatMap(bpf-> Mono.just(e));
+                })
+                .flatMap(e->{
+                    var accPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.ACCOUNTPORTFOLIO, DEFAULT_ACCPF_PREFIX+e.getDescription(), e.getInstrumentid());
+                    accPortfolioHandler.setTreeLastChanged(ts);
+                    return accPortfolioHandler.save()
+                            // Return again the mono of the tenant
+                            .flatMap(bpf-> Mono.just(e));
+                });
     }
 
     /*public List<InstrumentEntity> listInstruments() {

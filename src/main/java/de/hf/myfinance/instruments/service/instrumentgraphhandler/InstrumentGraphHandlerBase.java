@@ -16,23 +16,21 @@ public abstract class InstrumentGraphHandlerBase implements InstrumentGraphHandl
     }
 
     @Override
-    public Flux<InstrumentGraphEntry> addInstrumentToGraph(final String instrumentId, final String ancestorId, final EdgeType edgeType){
-        final InstrumentGraphEntry newEntry = new InstrumentGraphEntry(instrumentId, instrumentId, edgeType);
-        newEntry.setPathlength(0);
-        Mono<InstrumentGraphEntry> newMonoEntry = Mono.just(newEntry);
-        newMonoEntry.flatMap(instrumentGraphRepository::save);
+    public Mono<InstrumentGraphEntry> addInstrumentToGraph(final String instrumentId, final String ancestorId, final EdgeType edgeType){
 
-        Flux<InstrumentGraphEntry> ancestorGraphEntries = instrumentGraphRepository.findByDescendantAndEdgetype(ancestorId, edgeType);
-        ancestorGraphEntries
+        return instrumentGraphRepository.findByDescendantAndEdgetype(ancestorId, edgeType)
                 .switchIfEmpty(handleNotExistingEntry(instrumentId, ancestorId, edgeType))
                 .map(e-> {
                     final InstrumentGraphEntry newEntry4EachExisting = new InstrumentGraphEntry(e.getAncestor(), instrumentId, edgeType);
                     newEntry4EachExisting.setPathlength(e.getPathlength()+1);
                     return newEntry4EachExisting;
                 })
-                .flatMap(instrumentGraphRepository::save)
-                .then(newMonoEntry);
-        return ancestorGraphEntries;
+                .flatMap(this::save)
+                .then(instrumentGraphRepository.save(new InstrumentGraphEntry(instrumentId, instrumentId, edgeType)));
+    }
+
+    private Mono<InstrumentGraphEntry> save(InstrumentGraphEntry instrumentGraphEntry) {
+        return instrumentGraphRepository.save(instrumentGraphEntry);
     }
 
 

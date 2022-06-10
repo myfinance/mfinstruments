@@ -4,7 +4,6 @@ package de.hf.myfinance.instruments.service.instrumentgraphhandler;
 import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentGraphEntry;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraph;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class InstrumentGraphHandlerImpl extends InstrumentGraphHandlerBase{
@@ -14,7 +13,7 @@ public class InstrumentGraphHandlerImpl extends InstrumentGraphHandlerBase{
     }
 
     @Override
-    public Flux<InstrumentGraphEntry> addInstrumentToGraph(final String instrumentId, final String ancestorId){
+    public Mono<InstrumentGraphEntry> addInstrumentToGraph(final String instrumentId, final String ancestorId){
         return addInstrumentToGraph(instrumentId, ancestorId, EdgeType.TENANTGRAPH);
     }
 

@@ -12,9 +12,9 @@ public interface InstrumentGraphHandler {
      * @param ancestorId the id of the parent of the instrument
      * @param edgeType the edgetype that describes the relation between parent and child e.G. TenantGraph
      */
-    Flux<InstrumentGraphEntry> addInstrumentToGraph(String instrumentId, String ancestorId, EdgeType edgeType);
+    Mono<InstrumentGraphEntry> addInstrumentToGraph(String instrumentId, String ancestorId, EdgeType edgeType);
     /** calls addInstrumentToGraph(int instrumentId, int ancestorId, EdgeType edgeType) with EdgeType =  TenantGraph */
-    Flux<InstrumentGraphEntry> addInstrumentToGraph(String instrumentId, String ancestorId);
+    Mono<InstrumentGraphEntry> addInstrumentToGraph(String instrumentId, String ancestorId);
 
     /**
      * get the id of the rootinstrument in the graph 

@@ -64,9 +64,9 @@ public abstract class InstrumentGraphHandlerBase implements InstrumentGraphHandl
     public  Flux<String> getInstrumentChildIds(final String instrumentId, final EdgeType edgeType, int pathlength){
         var childs = instrumentGraphRepository.findByAncestorAndEdgetype(instrumentId, edgeType);
         if(pathlength>0) {
-            childs.filter(e->e.getPathlength()==pathlength);
+            childs =childs.filter(e->e.getPathlength()==pathlength);
         } else {
-            childs.filter(e->e.getPathlength()>pathlength);
+            childs = childs.filter(e->e.getPathlength()>pathlength);
         }
         return childs.map(e->e.getDescendant());
     }

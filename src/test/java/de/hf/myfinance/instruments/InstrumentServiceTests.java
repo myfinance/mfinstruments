@@ -28,73 +28,83 @@ class InstrumentServiceTests extends MongoDbTestBase{
 
     @BeforeEach
     void setupDb() {
-        instrumentRepository.deleteAll();
-        instrumentGraphRepository.deleteAll();
+        instrumentRepository.deleteAll().block();
+        instrumentGraphRepository.deleteAll().block();
     }
 
     @Test
     void createTenant() {
-        var newTenant = new Instrument("aTest", InstrumentType.TENANT);
-        instrumentService.addInstrument(newTenant).subscribe();
-        var instruments = instrumentService.listInstruments();
-        StepVerifier.create(instruments).expectNextCount(5).verifyComplete();
+        var tenantKey = "aTest@6";
+        var tenantDesc = "aTest";
+        var newTenant = new Instrument(tenantDesc, InstrumentType.TENANT);
+        instrumentService.addInstrument(newTenant).block();
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(5).verifyComplete();
 
-        /*var tenant = instruments.stream().filter(i->i.getInstrumentType().equals(InstrumentType.TENANT)).findFirst();
-        assertTrue(tenant.isPresent());
-        assertEquals("aTest@6", tenant.get().getBusinesskey());
-        assertEquals("aTest", tenant.get().getDescription());
-        assertTrue(tenant.get().isIsactive());
+        var tenants = instrumentService.listTenants().collectList().block();
+        assertEquals(1, tenants.size());
+        var tenant = tenants.get(0);
+        assertEquals(tenantKey, tenant.getBusinesskey());
+        assertEquals(tenantDesc, tenant.getDescription());
+        assertTrue(tenant.isIsactive());
 
-        var accountpf = instruments.stream().filter(i->i.getInstrumentType().equals(InstrumentType.ACCOUNTPORTFOLIO)).findFirst();
-        assertTrue(accountpf.isPresent());
-        assertEquals("accPf_aTest@8", accountpf.get().getBusinesskey());
-        assertEquals("accPf_aTest", accountpf.get().getDescription());
-        assertTrue(accountpf.get().isIsactive());
+        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
+        assertEquals(1, accPfs.size());
+        var accPf = accPfs.get(0);
+        assertEquals("accPf_aTest@8", accPf.getBusinesskey());
+        assertEquals("accPf_aTest", accPf.getDescription());
+        assertTrue(accPf.isIsactive());
 
-        var budgetpf = instruments.stream().filter(i->i.getInstrumentType().equals(InstrumentType.BUDGETPORTFOLIO)).findFirst();
-        assertTrue(budgetpf.isPresent());
-        assertEquals("bgtPf_aTest@23", budgetpf.get().getBusinesskey());
-        assertEquals("bgtPf_aTest", budgetpf.get().getDescription());
-        assertTrue(budgetpf.get().isIsactive());
+        var budgetPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.BUDGETPORTFOLIO).collectList().block();
+        assertEquals(1, budgetPfs.size());
+        var budgetPf = budgetPfs.get(0);
+        assertEquals("bgtPf_aTest@23", budgetPf.getBusinesskey());
+        assertEquals("bgtPf_aTest", budgetPf.getDescription());
+        assertTrue(budgetPf.isIsactive());
 
-        var budgetgroup = instruments.stream().filter(i->i.getInstrumentType().equals(InstrumentType.BUDGETGROUP)).findFirst();
-        assertTrue(budgetgroup.isPresent());
-        assertEquals("bgtGrp_aTest@10", budgetgroup.get().getBusinesskey());
-        assertEquals("bgtGrp_aTest", budgetgroup.get().getDescription());
-        assertTrue(budgetgroup.get().isIsactive());
+        var budgetgroups = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.BUDGETGROUP).collectList().block();
+        assertEquals(1, budgetgroups.size());
+        var budgetgroup = budgetgroups.get(0);
+        assertEquals("bgtGrp_aTest@10", budgetgroup.getBusinesskey());
+        assertEquals("bgtGrp_aTest", budgetgroup.getDescription());
+        assertTrue(budgetgroup.isIsactive());
 
-        var budget = instruments.stream().filter(i->i.getInstrumentType().equals(InstrumentType.BUDGET)).findFirst();
-        assertTrue(budget.isPresent());
-        assertEquals("incomeBgt_bgtGrp_aTest@5", budget.get().getBusinesskey());
-        assertEquals("incomeBgt_bgtGrp_aTest", budget.get().getDescription());
-        assertTrue(budget.get().isIsactive());
+        var budgets = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.BUDGET).collectList().block();
+        assertEquals(1, budgets.size());
+        var budget = budgets.get(0);
+        assertEquals("incomeBgt_bgtGrp_aTest@5", budget.getBusinesskey());
+        assertEquals("incomeBgt_bgtGrp_aTest", budget.getDescription());
+        assertTrue(budget.isIsactive());
 
-        var instrument4Tenant = instrumentService.listInstruments(tenant.get().getBusinesskey());
-        assertEquals(4, instrument4Tenant.size());*/
+        StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(4).verifyComplete();
     }
 
-    /*@Test
+    @Test
     void createDuplicate() {
-        var newTenant = new Instrument("aTest", InstrumentType.TENANT);
+        var tenantKey = "aTest@6";
+        var tenantDesc = "aTest";
+        var newTenant = new Instrument(tenantDesc, InstrumentType.TENANT);
+        instrumentService.addInstrument(newTenant).block();
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(5).verifyComplete();
+
+        var tenants = instrumentService.listTenants().collectList().block();
+        assertEquals(1, tenants.size());
+        var tenant = tenants.get(0);
+        assertEquals(tenantKey, tenant.getBusinesskey());
+        assertEquals(tenantDesc, tenant.getDescription());
+        assertTrue(tenant.isIsactive());
+
+
+
         instrumentService.addInstrument(newTenant);
-        var instruments = instrumentService.listInstruments();
-        assertEquals(5, instruments.size());
+        instrumentService.addInstrument(newTenant).block();
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(5).verifyComplete();
 
-        var tenant = instruments.stream().filter(i->i.getInstrumentType().equals(InstrumentType.TENANT)).findFirst();
-        assertTrue(tenant.isPresent());
-        assertEquals("aTest@6", tenant.get().getBusinesskey());
-        assertEquals("aTest", tenant.get().getDescription());
-        assertTrue(tenant.get().isIsactive());
-
-        instrumentService.addInstrument(newTenant);
-        instruments = instrumentService.listInstruments();
-        assertEquals(5, instruments.size());
-
-        tenant = instruments.stream().filter(i->i.getInstrumentType().equals(InstrumentType.TENANT)).findFirst();
-        assertTrue(tenant.isPresent());
-        assertEquals("aTest@6", tenant.get().getBusinesskey());
-        assertEquals("aTest", tenant.get().getDescription());
-        assertTrue(tenant.get().isIsactive());
+        tenants = instrumentService.listTenants().collectList().block();
+        assertEquals(1, tenants.size());
+        tenant = tenants.get(0);
+        assertEquals(tenantKey, tenant.getBusinesskey());
+        assertEquals(tenantDesc, tenant.getDescription());
+        assertTrue(tenant.isIsactive());
     }
 
     @Test
@@ -103,28 +113,4 @@ class InstrumentServiceTests extends MongoDbTestBase{
             instrumentService.getInstrument("bla");
         });
     }
-
-    @Test
-    void updateTenant() {
-        var newTenant = new Instrument("aTest", InstrumentType.TENANT);
-        instrumentService.addInstrument(newTenant);
-        var instruments = instrumentService.listInstruments();
-        assertEquals(5, instruments.size());
-
-        var tenant = instruments.stream().filter(i->i.getInstrumentType().equals(InstrumentType.TENANT)).findFirst();
-        assertTrue(tenant.isPresent());
-        assertEquals("aTest@6", tenant.get().getBusinesskey());
-        assertEquals("aTest", tenant.get().getDescription());
-        assertTrue(tenant.get().isIsactive());
-
-        instrumentService.updateInstrument("aTest@6", "newTenantDesc", true);
-        instruments = instrumentService.listInstruments();
-        assertEquals(5, instruments.size());
-
-        tenant = instruments.stream().filter(i->i.getInstrumentType().equals(InstrumentType.TENANT)).findFirst();
-        assertTrue(tenant.isPresent());
-        assertEquals("aTest@6", tenant.get().getBusinesskey());
-        assertEquals("newTenantDesc", tenant.get().getDescription());
-        assertTrue(tenant.get().isIsactive());
-    }*/
 }

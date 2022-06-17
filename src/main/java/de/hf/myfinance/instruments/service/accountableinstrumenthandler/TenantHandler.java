@@ -1,14 +1,11 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
-import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.InstrumentFactory;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraphAndFactory;
 import de.hf.myfinance.restmodel.InstrumentType;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.ArrayList;
 
 public class TenantHandler extends AbsAccountableInstrumentHandler {
     private InstrumentFactory instrumentFactory;

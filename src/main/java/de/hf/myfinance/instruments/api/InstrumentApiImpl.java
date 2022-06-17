@@ -44,20 +44,6 @@ public class InstrumentApiImpl implements InstrumentApi {
     }
 
     @Override
-    public Instrument getInstrumentBlocking(String businesskey) {
-        try{
-            var instrument = instrumentService.getInstrument(businesskey).block();
-            instrument.setServiceAddress(serviceUtil.getServiceAddress());
-            return instrument;
-        } catch(MFException e) {
-            throw e;
-        }
-        catch(Exception e) {
-            throw new MFException(MFMsgKey.UNSPECIFIED, e.getMessage());
-        }
-    }
-
-    @Override
     public Flux<Instrument> listInstruments() {
         return instrumentService.listInstruments();
     }
@@ -65,6 +51,16 @@ public class InstrumentApiImpl implements InstrumentApi {
     @Override
     public Flux<Instrument> listInstrumentsForTenant(String businesskey) {
         return instrumentService.listInstruments(businesskey);
+    }
+
+    @Override
+    public Flux<Instrument> listActiveInstrumentsForTenant(String tenantbusinesskey) {
+        return instrumentService.listActiveInstruments(tenantbusinesskey);
+    }
+
+    @Override
+    public Flux<Instrument> listInstrumentsByType(String tenantbusinesskey, InstrumentType instrumentType) {
+        return instrumentService.listInstrumentsByType(tenantbusinesskey, instrumentType);
     }
 
     @Override

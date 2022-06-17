@@ -162,7 +162,8 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
                     result.add(element);
                     return result;
                 })
-                .flatMapMany(instrumentIds -> instrumentRepository.findAllById(instrumentIds));
+                .flatMapMany(instrumentIds ->
+                        instrumentRepository.findAllById(instrumentIds));
     }
 
     protected Flux<InstrumentEntity> filterActiveInstrumentChilds(Flux<InstrumentEntity> childs) {
@@ -175,7 +176,8 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
             instruments = childs.filter(i->i.isIsactive()==true);
         }
         if(filterInstrumentType) {
-            instruments.filter(i->i.getInstrumentType().equals(instrumentType));
+            instruments = instruments.filter(i->
+                    i.getInstrumentType().equals(instrumentType));
         }
         return instruments;
     }

@@ -67,4 +67,12 @@ public class InstrumentService {
     public Flux<Instrument> listInstruments(String tenantkey){
         return instrumentFactory.getTenantHandler(tenantkey).listInstrumentChilds().map(e-> instrumentMapper.entityToApi(e));
     }
+
+    public Flux<Instrument> listActiveInstruments(String tenantkey) {
+        return instrumentFactory.getTenantHandler(tenantkey).listActiveInstrumentChilds().map(e-> instrumentMapper.entityToApi(e));
+    }
+
+    public Flux<Instrument> listInstrumentsByType(String tenantkey, InstrumentType instrumentType) {
+        return instrumentFactory.getTenantHandler(tenantkey).listInstrumentChilds(instrumentType, true).map(e-> instrumentMapper.entityToApi(e));
+    }
 }

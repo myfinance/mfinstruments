@@ -1,35 +1,24 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
-import de.hf.framework.audit.AuditService;
-import de.hf.framework.exceptions.MFException;
-import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
-import de.hf.myfinance.instruments.persistence.entities.InstrumentPropertiesEntity;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.service.InstrumentFactory;
-import de.hf.myfinance.restmodel.InstrumentPropertyType;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraphAndFactory;
 import de.hf.myfinance.restmodel.InstrumentType;
+import reactor.core.publisher.Mono;
 
-import java.util.Optional;
 
 public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
     private  final InstrumentFactory instrumentFactory;
     private static final String DEFAULT_INCOMEBUDGET_PREFIX = "incomeBgt_";
 
-    public BudgetGroupHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentFactory instrumentFactory, String businesskey) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
-        this.instrumentFactory = instrumentFactory;
-    }
-
-    public BudgetGroupHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, InstrumentFactory instrumentFactory, String description, String budgetPFId, String businesskey) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, description, budgetPFId, businesskey);
-        this.instrumentFactory = instrumentFactory;
+    public BudgetGroupHandler(InstrumentEnvironmentWithGraphAndFactory instrumentEnvironment, String description, String budgetPFId, String businesskey, boolean isNewInstrument) {
+        super(instrumentEnvironment, description, budgetPFId, businesskey, isNewInstrument);
+        this.instrumentFactory = instrumentEnvironment.getInstrumentFactory();
     }
 
     public InstrumentEntity getIncomeBudget() {
-        var properties = getInstrumentProperties();
+        /*var properties = getInstrumentProperties();
         Optional<InstrumentPropertiesEntity> incomeBudgetIdProperty = properties.stream().filter(i->i.getPropertyname().equals(InstrumentPropertyType.INCOMEBUDGETID.getStringValue())).findFirst();
         if(!incomeBudgetIdProperty.isPresent()) {
             throw new MFException(MFMsgKey.NO_INCOMEBUDGET_DEFINED_EXCEPTION, "No IncomeBudget defined for budgetGroupId:"+instrumentId);
@@ -40,26 +29,30 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
             throw new MFException(MFMsgKey.NO_INCOMEBUDGET_DEFINED_EXCEPTION, "the IncomeBudget with id:"+incomeBudgetId+" does not exists");
         }
         
-        return incomeBudget.get();
+        return incomeBudget.get();*/
+        return null;
     } 
 
     @Override
-    protected void saveNewInstrument(){
-        super.saveNewInstrument();
+    protected Mono<InstrumentEntity> saveNewInstrument(InstrumentEntity instrumentEntity){
+        /*super.saveNewInstrument();
         var budgetHandler = instrumentFactory.getInstrumentHandler(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX + domainObject.getDescription(), instrumentId, null);
         budgetHandler.setTreeLastChanged(ts);
         budgetHandler.save();
-        addProperty(InstrumentPropertyType.INCOMEBUDGETID, budgetHandler.getInstrumentId());
+        addProperty(InstrumentPropertyType.INCOMEBUDGETID, budgetHandler.getInstrumentId());*/
+        return super.saveNewInstrument(instrumentEntity)
+                .flatMap(e->{
+                    var budgetHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX+e.getDescription(), e.getInstrumentid());
+                    budgetHandler.setTreeLastChanged(ts);
+                    return budgetHandler.save()
+                            // Return again the mono of the tenant
+                            .flatMap(bpf-> Mono.just(e));
+                });
     }
 
     @Override
-    protected void createDomainObject() {
-        domainObject = new InstrumentEntity(InstrumentType.BUDGETGROUP, description, true, ts);
-    }
-
-    @Override
-    protected void setDomainObjectName() {
-        domainObjectName = "BudgetGroup";
+    protected InstrumentEntity createDomainObject() {
+        return new InstrumentEntity(InstrumentType.BUDGETGROUP, description, true, ts);
     }
 
     @Override
@@ -67,22 +60,22 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
         return InstrumentType.BUDGETGROUP;
     }
 
-    @Override
+    //@Override
     protected void updateInstrument() {
-        super.updateInstrument();
+        /*super.updateInstrument();
         var incomeBudget = getIncomeBudget();
         var handler = instrumentFactory.getInstrumentHandler(incomeBudget.getInstrumentid());
         handler.setDescription(DEFAULT_INCOMEBUDGET_PREFIX + domainObject.getDescription());
-        handler.save();
+        handler.save();*/
     }
 
-    @Override
+    //@Override
     protected void validateInstrument4Inactivation() {
-        for(InstrumentEntity budget : getInstrumentChilds(EdgeType.TENANTGRAPH, 1)) {
-            var budgetHandler = instrumentFactory.getInstrumentHandler(budget.getInstrumentid());
+        /*for(InstrumentEntity budget : getInstrumentChilds(EdgeType.TENANTGRAPH, 1)) {
+            var budgetHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(budget.getInstrumentid());
             budgetHandler.setActive(false);
             budgetHandler.save();
-        }
+        }*/
     }
 
     @Override

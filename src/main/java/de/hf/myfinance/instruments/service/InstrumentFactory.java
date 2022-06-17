@@ -11,22 +11,21 @@ import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepos
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.accountableinstrumenthandler.*;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentImpl;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraphAndFactory;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 @Component
 public class InstrumentFactory {
 
-    private final InstrumentRepository instrumentRepository;
-    private final InstrumentGraphRepository instrumentGraphRepository;
-    private final AuditService auditService;
+    private final InstrumentEnvironmentWithGraphAndFactory instrumentEnvironment;
 
     @Autowired
     public InstrumentFactory(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService) {
-        this.instrumentRepository = instrumentRepository;
-        this.instrumentGraphRepository = instrumentGraphRepository;
-        this.auditService = auditService;
+        instrumentEnvironment = new InstrumentEnvironmentImpl(instrumentRepository, instrumentGraphRepository, auditService, this);
     }
 
     /**
@@ -36,7 +35,7 @@ public class InstrumentFactory {
      * @return the BaseAccountableInstrumentHandler
      */
     public BaseAccountableInstrumentHandler getBaseInstrumentHandler(String instrumentId) {
-        return new BaseAccountableInstrumentHandlerImpl(instrumentRepository, instrumentGraphRepository, auditService, instrumentId);
+        return new BaseAccountableInstrumentHandlerImpl(instrumentEnvironment, instrumentId);
     }
 
     /**
@@ -46,18 +45,18 @@ public class InstrumentFactory {
      * @param parentId the id of the parent
      * @return Instrumenthandler for the instrumenttype of the new instrument
      */
-    public InstrumentHandler getInstrumentHandler(InstrumentType instrumentType, String description, String parentId, String businesskey) {
+    public InstrumentHandler getInstrumentHandlerForNewInstrument(InstrumentType instrumentType, String description, String parentId) {
         switch(instrumentType){
             case TENANT:
-                return new TenantHandler(instrumentRepository, instrumentGraphRepository, auditService, this, description, businesskey);
+                return new TenantHandler(instrumentEnvironment, description, null, true);
             case BUDGETPORTFOLIO:
-                return new BudgetPortfolioHandler(instrumentRepository, instrumentGraphRepository, auditService, description, parentId, businesskey);
+                return new BudgetPortfolioHandler(instrumentEnvironment, description, parentId, null, true);
             case ACCOUNTPORTFOLIO:
-                return new AccountPortfolioHandler(instrumentRepository, instrumentGraphRepository, auditService, description, parentId, businesskey);
+                return new AccountPortfolioHandler(instrumentEnvironment, description, parentId, null, true);
             case BUDGETGROUP:
-                return new BudgetGroupHandler(instrumentRepository, instrumentGraphRepository, auditService, this, description, parentId, businesskey);
+                return new BudgetGroupHandler(instrumentEnvironment, description, parentId, null, true);
             case BUDGET:
-                return new BudgetHandler(instrumentRepository, instrumentGraphRepository, auditService, description, parentId, businesskey);
+                return new BudgetHandler(instrumentEnvironment, description, parentId, null, true);
 
             default:
                 throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:"+instrumentType);
@@ -70,7 +69,7 @@ public class InstrumentFactory {
      * @param businesskey the businesskey of the instrument
      * @return Instrumenthandler for the instrumenttype of the new instrument
      */
-    public InstrumentHandler getInstrumentHandler(String businesskey) {
+    public InstrumentHandler getInstrumentHandlerForExistingInstrument(String businesskey) {
         InstrumentType instrumentType = InstrumentType.UNKNOWN;
         try {
             int typeId = Integer.parseInt(businesskey.substring(businesskey.lastIndexOf("@")+1));
@@ -80,15 +79,15 @@ public class InstrumentFactory {
         }
         switch(instrumentType){
             case TENANT:
-                return new TenantHandler(instrumentRepository, instrumentGraphRepository, auditService, this, businesskey);
+                return new TenantHandler(instrumentEnvironment, null, businesskey, false);
             case BUDGETPORTFOLIO:
-                return new BudgetPortfolioHandler(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
+                return new BudgetPortfolioHandler(instrumentEnvironment, null, null, businesskey, false);
             case ACCOUNTPORTFOLIO:
-                return new AccountPortfolioHandler(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
+                return new AccountPortfolioHandler(instrumentEnvironment, null, null, businesskey, false);
             case BUDGETGROUP:
-                return new BudgetGroupHandler(instrumentRepository, instrumentGraphRepository, auditService, this, businesskey);
+                return new BudgetGroupHandler(instrumentEnvironment, null, null, businesskey, false);
             case BUDGET:
-                return new BudgetHandler(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
+                return new BudgetHandler(instrumentEnvironment, null, null, businesskey, false);
             default:
                 throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:"+instrumentType);
         }
@@ -102,14 +101,14 @@ public class InstrumentFactory {
      * @return TenantHandler
      */
     public TenantHandler getTenantHandler(String businesskey) {
-        return new TenantHandler(instrumentRepository, instrumentGraphRepository, auditService, this, businesskey);
+        return new TenantHandler(instrumentEnvironment, null, businesskey, false);
     }
 
-    public Iterable<InstrumentEntity> listInstruments() {
-        return instrumentRepository.findAll();
+    public Flux<InstrumentEntity> listInstruments() {
+        return instrumentEnvironment.getInstrumentRepository().findAll();
     }
 
-    public List<InstrumentEntity> listTenants(){
-        return StreamSupport.stream(listInstruments().spliterator(), false).filter(i->i.getInstrumentType().equals(InstrumentType.TENANT)).collect(Collectors.toList());
+    public Flux<InstrumentEntity> listTenants(){
+        return listInstruments().filter(i->i.getInstrumentType().equals(InstrumentType.TENANT));
     }
 }

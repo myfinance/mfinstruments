@@ -7,14 +7,15 @@ import java.util.Optional;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentPropertiesEntity;
 import de.hf.myfinance.restmodel.InstrumentPropertyType;
+import reactor.core.publisher.Mono;
 
 public interface InstrumentHandler {
     String getInstrumentId();
-    List<InstrumentPropertiesEntity> getInstrumentProperties();
-    List<InstrumentPropertiesEntity> getInstrumentProperties(InstrumentPropertyType instrumentPropertyType);
+    //List<InstrumentPropertiesEntity> getInstrumentProperties();
+    //List<InstrumentPropertiesEntity> getInstrumentProperties(InstrumentPropertyType instrumentPropertyType);
     void setTreeLastChanged(LocalDateTime ts);
-    void save();
+    Mono<InstrumentEntity> save();
     void setActive(boolean isActive);
     void setDescription(String description);
-    Optional<InstrumentEntity> getSavedDomainObject() ;
+    Mono<InstrumentEntity> loadInstrument();
 }

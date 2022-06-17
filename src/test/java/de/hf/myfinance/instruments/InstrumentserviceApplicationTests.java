@@ -34,7 +34,7 @@ class InstrumentserviceApplicationTests extends MongoDbTestBase{
 	void getTenantById() {
 		var tenant = new Instrument("testTenant", InstrumentType.TENANT);
 		postAndVerifyTenant(tenant, OK);
-		var savedTenant = instrumentRepository.findByBusinesskey("testTenant@6");
+		var savedTenant = instrumentRepository.findByBusinesskey("testTenant@6").block();
 
 		getAndVerifyInstrument(savedTenant.getBusinesskey(), OK).jsonPath("$.description").isEqualTo(tenant.getDescription());
 	}

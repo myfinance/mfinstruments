@@ -1,125 +1,184 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
-import de.hf.framework.audit.AuditService;
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentGraphEntry;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.service.AbsInstrumentHandlerWithProperty;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraph;
 import de.hf.myfinance.instruments.service.instrumentgraphhandler.InstrumentGraphHandler;
 import de.hf.myfinance.instruments.service.instrumentgraphhandler.InstrumentGraphHandlerImpl;
 import de.hf.myfinance.restmodel.InstrumentType;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * This abstract class is the base for all Instruments a Tenant can be directly connected with and the Tenant it self.
  * Securities like Equities  and Bonds are only connected via Trades and so use a different base class
  */
 public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandlerWithProperty implements AccountableInstrumentHandler{
-    protected final InstrumentGraphHandler instrumentGraphHandler;
     private String parentId;
+    protected final InstrumentGraphHandler instrumentGraphHandler;
+    boolean addToAccountPf;
+    boolean isRootElement = false;
 
-    protected AbsAccountableInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String description, String parentId, String businesskey) {
-        this(instrumentRepository, instrumentGraphRepository, auditService, description, parentId, false, businesskey);
+    protected AbsAccountableInstrumentHandler(InstrumentEnvironmentWithGraph instrumentEnvironment, String description, String parentId, String businesskey, boolean isNewInstrument) {
+        this(instrumentEnvironment, description, parentId, false, businesskey, isNewInstrument);
     }
 
-    protected AbsAccountableInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String description, String parentId, boolean addToAccountPf, String businesskey) {
-        super(instrumentRepository, auditService, description, businesskey);
-        this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentGraphRepository, instrumentRepository);
-        setParent(parentId, addToAccountPf);
-        validateParent();
-    }
-
-    protected AbsAccountableInstrumentHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String businesskey) {
-        super(instrumentRepository, auditService, businesskey);
-        this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentGraphRepository, instrumentRepository);
-    }
-
-    protected void saveNewInstrument() {
-        super.saveNewInstrument();
-        updateParent();
-        instrumentGraphHandler.addInstrumentToGraph(instrumentId, parentId);
-    }
-
-
-    protected void validateParent() {
-        Optional<InstrumentEntity> parent = instrumentRepository.findById(parentId);
-        if(!parent.isPresent()){
-            throw new MFException(MFMsgKey.UNKNOWN_PARENT_EXCEPTION, domainObjectName+" not saved: unknown parent:"+parentId);
+    protected AbsAccountableInstrumentHandler(InstrumentEnvironmentWithGraph instrumentEnvironment, String description, String parentId, boolean addToAccountPf, String businesskey, boolean isNewInstrument) {
+        super(instrumentEnvironment, description, businesskey, isNewInstrument);
+        this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentEnvironment);
+        if(isNewInstrument) {
+            this.parentId = parentId;
+            this.addToAccountPf = addToAccountPf;
         }
-        if(parent.get().getInstrumentType() != getParentType()){
+    }
+
+    protected AbsAccountableInstrumentHandler(InstrumentEnvironmentWithGraph instrumentEnvironment, String businesskey) {
+        super(instrumentEnvironment, "", businesskey, false);
+        this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentEnvironment);
+    }
+
+    @Override
+    public Mono<InstrumentEntity> loadInstrument() {
+        var instrumentMono = super.loadInstrument();
+        if(isNewInstrument && !isRootElement) {
+            var parentMono = loadParent();
+            return Mono.zip(instrumentMono, parentMono, this::validateParent);
+        }
+
+        return instrumentMono;
+    }
+
+    protected Mono<InstrumentEntity> loadParent() {
+        if(isRootElement) {
+            // the tenant or Root element has no parent
+            return Mono.empty();
+        }
+        if(addToAccountPf) {
+            return getAllInstrumentChildsWithType(parentId, InstrumentType.ACCOUNTPORTFOLIO)
+                    .switchIfEmpty(Mono.error(new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION,  "Account not saved: account portfolio for the tenant:"+parentId+" does not exists")))
+                    .next();
+        }
+        return instrumentRepository.findById(parentId)
+                .switchIfEmpty(Mono.error(new MFException(MFMsgKey.UNKNOWN_PARENT_EXCEPTION, domainObjectName+" not saved: unknown parent:"+parentId)));
+    }
+
+    protected Flux<InstrumentEntity> getAllInstrumentChildsWithType(String parentId, InstrumentType instrumentType) {
+        return getInstrumentChilds(instrumentId, EdgeType.TENANTGRAPH, 0)
+                .filter(e -> e.getInstrumentType().equals(instrumentType));
+    }
+
+    protected Mono<InstrumentEntity> saveNewInstrument(InstrumentEntity instrumentEntity) {
+        return super.saveNewInstrument(instrumentEntity).flatMap(e-> saveGraph(e)
+        // Return again the mono of the tenant
+        .flatMap(bpf-> Mono.just(e)));
+    }
+
+
+
+    protected Mono<InstrumentGraphEntry> saveGraph(InstrumentEntity instrumentEntity) {
+        this.instrumentId = instrumentEntity.getInstrumentid();
+        if(isRootElement) parentId = instrumentId;
+        return instrumentGraphHandler.addInstrumentToGraph(instrumentId, parentId);
+    }
+
+
+    protected InstrumentEntity validateParent(InstrumentEntity instrument, InstrumentEntity parent) {
+        if(isRootElement) {
+            // the tenant or Root element has no parent
+            return instrument;
+        }
+        if(parent.getInstrumentType() != getParentType()){
             throw new MFException(MFMsgKey.WRONG_INSTRUMENTTYPE_EXCEPTION,  domainObjectName+" not saved: Instrument with Id "+parentId + " has the wrong type");
         }
+        if(addToAccountPf) this.parentId = parent.getInstrumentid();
+        return instrument;
     }
-
-    protected void setParent(String parentId, boolean addToAccountPf) {
-        this.parentId = parentId;
-        if(addToAccountPf) setParentToAccountPf();
-    }
-
-    private void setParentToAccountPf() {
-        Optional<InstrumentEntity> accportfolio = instrumentGraphHandler.getAllInstrumentChildsWithType(parentId, InstrumentType.ACCOUNTPORTFOLIO).stream().findFirst();
-        if(!accportfolio.isPresent()) {
-            throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION,  "Account not saved: account portfolio for the tenant:"+parentId+" does not exists");
-        }
-        this.parentId = accportfolio.get().getInstrumentid();
-    }
-
-    /**
-     * used to override the parent during the save function. E.G. Tentant sets the parent to himself 
-     */
-    protected void updateParent() {
-    } 
 
     protected InstrumentType getParentType() {
         return InstrumentType.TENANT;
     }
 
 
-    public Optional<String> getTenant() {
-        checkInitStatus();
+    public Mono<String> getTenant() {
         return instrumentGraphHandler.getRootInstrument(instrumentId, EdgeType.TENANTGRAPH);
     }
 
-    public List<InstrumentEntity> getInstrumentChilds(EdgeType edgeType, int pathlength){
-        checkInitStatus();
-        return instrumentGraphHandler.getInstrumentChilds(instrumentId, edgeType, pathlength);
+    public Flux<InstrumentEntity> getInstrumentChilds(EdgeType edgeType, int pathlength){
+        return getInstrumentChilds(instrumentId, edgeType, pathlength);
     }
 
-    public List<String> getInstrumentChildIds(EdgeType edgeType, int pathlength){
-        checkInitStatus();
-        return instrumentGraphHandler.getInstrumentChildIds(instrumentId, edgeType, pathlength);
+    protected Flux<InstrumentEntity> getInstrumentChilds(String instrumentId, EdgeType edgeType, int pathlength){
+        return instrumentGraphHandler.getInstrumentChildIds(instrumentId, edgeType, pathlength)
+                .reduce(new ArrayList<String>(), (e1,e2)-> {
+                    e1.add(e2);
+                    return e1;
+                }).flatMapMany(e->{
+                    Flux<InstrumentEntity> instruments = instrumentRepository.findAllById(e);
+                    return instruments;
+                });
     }
 
-    public List<String> getAncestorIds() {
-        checkInitStatus();
-        var ids = new ArrayList<String>();
-        final List<InstrumentGraphEntry> ancestorGraphEntries = instrumentGraphHandler.getAncestors(instrumentId, EdgeType.TENANTGRAPH);
-        if (ancestorGraphEntries != null && !ancestorGraphEntries.isEmpty()) {
-            for (final InstrumentGraphEntry entry : ancestorGraphEntries) {
-                ids.add(entry.getAncestor());
-            }
-        }                
-        return ids;
+    public Flux<String> getAncestorIds() {
+        return instrumentGraphHandler.getAncestors(instrumentId, EdgeType.TENANTGRAPH).map(e->e.getAncestor());
     }
 
-    @Override
-    protected void validateInstrument(InstrumentEntity instrument, InstrumentType instrumentType, String errMsg) {
-        super.validateInstrument(instrument, instrumentType, errMsg);
-        Optional<String> tenantOfInstrument = instrumentGraphHandler.getRootInstrument(instrument.getInstrumentid(), EdgeType.TENANTGRAPH);
-        if(!tenantOfInstrument.isPresent()){
-            throw new MFException(MFMsgKey.WRONG_TENENT_EXCEPTION,  errMsg+" instrument has not the same tenant");
+    public Flux<InstrumentEntity> listInstrumentChilds(String instrumentId) {
+        return listInstrumentChilds(getInstrumentById(instrumentId, "instrument not found:"+instrumentId));
+    }
+
+    public Flux<InstrumentEntity> listInstrumentChilds() {
+        return listInstrumentChilds(loadInstrument());
+    }
+
+    public Flux<InstrumentEntity> listFirstLevelInstrumentChilds() {
+        return listInstrumentChilds(loadInstrument(), 1);
+    }
+
+    public Flux<InstrumentEntity> listFirstLevelInstrumentChilds(InstrumentType instrumentType, boolean onlyActive) {
+        return filterInstrumentChilds(listInstrumentChilds(instrumentType, onlyActive), true, instrumentType, onlyActive);
+    }
+
+    public Flux<InstrumentEntity> listActiveInstrumentChilds() {
+        return filterInstrumentChilds(listInstrumentChilds(), false, null, true);
+    }
+
+    public Flux<InstrumentEntity> listInstrumentChilds(InstrumentType instrumentType, boolean onlyActive) {
+        return filterInstrumentChilds(listInstrumentChilds(), true, instrumentType, onlyActive);
+    }
+
+    private Flux<InstrumentEntity> listInstrumentChilds(Mono<InstrumentEntity> instrument){
+        return listInstrumentChilds(instrument, 0);
+    }
+
+    protected Flux<InstrumentEntity> listInstrumentChilds(Mono<InstrumentEntity> instrument, int pathlength) {
+        return instrument.flatMapMany(e->instrumentGraphHandler.getInstrumentChildIds(e.getInstrumentid(), EdgeType.TENANTGRAPH, pathlength))
+                .reduce(new ArrayList<String>(), (result, element) -> {
+                    result.add(element);
+                    return result;
+                })
+                .flatMapMany(instrumentIds ->
+                        instrumentRepository.findAllById(instrumentIds));
+    }
+
+    protected Flux<InstrumentEntity> filterActiveInstrumentChilds(Flux<InstrumentEntity> childs) {
+        return filterInstrumentChilds(childs, false, null, true);
+    }
+
+    protected Flux<InstrumentEntity> filterInstrumentChilds(Flux<InstrumentEntity> childs, boolean filterInstrumentType, InstrumentType instrumentType, boolean onlyActive) {
+        Flux<InstrumentEntity> instruments = childs;
+        if(onlyActive) {
+            instruments = childs.filter(i->i.isIsactive()==true);
         }
-        if(initialized) {
-            if(!tenantOfInstrument.get().equals(getTenant().get())) {
-                throw new MFException(MFMsgKey.WRONG_TENENT_EXCEPTION,  errMsg+" instrument has not the same tenant");
-            }
+        if(filterInstrumentType) {
+            instruments = instruments.filter(i->
+                    i.getInstrumentType().equals(instrumentType));
         }
+        return instruments;
     }
 }

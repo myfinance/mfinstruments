@@ -2,12 +2,11 @@ package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
 import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
-
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface AccountableInstrumentHandler {
-    Optional<String> getTenant();
-    List<InstrumentEntity> getInstrumentChilds(EdgeType edgeType, int pathlength);
-    List<String> getAncestorIds();
+    Mono<String> getTenant();
+    Flux<InstrumentEntity> getInstrumentChilds(EdgeType edgeType, int pathlength);
+    Flux<String> getAncestorIds();
 }

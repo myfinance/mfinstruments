@@ -1,30 +1,20 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
-import de.hf.framework.audit.AuditService;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraph;
 import de.hf.myfinance.restmodel.InstrumentType;
 
 public class BudgetHandler extends AbsCashInstrumentHandler {
 
-    public BudgetHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String description, String budgetGroupId, String businesskey) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, description, budgetGroupId, businesskey);
-    }
-
-    public BudgetHandler(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, String businesskey) {
-        super(instrumentRepository, instrumentGraphRepository, auditService, businesskey);
+    public BudgetHandler(InstrumentEnvironmentWithGraph instrumentEnvironment, String description, String budgetGroupId, String businesskey, boolean isNewInstrument) {
+        super(instrumentEnvironment, description, budgetGroupId, businesskey, isNewInstrument);
     }
 
     @Override
-    protected void createDomainObject() {
-        domainObject = new InstrumentEntity(InstrumentType.BUDGET, description, true, ts);
-        domainObject.setBusinesskey(businesskey);
-    }
-
-    @Override
-    protected void setDomainObjectName() {
-        domainObjectName = "Budget";
+    protected InstrumentEntity createDomainObject() {
+        var theObj = new InstrumentEntity(InstrumentType.BUDGET, description, true, ts);
+        theObj.setBusinesskey(businesskey);
+        return theObj;
     }
 
     @Override
@@ -40,6 +30,6 @@ public class BudgetHandler extends AbsCashInstrumentHandler {
     @Override
     public void setDescription(String description) {
         super.setDescription(description);
-        super.setBusinesskey(description);
+        super.setBusinesskey();
     }
 }

@@ -1,7 +1,6 @@
 package de.hf.myfinance.instruments.service;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import de.hf.framework.audit.AuditService;
 import de.hf.framework.audit.Severity;
@@ -9,20 +8,20 @@ import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
 import de.hf.myfinance.restmodel.InstrumentType;
+import reactor.core.publisher.Mono;
 
 /**
  * Base class for alle instrument handler
  */
 public abstract class AbsInstrumentHandler {
-    protected InstrumentRepository instrumentRepository;
+    protected final InstrumentRepository instrumentRepository;
+    private final AuditService auditService;
     protected String instrumentId;
     protected boolean initialized = false;
-    protected boolean existenceChecked = false;
-    protected boolean exists = false;
-    protected InstrumentEntity domainObject;
+    protected boolean exists = true;
     protected boolean isPropertyInit = false;
-    protected AuditService auditService;
     protected LocalDateTime ts;
     protected static final String AUDIT_MSG_TYPE="InstrumentHandler_User_Event";
     protected String domainObjectName;
@@ -30,35 +29,42 @@ public abstract class AbsInstrumentHandler {
     protected String businesskey = "";
     protected String oldDesc;
     protected boolean isActive = true;
+    protected boolean isNewInstrument;
 
     private final int MAX_BUSINESSKEY_SIZE = 32;
 
-    protected AbsInstrumentHandler(InstrumentRepository instrumentRepository, AuditService auditService, String description, String businesskey) {
-        setBaseValues(instrumentRepository, auditService);
-        setDescription(description);
-        setBusinesskey(businesskey);
-        loadInstrument();
-    }
-
-    protected AbsInstrumentHandler(InstrumentRepository instrumentRepository, AuditService auditService, String businesskey) {
-        setBaseValues(instrumentRepository, auditService);
-        this.businesskey = businesskey;
-        loadInstrument();
-        if(!exists) {
-            throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION, "Instrument for businesskey:"+businesskey + " does not exists. You can only create existing instruments with just a businesskey");
-        }
-    }
-
-    private void setBaseValues(InstrumentRepository instrumentRepository, AuditService auditService) {
-        this.instrumentRepository = instrumentRepository;
-        this.auditService = auditService;
+    protected AbsInstrumentHandler(InstrumentEnvironment instrumentEnvironment, String description, String businesskey, boolean isNewInstrument) {
+        this.instrumentRepository = instrumentEnvironment.getInstrumentRepository();
+        this.auditService = instrumentEnvironment.getAuditService();
         ts = LocalDateTime.now();
+        this.description = description;
+        this.businesskey = businesskey;
+        this.isNewInstrument = isNewInstrument;
+        setBusinesskey();
     }
 
-    protected void validateInstrument() {
-        if(!domainObject.getInstrumentType().equals(getInstrumentType())) {
-            throw new MFException(MFMsgKey.WRONG_INSTRUMENTTYPE_EXCEPTION, "can not create instrumenthandler for instrumentid:"+instrumentId);
+    public Mono<InstrumentEntity> loadInstrument() {
+        return instrumentRepository.findByBusinesskey(businesskey)
+                .switchIfEmpty(handleNotExistingInstrument(isNewInstrument))
+                .map(e -> {
+                    validateInstrument(e, getInstrumentType(), "");
+                    return e;
+                });
+    }
+
+    private Mono<InstrumentEntity> handleNotExistingInstrument(boolean isNewInstrument){
+        if(isNewInstrument) {
+            return initNewDomainObject();
+        } else {
+            return Mono.error(new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION, "Instrument for businesskey:"+businesskey + " does not exists."));
         }
+    }
+
+    protected Mono<InstrumentEntity> initNewDomainObject() {
+        var object = createDomainObject();
+        object.setBusinesskey(this.businesskey);
+        exists = false;
+        return Mono.just(object);
     }
 
     protected void validateInstrument(InstrumentEntity instrument, InstrumentType instrumentType, String errMsg) {
@@ -67,97 +73,57 @@ public abstract class AbsInstrumentHandler {
         }
     }
 
-    public void setTreeLastChanged(LocalDateTime ts){
-        this.ts = ts;
-    }
-    
-    public void setInstrumentId(String instrumentId) {
-        initialized = true;
-        this.instrumentId = instrumentId;
-    }
-    public String getInstrumentId() {
-        return this.instrumentId;
+    public Mono<InstrumentEntity> save() {
+        return loadInstrument().flatMap(this::saveOrUpdate);
     }
 
-    protected void checkInitStatus() {
-        if(!initialized) {
-            throw new MFException(MFMsgKey.OBJECT_NOT_INITIALIZED_EXCEPTION, "instrumentId is not set:");
-        }
-    }
-
-    protected void checkDomainObjectInitStatus() {
-        if(this.domainObject==null) {
-            throw new MFException(MFMsgKey.OBJECT_NOT_INITIALIZED_EXCEPTION, "instrument is not set:");
-        }
-    }
-
-    protected void loadInstrument() {
-        this.domainObject = instrumentRepository.findByBusinesskey(businesskey);
-        existenceChecked = true;
-        if(this.domainObject!=null) {
-            exists = true;
-            setInstrumentId(this.domainObject.getInstrumentid());
-            validateInstrument();
-        } else {
-            createDomainObject();
-            domainObject.setBusinesskey(this.businesskey);
-        }
-    }
-
-    /**
-     * get and validate an Instrument for another id. the instrumentId of the Instrumenthandler will not change
-     * @param instrumentId the id
-     * @return the instrument for the id
-     */
-    protected InstrumentEntity getInstrumentById(String instrumentId) {
-        return getInstrumentById(instrumentId, "");
-    }
-
-    protected InstrumentEntity getInstrumentById(String instrumentId, String errMsg) {
-        var instrument = instrumentRepository.findById(instrumentId);
-        if(!instrument.isPresent()){
-            throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION, errMsg + " Instrument for id:"+instrumentId + " not found");
-        }
-        return instrument.get();
-    }
-
-
-    protected void checkInstrumentInactivation(boolean isActiveBeforeUpdate,  boolean isActiveAfterUpdate) {
-        // try to deactivate instrument ?
-        if(!isActiveAfterUpdate && isActiveBeforeUpdate) {
-            validateInstrument4Inactivation();
-        }        
-    } 
-
-    protected void validateInstrument4Inactivation() {
-        throw new MFException(MFMsgKey.NO_VALID_INSTRUMENT_FOR_DEACTIVATION, "instrument with id:"+instrumentId + " not deactivated. Instruments with type:"+ domainObject.getInstrumentType() + " can not deactivated");
-    }
-
-    public void save() {
-        loadInstrument();
+    private Mono<InstrumentEntity> saveOrUpdate(InstrumentEntity instrumentEntity) {
+        Mono<InstrumentEntity> newDomainObjectmono;
         if(exists) {
-            updateInstrument();
+            newDomainObjectmono=updateInstrument(instrumentEntity);
         } else {
-            saveNewInstrument();
+            newDomainObjectmono=saveNewInstrument(instrumentEntity);
             exists = true;
         }
-    } 
-
-    protected void saveNewInstrument() {
-        checkDomainObjectInitStatus();
-        instrumentRepository.save(domainObject);
-        setInstrumentId(domainObject.getInstrumentid());
-        auditService.saveMessage(domainObjectName+" inserted: businesskey=" + domainObject.getBusinesskey() + " desc=" + domainObject.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
+        return newDomainObjectmono;
     }
 
-    protected void updateInstrument() {
-        checkInstrumentInactivation(domainObject.isIsactive(), isActive);
-        oldDesc = domainObject.getDescription();
-        if(description!=null && !description.equals("")) {
-            domainObject.setDescription(description);
+    protected Mono<InstrumentEntity> saveNewInstrument(InstrumentEntity instrumentEntity) {
+        var newDomainObjectmono = instrumentRepository.save(instrumentEntity);
+        auditService.saveMessage(domainObjectName+" inserted: businesskey=" + instrumentEntity.getBusinesskey() + " desc=" + instrumentEntity.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
+        return newDomainObjectmono;
+    }
+
+    protected Mono<InstrumentEntity> updateInstrument(InstrumentEntity instrumentEntity) {
+        checkInstrumentInactivation(instrumentEntity, isActive);
+        oldDesc = instrumentEntity.getDescription();
+        if (description != null && !description.equals("")) {
+            instrumentEntity.setDescription(description);
         }
-        instrumentRepository.save(domainObject);
-        auditService.saveMessage(domainObjectName+" updated:businesskey=" + domainObject.getBusinesskey() + " desc=" + domainObject.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
+        var newDomainObjectmono = instrumentRepository.save(instrumentEntity);
+        auditService.saveMessage(domainObjectName + " updated:businesskey=" + instrumentEntity.getBusinesskey() + " desc=" + instrumentEntity.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
+        return newDomainObjectmono;
+    }
+
+        protected Mono<InstrumentEntity> getInstrumentById(String instrumentId, String errMsg) {
+        var instrument = instrumentRepository.findById(instrumentId)
+                .switchIfEmpty(
+                    Mono.error(new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION, errMsg + " Instrument for id:" + instrumentId + " not found")));
+
+        return instrument;
+    }
+
+
+    protected void checkInstrumentInactivation(InstrumentEntity oldInstrumentEntity,  boolean isActiveAfterUpdate) {
+        // try to deactivate instrument ?
+
+        if(!isActiveAfterUpdate && oldInstrumentEntity.isIsactive()) {
+            validateInstrument4Inactivation(oldInstrumentEntity);
+        }
+    }
+
+    protected void validateInstrument4Inactivation(InstrumentEntity oldInstrumentEntity) {
+        throw new MFException(MFMsgKey.NO_VALID_INSTRUMENT_FOR_DEACTIVATION, "instrument with id:"+instrumentId + " not deactivated. Instruments with type:"+ oldInstrumentEntity.getInstrumentType() + " can not deactivated");
     }
 
     public void setActive(boolean isActive) {
@@ -168,23 +134,29 @@ public abstract class AbsInstrumentHandler {
         this.description = description;
     }
 
-    public void setBusinesskey(String businesskey) {
-        if(businesskey==null) {
-            this.businesskey = description.trim();
-        } else {
-            this.businesskey = businesskey.trim();
+    protected void setBusinesskey() {
+        if(isNewInstrument) {
+            if(businesskey==null) {
+                this.businesskey = description.trim();
+            }
+            this.businesskey = this.businesskey.replace(" ", "");
+            if(this.businesskey.length()> MAX_BUSINESSKEY_SIZE) this.businesskey = this.businesskey.substring(0, MAX_BUSINESSKEY_SIZE);
+            this.businesskey = this.businesskey+"@"+getInstrumentType().getValue();
         }
-        this.businesskey = this.businesskey.replace(" ", "");
-        if(this.businesskey.length()> MAX_BUSINESSKEY_SIZE) this.businesskey = this.businesskey.substring(0, MAX_BUSINESSKEY_SIZE);
-        this.businesskey = this.businesskey+"@"+getInstrumentType().getValue();
     }
 
-    public Optional<InstrumentEntity> getSavedDomainObject() {
-        if(exists) return Optional.of(domainObject);
-        return Optional.empty();
+    public void setTreeLastChanged(LocalDateTime ts){
+        this.ts = ts;
     }
 
-    abstract protected void createDomainObject();
-    abstract protected void setDomainObjectName();
+    public String getInstrumentId() {
+        return this.instrumentId;
+    }
+    public void setInstrumentId(String instrumentId) {
+        initialized = true;
+        this.instrumentId = instrumentId;
+    }
+
+    abstract protected InstrumentEntity createDomainObject();
     abstract protected InstrumentType getInstrumentType();
 }

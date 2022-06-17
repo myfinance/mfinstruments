@@ -1,30 +1,19 @@
 package de.hf.myfinance.instruments.service;
 
-import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import de.hf.framework.audit.AuditService;
-import de.hf.framework.audit.Severity;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentPropertiesEntity;
-import de.hf.myfinance.restmodel.InstrumentPropertyType;
-import de.hf.myfinance.restmodel.ValuePerDate;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
 
 public abstract class AbsInstrumentHandlerWithProperty extends AbsInstrumentHandler implements InstrumentHandler {
 
-    protected AbsInstrumentHandlerWithProperty(InstrumentRepository instrumentRepository, AuditService auditService, String description, String businesskey) {
-        super(instrumentRepository, auditService, description, businesskey);
-    }
-
-    protected AbsInstrumentHandlerWithProperty(InstrumentRepository instrumentRepository, AuditService auditService, String businesskey) {
-        super(instrumentRepository, auditService, businesskey);
+    protected AbsInstrumentHandlerWithProperty(InstrumentEnvironment instrumentEnvironment, String description, String businesskey, boolean isNewInstrument) {
+        super(instrumentEnvironment, description, businesskey, isNewInstrument);
     }
 
     private List<InstrumentPropertiesEntity> properties;
 
-    public List<InstrumentPropertiesEntity> getInstrumentProperties() {
-        checkInitStatus();
+    /*public List<InstrumentPropertiesEntity> getInstrumentProperties() {
         if(!isPropertyInit) {
             properties = domainObject.getInstrumentProperties().stream().toList();
         }
@@ -36,19 +25,16 @@ public abstract class AbsInstrumentHandlerWithProperty extends AbsInstrumentHand
     }
 
     protected void addProperty(InstrumentPropertyType instrumentPropertyType, String value, LocalDate validFrom) {
-        checkInitStatus();
         var properties = domainObject.getInstrumentProperties();
         properties.add(new InstrumentPropertiesEntity(instrumentPropertyType.name(), value, instrumentPropertyType.getValueType(), validFrom));
     }
 
     protected void addProperty(InstrumentPropertyType instrumentPropertyType, ValuePerDate value) {
-        checkInitStatus();
         var properties = domainObject.getInstrumentProperties();
         properties.add(new InstrumentPropertiesEntity(instrumentPropertyType.name(), String.valueOf(value.getValue()), instrumentPropertyType.getValueType(), value.getDate()));
    }
 
    protected void addProperty(InstrumentPropertyType instrumentPropertyType, String value) {
-        checkInitStatus();
         var properties = domainObject.getInstrumentProperties();
         properties.add(new InstrumentPropertiesEntity(instrumentPropertyType.name(), value, instrumentPropertyType.getValueType(), null));
     }
@@ -87,6 +73,6 @@ public abstract class AbsInstrumentHandlerWithProperty extends AbsInstrumentHand
                 domainObject.getInstrumentProperties().remove(instrumentProperty);
             }
         }    
-    }
+    }*/
 
 }

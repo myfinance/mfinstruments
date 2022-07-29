@@ -4,12 +4,6 @@ logging:
     root: INFO
     de.hf.myfinance: DEBUG
 
-spring.jpa.hibernate.ddl-auto: none
-spring.datasource:
-  url: jdbc:postgresql://192.168.100.73:30020/marketdata
-  username: postgres
-  password: vulkan
-
 spring.data.mongodb:
   host: 192.168.100.73
   port: 30029
@@ -38,12 +32,7 @@ api:
     unprocessableEntity.description: Unprocessable entity, input parameters caused the processing to fail. See response message for more information
 
 ---
-spring.config.activate.on-profile: docker
-
-spring.datasource:
-  url: jdbc:postgresql://mfdb:30020/marketdata
-  username: postgres
-  password: vulkan
+spring.config.activate.on-profile: k8n
 
 spring.data.mongodb:
   host: mfmongo

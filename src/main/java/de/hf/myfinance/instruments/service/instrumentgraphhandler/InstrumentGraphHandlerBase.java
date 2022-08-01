@@ -37,7 +37,6 @@ public abstract class InstrumentGraphHandlerBase implements InstrumentGraphHandl
     private Flux<InstrumentGraphEntry> handleNotExistingEntry(final String instrumentId, final String ancestorId, final EdgeType edgeType){
         if(instrumentId!=ancestorId){
             final InstrumentGraphEntry newEntry = new InstrumentGraphEntry(ancestorId, ancestorId, edgeType);
-            newEntry.setPathlength(0);
             return Flux.just(newEntry);
         }
         return Flux.empty();

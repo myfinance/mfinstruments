@@ -28,7 +28,7 @@ public class InstrumentGraphEntry implements java.io.Serializable {
         this.ancestor = ancestorId;
         this.descendant = descendantId;
         this.edgetype = edgeType;
-        this.pathlength = pathlength;
+        this.pathlength = 0;
     }
 
     public String getInstrumentGraphid() {

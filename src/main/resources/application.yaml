@@ -18,6 +18,23 @@ springdoc:
   packagesToScan: de.hf.myfinance
   pathsToMatch: /**
 
+spring.cloud.stream:
+  defaultBinder: rabbit
+  default.contentType: application/json
+  bindings.messageProcessor-in-0:
+    destination: instruments
+    group: instrumentsGroup
+
+spring.cloud.stream.rabbit.bindings.messageProcessor-in-0.consumer:
+  autoBindDlq: true
+  republishToDlq: true
+
+spring.rabbitmq:
+  host: 192.168.100.73
+  port: 30021
+  username: user
+  password: vulkan
+
 api:
 
   common:

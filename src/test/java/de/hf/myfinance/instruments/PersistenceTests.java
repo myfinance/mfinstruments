@@ -16,27 +16,33 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DataMongoTest
 @Testcontainers
-public class PersistenceTests extends MongoDbTestBase{
+class PersistenceTests extends MongoDbTestBase{
 
-    /*@Autowired
-    private InstrumentRepository repository;
+    @Autowired
+    InstrumentRepository repository;
 
     @BeforeEach
     void setupDb() {
-        repository.deleteAll();
+        repository.deleteAll().block();
     }
 
     @Test
-    void create() {
+    void create() throws Exception {
         var newEntity = new InstrumentEntity(InstrumentType.TENANT, "aTest", true, LocalDateTime.now());
-        repository.save(newEntity);
+        var newEntityMono = repository.save(newEntity).block();
 
-        var foundEntity = repository.findById(newEntity.getInstrumentid()).get();
+        if(newEntityMono==null || newEntityMono.getInstrumentid()==null) {
+            throw new Exception("newEntityMono could not be saved");
+        }
+        var foundEntity = repository.findById(newEntityMono.getInstrumentid()).block();
+        if(foundEntity==null) {
+            throw new Exception("no entity found");
+        }
         assertEqualsTenant(newEntity, foundEntity);
 
-        assertEquals(1, repository.count());
-        repository.deleteAll();
-        assertEquals(0, repository.count());
+        assertEquals(1, repository.count().block());
+        repository.deleteAll().block();
+        assertEquals(0, repository.count().block());
     }
 
     private void assertEqualsTenant(InstrumentEntity expectedEntity, InstrumentEntity actualEntity) {
@@ -49,31 +55,42 @@ public class PersistenceTests extends MongoDbTestBase{
     }
 
     @Test
-    void optimisticLockError() {
+    void optimisticLockError() throws Exception {
 
         var newEntity = new InstrumentEntity(InstrumentType.TENANT, "aTest", true, LocalDateTime.now());
-        repository.save(newEntity);
+        newEntity = repository.save(newEntity).block();
+
+        if(newEntity==null || newEntity.getInstrumentid()==null) {
+            throw new Exception("newEntityMono could not be saved");
+        }
 
         // Store the saved entity in two separate entity objects
-        var foundEntity1 = repository.findById(newEntity.getInstrumentid()).get();
-        var foundEntity2 = repository.findById(newEntity.getInstrumentid()).get();
+        var foundEntity1 = repository.findById(newEntity.getInstrumentid()).block();
+        var foundEntity2 = repository.findById(newEntity.getInstrumentid()).block();
+
+        if(foundEntity1==null || foundEntity2==null) {
+            throw new Exception("newEntity could not be saved");
+        }
 
         // Update the entity using the first entity object
         foundEntity1.setDescription("n1");
-        repository.save(foundEntity1);
+        repository.save(foundEntity1).block();
 
         //  Update the entity using the second entity object.
         // This should fail since the second entity now holds an old version
         // number, that is, an Optimistic Lock Error
-        assertThrows(OptimisticLockingFailureException.class, () -> {
-            foundEntity2.setDescription("n2");
-            repository.save(foundEntity2);
-        });
+        foundEntity2.setDescription("n2");
+        var result = repository.save(foundEntity2);
+        assertThrows(OptimisticLockingFailureException.class, result::block);
 
         // Get the updated entity from the database and verify its new state
         var updatedEntity =
-                repository.findById(newEntity.getInstrumentid()).get();
+                repository.findById(newEntity.getInstrumentid()).block();
+        if(updatedEntity==null || updatedEntity.getVersion()==null) {
+            throw new Exception(".getVersion() could not be found");
+        }
+
         assertEquals(1, (int)updatedEntity.getVersion());
         assertEquals("n1", updatedEntity.getDescription());
-    }*/
+    }
 }

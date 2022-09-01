@@ -20,21 +20,15 @@ import java.util.ArrayList;
  * Securities like Equities  and Bonds are only connected via Trades and so use a different base class
  */
 public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandlerWithProperty implements AccountableInstrumentHandler{
-    private String parentId;
+    private String parentBusinesskey;
     protected final InstrumentGraphHandler instrumentGraphHandler;
-    boolean addToAccountPf;
     boolean isRootElement = false;
 
-    protected AbsAccountableInstrumentHandler(InstrumentEnvironmentWithGraph instrumentEnvironment, String description, String parentId, String businesskey, boolean isNewInstrument) {
-        this(instrumentEnvironment, description, parentId, false, businesskey, isNewInstrument);
-    }
-
-    protected AbsAccountableInstrumentHandler(InstrumentEnvironmentWithGraph instrumentEnvironment, String description, String parentId, boolean addToAccountPf, String businesskey, boolean isNewInstrument) {
+    protected AbsAccountableInstrumentHandler(InstrumentEnvironmentWithGraph instrumentEnvironment, String description, String parentBusinesskey, String businesskey, boolean isNewInstrument) {
         super(instrumentEnvironment, description, businesskey, isNewInstrument);
         this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentEnvironment);
         if(isNewInstrument) {
-            this.parentId = parentId;
-            this.addToAccountPf = addToAccountPf;
+            this.parentBusinesskey = parentBusinesskey;
         }
     }
 
@@ -59,17 +53,12 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
             // the tenant or Root element has no parent
             return Mono.empty();
         }
-        if(addToAccountPf) {
-            return getAllInstrumentChildsWithType(parentId, InstrumentType.ACCOUNTPORTFOLIO)
-                    .switchIfEmpty(Mono.error(new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION,  "Account not saved: account portfolio for the tenant:"+parentId+" does not exists")))
-                    .next();
-        }
-        return instrumentRepository.findById(parentId)
-                .switchIfEmpty(Mono.error(new MFException(MFMsgKey.UNKNOWN_PARENT_EXCEPTION, domainObjectName+" not saved: unknown parent:"+parentId)));
+        return instrumentRepository.findByBusinesskey(parentBusinesskey)
+                .switchIfEmpty(Mono.error(new MFException(MFMsgKey.UNKNOWN_PARENT_EXCEPTION, domainObjectName+" not saved: unknown parent:"+ parentBusinesskey)));
     }
 
-    protected Flux<InstrumentEntity> getAllInstrumentChildsWithType(String parentId, InstrumentType instrumentType) {
-        return getInstrumentChilds(instrumentId, EdgeType.TENANTGRAPH, 0)
+    protected Flux<InstrumentEntity> getAllInstrumentChildsWithType(InstrumentType instrumentType) {
+        return getInstrumentChilds(businesskey, EdgeType.TENANTGRAPH, 0)
                 .filter(e -> e.getInstrumentType().equals(instrumentType));
     }
 
@@ -82,9 +71,9 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
 
 
     protected Mono<InstrumentGraphEntry> saveGraph(InstrumentEntity instrumentEntity) {
-        this.instrumentId = instrumentEntity.getInstrumentid();
-        if(isRootElement) parentId = instrumentId;
-        return instrumentGraphHandler.addInstrumentToGraph(instrumentId, parentId);
+        this.businesskey = instrumentEntity.getBusinesskey();
+        if(isRootElement) parentBusinesskey = businesskey;
+        return instrumentGraphHandler.addInstrumentToGraph(businesskey, parentBusinesskey);
     }
 
 
@@ -94,9 +83,8 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
             return instrument;
         }
         if(parent.getInstrumentType() != getParentType()){
-            throw new MFException(MFMsgKey.WRONG_INSTRUMENTTYPE_EXCEPTION,  domainObjectName+" not saved: Instrument with Id "+parentId + " has the wrong type");
+            throw new MFException(MFMsgKey.WRONG_INSTRUMENTTYPE_EXCEPTION,  domainObjectName+" not saved: Instrument with Id "+ parentBusinesskey + " has the wrong type");
         }
-        if(addToAccountPf) this.parentId = parent.getInstrumentid();
         return instrument;
     }
 
@@ -110,11 +98,11 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
     }
 
     public Flux<InstrumentEntity> getInstrumentChilds(EdgeType edgeType, int pathlength){
-        return getInstrumentChilds(instrumentId, edgeType, pathlength);
+        return getInstrumentChilds(businesskey, edgeType, pathlength);
     }
 
-    protected Flux<InstrumentEntity> getInstrumentChilds(String instrumentId, EdgeType edgeType, int pathlength){
-        return instrumentGraphHandler.getInstrumentChildIds(instrumentId, edgeType, pathlength)
+    protected Flux<InstrumentEntity> getInstrumentChilds(String businesskey, EdgeType edgeType, int pathlength){
+        return instrumentGraphHandler.getInstrumentChildIds(businesskey, edgeType, pathlength)
                 .reduce(new ArrayList<String>(), (e1,e2)-> {
                     e1.add(e2);
                     return e1;
@@ -125,11 +113,11 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
     }
 
     public Flux<String> getAncestorIds() {
-        return instrumentGraphHandler.getAncestors(instrumentId, EdgeType.TENANTGRAPH).map(e->e.getAncestor());
+        return instrumentGraphHandler.getAncestors(businesskey, EdgeType.TENANTGRAPH).map(e->e.getAncestor());
     }
 
-    public Flux<InstrumentEntity> listInstrumentChilds(String instrumentId) {
-        return listInstrumentChilds(getInstrumentById(instrumentId, "instrument not found:"+instrumentId));
+    public Flux<InstrumentEntity> listInstrumentChilds(String businesskey) {
+        return listInstrumentChilds(getInstrumentById(businesskey, "instrument not found:"+instrumentId));
     }
 
     public Flux<InstrumentEntity> listInstrumentChilds() {
@@ -157,13 +145,13 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
     }
 
     protected Flux<InstrumentEntity> listInstrumentChilds(Mono<InstrumentEntity> instrument, int pathlength) {
-        return instrument.flatMapMany(e->instrumentGraphHandler.getInstrumentChildIds(e.getInstrumentid(), EdgeType.TENANTGRAPH, pathlength))
+        return instrument.flatMapMany(e->instrumentGraphHandler.getInstrumentChildIds(e.getBusinesskey(), EdgeType.TENANTGRAPH, pathlength))
                 .reduce(new ArrayList<String>(), (result, element) -> {
                     result.add(element);
                     return result;
                 })
-                .flatMapMany(instrumentIds ->
-                        instrumentRepository.findAllById(instrumentIds));
+                .flatMapMany(businessKeys ->
+                        instrumentRepository.findByBusinesskeyIn(businessKeys));
     }
 
     protected Flux<InstrumentEntity> filterActiveInstrumentChilds(Flux<InstrumentEntity> childs) {

@@ -5,23 +5,19 @@ import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWith
 
 public abstract class AbsCashInstrumentHandler extends AbsAccountableInstrumentHandler {
 
-    protected AbsCashInstrumentHandler(InstrumentEnvironmentWithGraph instrumentEnvironment, String description, String tenantId, String businesskey, boolean isNewInstrument) {
-        this(instrumentEnvironment, description, tenantId, false, businesskey, isNewInstrument);
-    }
-
-    protected AbsCashInstrumentHandler(InstrumentEnvironmentWithGraph instrumentEnvironment, String description, String tenantId, boolean addToAccountPf, String businesskey, boolean isNewInstrument) {
-        super(instrumentEnvironment, description, tenantId, addToAccountPf, businesskey, isNewInstrument);
+    protected AbsCashInstrumentHandler(InstrumentEnvironmentWithGraph instrumentEnvironment, String description, String parentBusinesskey, String businesskey, boolean isNewInstrument) {
+        super(instrumentEnvironment, description, parentBusinesskey, businesskey, isNewInstrument);
     }
 
     //@Override
     protected void validateInstrument4Inactivation() {
         /*if( valueService.getValue(instrumentId, LocalDate.MAX)!=0.0 ){
             throw new MFException(MFMsgKey.NO_VALID_INSTRUMENT_FOR_DEACTIVATION, "instrument with id:"+instrumentId + " not deactivated. The current value is not 0");
-        } 
+        }
         validateRecurrentTransactions4InstrumentInactivation();*/
     }
 
-    
+
     /*private void validateRecurrentTransactions4InstrumentInactivation() {
         for (RecurrentTransaction r : recurrentTransactionDao.listRecurrentTransactions()) {
 

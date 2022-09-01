@@ -25,11 +25,11 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
     protected Mono<InstrumentEntity> saveNewInstrument(InstrumentEntity instrumentEntity) {
         return super.saveNewInstrument(instrumentEntity)
                 .flatMap(e->{
-                    var budgetPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETPORTFOLIO, DEFAULT_BUDGETPF_PREFIX+e.getDescription(), e.getInstrumentid());
+                    var budgetPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETPORTFOLIO, DEFAULT_BUDGETPF_PREFIX+e.getDescription(), e.getBusinesskey());
                     budgetPortfolioHandler.setTreeLastChanged(ts);
                     return budgetPortfolioHandler.save()
                             .flatMap(bpf-> {
-                                var budgetGroupHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETGROUP, DEFAULT_BUDGETGROUP_PREFIX+e.getDescription(), bpf.getInstrumentid());
+                                var budgetGroupHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETGROUP, DEFAULT_BUDGETGROUP_PREFIX+e.getDescription(), bpf.getBusinesskey());
                                 budgetGroupHandler.setTreeLastChanged(ts);
                                 return budgetGroupHandler.save();
                             })
@@ -37,7 +37,7 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
                             .flatMap(bpf-> Mono.just(e));
                 })
                 .flatMap(e->{
-                    var accPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.ACCOUNTPORTFOLIO, DEFAULT_ACCPF_PREFIX+e.getDescription(), e.getInstrumentid());
+                    var accPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.ACCOUNTPORTFOLIO, DEFAULT_ACCPF_PREFIX+e.getDescription(), e.getBusinesskey());
                     accPortfolioHandler.setTreeLastChanged(ts);
                     return accPortfolioHandler.save()
                             // Return again the mono of the tenant

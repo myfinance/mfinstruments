@@ -1,20 +1,24 @@
 package de.hf.myfinance.instruments;
 
+import de.hf.myfinance.event.Event;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 
+import static de.hf.myfinance.event.Event.Type.CREATE;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static reactor.core.publisher.Mono.just;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import java.util.function.Consumer;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Testcontainers
@@ -25,6 +29,10 @@ class InstrumentserviceApplicationTests extends MongoDbTestBase{
 
 	@Autowired
 	InstrumentRepository instrumentRepository;
+
+	@Autowired
+	@Qualifier("messageProcessor")
+	private Consumer<Event<Integer, Instrument>> messageProcessor;
 
 	@Test
 	void contextLoads() {
@@ -37,6 +45,14 @@ class InstrumentserviceApplicationTests extends MongoDbTestBase{
 		var savedTenant = instrumentRepository.findByBusinesskey("testTenant@6").block();
 
 		getAndVerifyInstrument(savedTenant.getBusinesskey(), OK).jsonPath("$.description").isEqualTo(tenant.getDescription());
+	}
+
+	@Test
+	void createTenantViaMsg() {
+		sendCreateInstrumentEvent("nextTenant", InstrumentType.TENANT);
+		var savedTenant = instrumentRepository.findByBusinesskey("nextTenant@6").block();
+
+		getAndVerifyInstrument(savedTenant.getBusinesskey(), OK).jsonPath("$.description").isEqualTo("nextTenant");
 	}
 
 	private WebTestClient.BodyContentSpec postAndVerifyTenant(Instrument tenant, HttpStatus expectedStatus) {
@@ -61,6 +77,10 @@ class InstrumentserviceApplicationTests extends MongoDbTestBase{
 				.expectBody();
 	}
 
-
+	private void sendCreateInstrumentEvent(String desc, InstrumentType type) {
+		var instrument = new Instrument(desc, type);
+		Event<Integer, Instrument> event = new Event(CREATE, desc, instrument);
+		messageProcessor.accept(event);
+	}
 
 }

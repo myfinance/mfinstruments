@@ -13,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.test.StepVerifier;
 
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataMongoTest
@@ -113,4 +114,39 @@ class InstrumentServiceTests extends MongoDbTestBase{
             instrumentService.getInstrument("bla");
         });
     }
-}
+
+    @Test
+    void createGiro() {
+        var tenantKey = "aTest@6";
+        var tenantDesc = "aTest";
+        var newTenant = new Instrument(tenantDesc, InstrumentType.TENANT);
+        instrumentService.addInstrument(newTenant).block();
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(5).verifyComplete();
+
+        var tenants = instrumentService.listTenants().collectList().block();
+        assertEquals(1, tenants.size());
+        var tenant = tenants.get(0);
+        assertEquals(tenantKey, tenant.getBusinesskey());
+        assertEquals(tenantDesc, tenant.getDescription());
+        assertTrue(tenant.isIsactive());
+
+        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
+        assertEquals(1, accPfs.size());
+        var accPf = accPfs.get(0);
+        assertEquals("accPf_aTest@8", accPf.getBusinesskey());
+        assertEquals("accPf_aTest", accPf.getDescription());
+        assertTrue(accPf.isIsactive());
+
+
+        var giroDesc = "newGiro";
+        var giroKey = "newGiro@1";
+        var newGiro = new Instrument(giroDesc, InstrumentType.GIRO);
+        newGiro.setParentBusinesskey(accPf.getBusinesskey());
+        var savedGiro = instrumentService.addInstrument(newGiro).block();
+        assertEquals(giroDesc, savedGiro.getDescription());
+        assertEquals(giroKey, savedGiro.getBusinesskey());
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(6).verifyComplete();
+
+        StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(5).verifyComplete();
+    }
+    }

@@ -42,7 +42,7 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
         addProperty(InstrumentPropertyType.INCOMEBUDGETID, budgetHandler.getInstrumentId());*/
         return super.saveNewInstrument(instrumentEntity)
                 .flatMap(e->{
-                    var budgetHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX+e.getDescription(), e.getInstrumentid());
+                    var budgetHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX+e.getDescription(), e.getBusinesskey());
                     budgetHandler.setTreeLastChanged(ts);
                     return budgetHandler.save()
                             // Return again the mono of the tenant

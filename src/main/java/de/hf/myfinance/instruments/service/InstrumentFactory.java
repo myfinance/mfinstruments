@@ -57,6 +57,8 @@ public class InstrumentFactory {
                 return new BudgetGroupHandler(instrumentEnvironment, description, parentId, null, true);
             case BUDGET:
                 return new BudgetHandler(instrumentEnvironment, description, parentId, null, true);
+            case GIRO:
+                return new GiroHandler(instrumentEnvironment, description, parentId, null, true);
 
             default:
                 throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:"+instrumentType);

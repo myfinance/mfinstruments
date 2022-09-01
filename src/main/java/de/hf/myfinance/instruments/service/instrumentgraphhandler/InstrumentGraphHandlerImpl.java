@@ -4,8 +4,10 @@ package de.hf.myfinance.instruments.service.instrumentgraphhandler;
 import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentGraphEntry;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraph;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+@Component
 public class InstrumentGraphHandlerImpl extends InstrumentGraphHandlerBase{
 
     public InstrumentGraphHandlerImpl(final InstrumentEnvironmentWithGraph instrumentEnvironment) {

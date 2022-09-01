@@ -1,9 +1,5 @@
 package de.hf.myfinance.instruments.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
 import de.hf.framework.audit.AuditService;
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
@@ -46,23 +42,15 @@ public class InstrumentFactory {
      * @return Instrumenthandler for the instrumenttype of the new instrument
      */
     public InstrumentHandler getInstrumentHandlerForNewInstrument(InstrumentType instrumentType, String description, String parentId) {
-        switch(instrumentType){
-            case TENANT:
-                return new TenantHandler(instrumentEnvironment, description, null, true);
-            case BUDGETPORTFOLIO:
-                return new BudgetPortfolioHandler(instrumentEnvironment, description, parentId, null, true);
-            case ACCOUNTPORTFOLIO:
-                return new AccountPortfolioHandler(instrumentEnvironment, description, parentId, null, true);
-            case BUDGETGROUP:
-                return new BudgetGroupHandler(instrumentEnvironment, description, parentId, null, true);
-            case BUDGET:
-                return new BudgetHandler(instrumentEnvironment, description, parentId, null, true);
-            case GIRO:
-                return new GiroHandler(instrumentEnvironment, description, parentId, null, true);
-
-            default:
-                throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:"+instrumentType);
-        }
+        return switch (instrumentType) {
+            case TENANT -> new TenantHandler(instrumentEnvironment, description, null, true);
+            case BUDGETPORTFOLIO -> new BudgetPortfolioHandler(instrumentEnvironment, description, parentId, null, true);
+            case ACCOUNTPORTFOLIO -> new AccountPortfolioHandler(instrumentEnvironment, description, parentId, null, true);
+            case BUDGETGROUP -> new BudgetGroupHandler(instrumentEnvironment, description, parentId, null, true);
+            case BUDGET -> new BudgetHandler(instrumentEnvironment, description, parentId, null, true);
+            case GIRO -> new GiroHandler(instrumentEnvironment, description, parentId, null, true);
+            default -> throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:" + instrumentType);
+        };
     }
 
     /**
@@ -72,27 +60,21 @@ public class InstrumentFactory {
      * @return Instrumenthandler for the instrumenttype of the new instrument
      */
     public InstrumentHandler getInstrumentHandlerForExistingInstrument(String businesskey) {
-        InstrumentType instrumentType = InstrumentType.UNKNOWN;
+        InstrumentType instrumentType;
         try {
             int typeId = Integer.parseInt(businesskey.substring(businesskey.lastIndexOf("@")+1));
             instrumentType = InstrumentType.getInstrumentTypeById(typeId);
         } catch (Exception e) {
             throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, " no valid businesskey, the Instrumenttype seems not to be included:"+businesskey);
         }
-        switch(instrumentType){
-            case TENANT:
-                return new TenantHandler(instrumentEnvironment, null, businesskey, false);
-            case BUDGETPORTFOLIO:
-                return new BudgetPortfolioHandler(instrumentEnvironment, null, null, businesskey, false);
-            case ACCOUNTPORTFOLIO:
-                return new AccountPortfolioHandler(instrumentEnvironment, null, null, businesskey, false);
-            case BUDGETGROUP:
-                return new BudgetGroupHandler(instrumentEnvironment, null, null, businesskey, false);
-            case BUDGET:
-                return new BudgetHandler(instrumentEnvironment, null, null, businesskey, false);
-            default:
-                throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:"+instrumentType);
-        }
+        return switch (instrumentType) {
+            case TENANT -> new TenantHandler(instrumentEnvironment, null, businesskey, false);
+            case BUDGETPORTFOLIO -> new BudgetPortfolioHandler(instrumentEnvironment, null, null, businesskey, false);
+            case ACCOUNTPORTFOLIO -> new AccountPortfolioHandler(instrumentEnvironment, null, null, businesskey, false);
+            case BUDGETGROUP -> new BudgetGroupHandler(instrumentEnvironment, null, null, businesskey, false);
+            case BUDGET -> new BudgetHandler(instrumentEnvironment, null, null, businesskey, false);
+            default -> throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:" + instrumentType);
+        };
     }
 
     /**

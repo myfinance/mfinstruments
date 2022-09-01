@@ -6,6 +6,7 @@ import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository
 import de.hf.myfinance.instruments.service.accountableinstrumenthandler.TenantHandler;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraphAndFactory;
 import de.hf.myfinance.instruments.service.instrumentgraphhandler.InstrumentGraphHandlerImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
@@ -31,6 +32,12 @@ public class AccountableInstrumentHandlerTest extends MongoDbTestBase{
 
     @Autowired
     InstrumentGraphHandlerImpl instrumentGraphHandler;
+
+    @BeforeEach
+    void setupDb() {
+        instrumentRepository.deleteAll().block();
+        instrumentGraphRepository.deleteAll().block();
+    }
 
 
     @Test

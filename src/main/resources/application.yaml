@@ -47,11 +47,3 @@ api:
     badRequest.description: Bad Request, invalid format of the request. See response message for more information
     notFound.description: Not found, the specified id does not exist
     unprocessableEntity.description: Unprocessable entity, input parameters caused the processing to fail. See response message for more information
-
----
-spring.config.activate.on-profile: k8n
-
-spring.data.mongodb:
-  host: mfmongo
-  port: 30029
-  database: instrument-db

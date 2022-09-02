@@ -4,6 +4,7 @@ import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.service.InstrumentService;
+import de.hf.myfinance.restmodel.AdditionalMaps;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,9 @@ import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.test.StepVerifier;
 
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -149,4 +153,35 @@ class InstrumentServiceTests extends MongoDbTestBase{
 
         StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(5).verifyComplete();
     }
+
+    @Test
+    void createCurrency() {
+        var desc = "newCurrency";
+        var currencyCode = "USD";
+        var currency = new Instrument(desc, InstrumentType.CURRENCY);
+        currency.setBusinesskey(currencyCode);
+        var savedCurrency = instrumentService.addInstrument(currency).block();
+        assertEquals(desc, savedCurrency.getDescription());
+        assertEquals(currencyCode, savedCurrency.getBusinesskey());
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(1).verifyComplete();
     }
+
+    @Test
+    void createEquity() {
+        var desc = "newEquity";
+        var isin = "de000001";
+        var symbols = new HashMap<String, String>();
+        symbols.put("MYSYMBOL", "USD");
+        Map<AdditionalMaps, Map<String, String>> additionalMaps = new HashMap<>();
+        additionalMaps.put(AdditionalMaps.EQUITYSYMBOLS, symbols);
+        var eq = new Instrument(desc, InstrumentType.EQUITY);
+        eq.setAdditionalMaps(additionalMaps);
+        eq.setBusinesskey(isin);
+        var savedEq = instrumentService.addInstrument(eq).block();
+        assertEquals(desc, savedEq.getDescription());
+        assertEquals(isin, savedEq.getBusinesskey());
+        assertEquals(1, savedEq.getAdditionalMaps().get(AdditionalMaps.EQUITYSYMBOLS).size());
+        assertEquals("USD", savedEq.getAdditionalMaps().get(AdditionalMaps.EQUITYSYMBOLS).get("MYSYMBOL"));
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(1).verifyComplete();
+    }
+}

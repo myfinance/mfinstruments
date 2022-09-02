@@ -9,5 +9,4 @@ public interface BaseAccountableInstrumentHandler {
     Flux<String> getAncestorIds();
     Flux<InstrumentEntity> getInstrumentChilds(EdgeType edgeType, int pathlength);
     Mono<String> getTenant();
-    //List<InstrumentPropertiesEntity> getInstrumentProperties();
 }

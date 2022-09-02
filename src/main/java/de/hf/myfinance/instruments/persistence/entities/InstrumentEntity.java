@@ -17,13 +17,13 @@
  package de.hf.myfinance.instruments.persistence.entities;
 
 
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 
+import de.hf.myfinance.restmodel.AdditionalMaps;
+import de.hf.myfinance.restmodel.AdditionalProperties;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -44,12 +44,12 @@ public class InstrumentEntity implements java.io.Serializable {
     private InstrumentType instrumentType;
     private String description;
     private boolean isactive;
-    private LocalDate maturitydate;
-    private LocalDate closingdate;
     private LocalDateTime treelastchanged;
     @Indexed(unique = true)
     private String businesskey;
-    private Set<InstrumentPropertiesEntity> instrumentProperties = new HashSet<InstrumentPropertiesEntity>(0);
+
+    private Map<AdditionalMaps, Map<String, String>> additionalMaps = new HashMap<>();
+    private Map<AdditionalProperties, String> additionalProperties = new HashMap<>();
 
     public InstrumentEntity() {
     }
@@ -94,21 +94,6 @@ public class InstrumentEntity implements java.io.Serializable {
         this.isactive = isactive;
     }
     
-    public LocalDate getMaturitydate() {
-        return this.maturitydate;
-    }
-    public void setMaturitydate(LocalDate maturitydate) {
-        this.maturitydate = maturitydate;
-    }
-    
-
-    public LocalDate getClosingdate() {
-        return this.closingdate;
-    }
-    public void setClosingdate(LocalDate closingdate) {
-        this.closingdate = closingdate;
-    }
-    
     public LocalDateTime getTreelastchanged() {
         return this.treelastchanged;
     }
@@ -123,11 +108,18 @@ public class InstrumentEntity implements java.io.Serializable {
         this.businesskey = businesskey;
     }
 
-    public Set<InstrumentPropertiesEntity> getInstrumentProperties() {
-        return this.instrumentProperties;
+    public Map<AdditionalProperties, String> getAdditionalProperties() {
+        return additionalProperties;
     }
-    public void setInstrumentProperties(Set<InstrumentPropertiesEntity> instrumentProperties) {
-        this.instrumentProperties = instrumentProperties;
+    public void setAdditionalProperties(Map<AdditionalProperties, String> additionalProperties) {
+        this.additionalProperties = additionalProperties;
+    }
+
+    public Map<AdditionalMaps, Map<String, String>> getAdditionalMaps() {
+        return additionalMaps;
+    }
+    public void setAdditionalMaps(Map<AdditionalMaps, Map<String, String>> additionalMaps) {
+        this.additionalMaps = additionalMaps;
     }
 
     public Integer getVersion() {

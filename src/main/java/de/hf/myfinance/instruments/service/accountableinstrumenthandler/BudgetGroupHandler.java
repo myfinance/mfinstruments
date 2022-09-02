@@ -1,6 +1,5 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
-import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.InstrumentFactory;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraphAndFactory;
@@ -42,7 +41,7 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
         addProperty(InstrumentPropertyType.INCOMEBUDGETID, budgetHandler.getInstrumentId());*/
         return super.saveNewInstrument(instrumentEntity)
                 .flatMap(e->{
-                    var budgetHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX+e.getDescription(), e.getBusinesskey());
+                    var budgetHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX+e.getDescription(), e.getBusinesskey(), null);
                     budgetHandler.setTreeLastChanged(ts);
                     return budgetHandler.save()
                             // Return again the mono of the tenant

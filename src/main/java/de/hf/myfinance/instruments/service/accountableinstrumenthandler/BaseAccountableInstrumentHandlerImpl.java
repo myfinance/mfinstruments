@@ -29,6 +29,7 @@ public final class BaseAccountableInstrumentHandlerImpl extends AbsAccountableIn
         throw new MFException(MFMsgKey.WRONG_OPERATION_EXCEPTION,  " instrumenttype can not be spezified for BaseAccountableInstrumentHandler");
     }
 
+    @Override
     public Mono<InstrumentEntity> save() {
         throw new MFException(MFMsgKey.WRONG_OPERATION_EXCEPTION,  "BaseAccountableInstrumentHandler can not be saved");
     }
@@ -38,15 +39,8 @@ public final class BaseAccountableInstrumentHandlerImpl extends AbsAccountableIn
         throw new MFException(MFMsgKey.WRONG_OPERATION_EXCEPTION,  "BaseAccountableInstrumentHandler can not be loaded and validated");
     }
 
+    @Override
     public void setTreeLastChanged(LocalDateTime ts){
         throw new MFException(MFMsgKey.WRONG_OPERATION_EXCEPTION,  "TimeStamp can not be set for BaseAccountableInstrumentHandler");
-    }
-
-    public void updateInstrument(boolean isActive) {
-        throw new MFException(MFMsgKey.WRONG_OPERATION_EXCEPTION,  "BaseAccountableInstrumentHandler can not be updated");
-    }
-
-    public void updateInstrument(String description, boolean isActive) {
-        throw new MFException(MFMsgKey.WRONG_OPERATION_EXCEPTION,  "BaseAccountableInstrumentHandler can not be updated");
     }
 }

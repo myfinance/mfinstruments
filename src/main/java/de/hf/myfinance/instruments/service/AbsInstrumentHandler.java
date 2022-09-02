@@ -9,6 +9,7 @@ import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
+import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import reactor.core.publisher.Mono;
 
@@ -31,7 +32,7 @@ public abstract class AbsInstrumentHandler {
     protected boolean isActive = true;
     protected boolean isNewInstrument;
 
-    protected final int MAX_BUSINESSKEY_SIZE = 32;
+    protected static final int MAX_BUSINESSKEY_SIZE = 32;
 
     protected AbsInstrumentHandler(InstrumentEnvironment instrumentEnvironment, String description, String businesskey, boolean isNewInstrument) {
         this.instrumentRepository = instrumentEnvironment.getInstrumentRepository();
@@ -89,7 +90,7 @@ public abstract class AbsInstrumentHandler {
     }
 
     protected Mono<InstrumentEntity> saveNewInstrument(InstrumentEntity instrumentEntity) {
-        var newDomainObjectmono = instrumentRepository.save(instrumentEntity);
+        var newDomainObjectmono = instrumentRepository.save(setAdditionalValues(instrumentEntity));
         auditService.saveMessage(domainObjectName+" inserted: businesskey=" + instrumentEntity.getBusinesskey() + " desc=" + instrumentEntity.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
         return newDomainObjectmono;
     }
@@ -100,19 +101,20 @@ public abstract class AbsInstrumentHandler {
         if (description != null && !description.equals("")) {
             instrumentEntity.setDescription(description);
         }
-        var newDomainObjectmono = instrumentRepository.save(instrumentEntity);
+        var newDomainObjectmono = instrumentRepository.save(setAdditionalValues(instrumentEntity));
         auditService.saveMessage(domainObjectName + " updated:businesskey=" + instrumentEntity.getBusinesskey() + " desc=" + instrumentEntity.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
         return newDomainObjectmono;
     }
 
         protected Mono<InstrumentEntity> getInstrumentById(String instrumentId, String errMsg) {
-        var instrument = instrumentRepository.findById(instrumentId)
+            return instrumentRepository.findById(instrumentId)
                 .switchIfEmpty(
                     Mono.error(new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION, errMsg + " Instrument for id:" + instrumentId + " not found")));
-
-        return instrument;
     }
 
+    protected InstrumentEntity setAdditionalValues(InstrumentEntity instrumentEntity) {
+        return instrumentEntity;
+    }
 
     protected void checkInstrumentInactivation(InstrumentEntity oldInstrumentEntity,  boolean isActiveAfterUpdate) {
         // try to deactivate instrument ?
@@ -157,6 +159,12 @@ public abstract class AbsInstrumentHandler {
         this.instrumentId = instrumentId;
     }
 
-    abstract protected InstrumentEntity createDomainObject();
-    abstract protected InstrumentType getInstrumentType();
+    public void setValues(Instrument instrument){
+        if(!isNewInstrument) {
+            isActive = instrument.isIsactive();
+        }
+    }
+
+    protected abstract InstrumentEntity createDomainObject();
+    protected abstract InstrumentType getInstrumentType();
 }

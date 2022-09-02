@@ -1,6 +1,5 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
-import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.InstrumentFactory;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraphAndFactory;

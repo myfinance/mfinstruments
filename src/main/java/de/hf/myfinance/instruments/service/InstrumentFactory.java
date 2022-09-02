@@ -10,6 +10,7 @@ import de.hf.myfinance.instruments.service.accountableinstrumenthandler.*;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentImpl;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraphAndFactory;
 import de.hf.myfinance.instruments.service.securityhandler.CurrencyHandler;
+import de.hf.myfinance.instruments.service.securityhandler.EquityHandler;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -49,8 +50,9 @@ public class InstrumentFactory {
             case ACCOUNTPORTFOLIO -> new AccountPortfolioHandler(instrumentEnvironment, description, parentId, null, true);
             case BUDGETGROUP -> new BudgetGroupHandler(instrumentEnvironment, description, parentId, null, true);
             case BUDGET -> new BudgetHandler(instrumentEnvironment, description, parentId, null, true);
-            case GIRO -> new GiroHandler(instrumentEnvironment, description, parentId, businesskey, true);
+            case GIRO -> new GiroHandler(instrumentEnvironment, description, parentId, null, true);
             case CURRENCY -> new CurrencyHandler(instrumentEnvironment, description, businesskey, true);
+            case EQUITY -> new EquityHandler(instrumentEnvironment, description, businesskey, true);
             default -> throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:" + instrumentType);
         };
     }
@@ -75,6 +77,9 @@ public class InstrumentFactory {
             case ACCOUNTPORTFOLIO -> new AccountPortfolioHandler(instrumentEnvironment, null, null, businesskey, false);
             case BUDGETGROUP -> new BudgetGroupHandler(instrumentEnvironment, null, null, businesskey, false);
             case BUDGET -> new BudgetHandler(instrumentEnvironment, null, null, businesskey, false);
+            case GIRO -> new GiroHandler(instrumentEnvironment, null, null, businesskey, false);
+            case CURRENCY -> new CurrencyHandler(instrumentEnvironment, null, businesskey, false);
+            case EQUITY -> new EquityHandler(instrumentEnvironment, null, businesskey, false);
             default -> throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:" + instrumentType);
         };
     }

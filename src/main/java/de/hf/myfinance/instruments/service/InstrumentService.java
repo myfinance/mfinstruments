@@ -3,7 +3,6 @@ package de.hf.myfinance.instruments.service;
 
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,14 +13,12 @@ import reactor.core.publisher.Mono;
 @Component
 public class InstrumentService {
     private final InstrumentMapper instrumentMapper;
-    private final InstrumentRepository instrumentRepository;
     private final InstrumentFactory instrumentFactory;
     InstrumentGraphRepository instrumentGraphRepository;
 
     @Autowired
-    public InstrumentService(InstrumentMapper instrumentMapper, InstrumentRepository instrumentRepository, InstrumentFactory instrumentFactory, InstrumentGraphRepository instrumentGraphRepository){
+    public InstrumentService(InstrumentMapper instrumentMapper, InstrumentFactory instrumentFactory, InstrumentGraphRepository instrumentGraphRepository){
         this.instrumentMapper = instrumentMapper;
-        this.instrumentRepository = instrumentRepository;
         this.instrumentFactory = instrumentFactory;
         this.instrumentGraphRepository = instrumentGraphRepository;
     }
@@ -35,7 +32,7 @@ public class InstrumentService {
     public Mono<Instrument> addInstrument(Instrument instrument) {
 
         var instrumentHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(instrument.getInstrumentType(), instrument.getDescription(), instrument.getParentBusinesskey(), instrument.getBusinesskey());
-
+        instrumentHandler.setValues(instrument);
         return instrumentHandler.save().map(e-> instrumentMapper.entityToApi(e));
     }
 

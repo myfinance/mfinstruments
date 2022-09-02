@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DataMongoTest
 @Testcontainers
-public class AccountableInstrumentHandlerTest extends MongoDbTestBase{
+class AccountableInstrumentHandlerTest extends MongoDbTestBase{
     @Autowired
     InstrumentGraphRepository instrumentGraphRepository;
 

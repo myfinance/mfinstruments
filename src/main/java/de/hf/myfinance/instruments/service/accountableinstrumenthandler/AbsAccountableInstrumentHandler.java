@@ -62,6 +62,7 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
                 .filter(e -> e.getInstrumentType().equals(instrumentType));
     }
 
+    @Override
     protected Mono<InstrumentEntity> saveNewInstrument(InstrumentEntity instrumentEntity) {
         return super.saveNewInstrument(instrumentEntity).flatMap(e-> saveGraph(e)
         // Return again the mono of the tenant
@@ -106,14 +107,11 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
                 .reduce(new ArrayList<String>(), (e1,e2)-> {
                     e1.add(e2);
                     return e1;
-                }).flatMapMany(e->{
-                    Flux<InstrumentEntity> instruments = instrumentRepository.findAllById(e);
-                    return instruments;
-                });
+                }).flatMapMany(instrumentRepository::findAllById);
     }
 
     public Flux<String> getAncestorIds() {
-        return instrumentGraphHandler.getAncestors(businesskey, EdgeType.TENANTGRAPH).map(e->e.getAncestor());
+        return instrumentGraphHandler.getAncestors(businesskey, EdgeType.TENANTGRAPH).map(InstrumentGraphEntry::getAncestor);
     }
 
     public Flux<InstrumentEntity> listInstrumentChilds(String businesskey) {
@@ -150,8 +148,7 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
                     result.add(element);
                     return result;
                 })
-                .flatMapMany(businessKeys ->
-                        instrumentRepository.findByBusinesskeyIn(businessKeys));
+                .flatMapMany(instrumentRepository::findByBusinesskeyIn);
     }
 
     protected Flux<InstrumentEntity> filterActiveInstrumentChilds(Flux<InstrumentEntity> childs) {
@@ -161,7 +158,7 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
     protected Flux<InstrumentEntity> filterInstrumentChilds(Flux<InstrumentEntity> childs, boolean filterInstrumentType, InstrumentType instrumentType, boolean onlyActive) {
         Flux<InstrumentEntity> instruments = childs;
         if(onlyActive) {
-            instruments = childs.filter(i->i.isIsactive()==true);
+            instruments = childs.filter(InstrumentEntity::isIsactive);
         }
         if(filterInstrumentType) {
             instruments = instruments.filter(i->

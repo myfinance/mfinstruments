@@ -149,4 +149,17 @@ class InstrumentServiceTests extends MongoDbTestBase{
 
         StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(5).verifyComplete();
     }
+
+    @Test
+    void createCurrency() {
+        var desc = "newCurrency";
+        var currencyCode = "USD";
+        var currency = new Instrument(desc, InstrumentType.CURRENCY);
+        currency.setBusinesskey(currencyCode);
+        var savedCurrency = instrumentService.addInstrument(currency).block();
+        assertEquals(desc, savedCurrency.getDescription());
+        assertEquals(currencyCode, savedCurrency.getBusinesskey());
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(1).verifyComplete();
+
     }
+}

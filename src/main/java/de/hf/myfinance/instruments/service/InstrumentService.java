@@ -33,12 +33,8 @@ public class InstrumentService {
     }
 
     public Mono<Instrument> addInstrument(Instrument instrument) {
-        Mono<InstrumentEntity> savedInstrument;
-        var parentBusinesskey = instrument.getParentBusinesskey();
-        if(instrument.getInstrumentType().equals(InstrumentType.TENANT)){
-            parentBusinesskey = null;
-        }
-        var instrumentHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(instrument.getInstrumentType(), instrument.getDescription(), parentBusinesskey);
+
+        var instrumentHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(instrument.getInstrumentType(), instrument.getDescription(), instrument.getParentBusinesskey(), instrument.getBusinesskey());
 
         return instrumentHandler.save().map(e-> instrumentMapper.entityToApi(e));
     }

@@ -9,6 +9,7 @@ import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.accountableinstrumenthandler.*;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentImpl;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraphAndFactory;
+import de.hf.myfinance.instruments.service.securityhandler.CurrencyHandler;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -41,14 +42,15 @@ public class InstrumentFactory {
      * @param parentId the id of the parent
      * @return Instrumenthandler for the instrumenttype of the new instrument
      */
-    public InstrumentHandler getInstrumentHandlerForNewInstrument(InstrumentType instrumentType, String description, String parentId) {
+    public InstrumentHandler getInstrumentHandlerForNewInstrument(InstrumentType instrumentType, String description, String parentId, String businesskey) {
         return switch (instrumentType) {
             case TENANT -> new TenantHandler(instrumentEnvironment, description, null, true);
             case BUDGETPORTFOLIO -> new BudgetPortfolioHandler(instrumentEnvironment, description, parentId, null, true);
             case ACCOUNTPORTFOLIO -> new AccountPortfolioHandler(instrumentEnvironment, description, parentId, null, true);
             case BUDGETGROUP -> new BudgetGroupHandler(instrumentEnvironment, description, parentId, null, true);
             case BUDGET -> new BudgetHandler(instrumentEnvironment, description, parentId, null, true);
-            case GIRO -> new GiroHandler(instrumentEnvironment, description, parentId, null, true);
+            case GIRO -> new GiroHandler(instrumentEnvironment, description, parentId, businesskey, true);
+            case CURRENCY -> new CurrencyHandler(instrumentEnvironment, description, businesskey, true);
             default -> throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:" + instrumentType);
         };
     }

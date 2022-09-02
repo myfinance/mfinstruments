@@ -31,7 +31,7 @@ public abstract class AbsInstrumentHandler {
     protected boolean isActive = true;
     protected boolean isNewInstrument;
 
-    private final int MAX_BUSINESSKEY_SIZE = 32;
+    protected final int MAX_BUSINESSKEY_SIZE = 32;
 
     protected AbsInstrumentHandler(InstrumentEnvironment instrumentEnvironment, String description, String businesskey, boolean isNewInstrument) {
         this.instrumentRepository = instrumentEnvironment.getInstrumentRepository();

@@ -6,6 +6,7 @@ import de.hf.framework.audit.AuditService;
 import de.hf.framework.audit.Severity;
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
+import de.hf.myfinance.instruments.events.out.EventHandler;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
@@ -31,7 +32,7 @@ public abstract class AbsInstrumentHandler {
     protected String oldDesc;
     protected boolean isActive = true;
     protected boolean isNewInstrument;
-
+    private final EventHandler eventHandler;
     protected static final int MAX_BUSINESSKEY_SIZE = 32;
 
     protected AbsInstrumentHandler(InstrumentEnvironment instrumentEnvironment, String description, String businesskey, boolean isNewInstrument) {
@@ -41,6 +42,7 @@ public abstract class AbsInstrumentHandler {
         this.description = description;
         this.businesskey = businesskey;
         this.isNewInstrument = isNewInstrument;
+        this.eventHandler = instrumentEnvironment.getEventHandler();
         setBusinesskey();
     }
 
@@ -92,6 +94,7 @@ public abstract class AbsInstrumentHandler {
     protected Mono<InstrumentEntity> saveNewInstrument(InstrumentEntity instrumentEntity) {
         var newDomainObjectmono = instrumentRepository.save(setAdditionalValues(instrumentEntity));
         auditService.saveMessage(domainObjectName+" inserted: businesskey=" + instrumentEntity.getBusinesskey() + " desc=" + instrumentEntity.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
+        eventHandler.sendInstrumentUpdatedEvent(instrumentEntity);
         return newDomainObjectmono;
     }
 
@@ -103,6 +106,7 @@ public abstract class AbsInstrumentHandler {
         }
         var newDomainObjectmono = instrumentRepository.save(setAdditionalValues(instrumentEntity));
         auditService.saveMessage(domainObjectName + " updated:businesskey=" + instrumentEntity.getBusinesskey() + " desc=" + instrumentEntity.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
+        eventHandler.sendInstrumentUpdatedEvent(instrumentEntity);
         return newDomainObjectmono;
     }
 

@@ -12,13 +12,11 @@ import reactor.core.publisher.Mono;
 public class InstrumentService {
     private final InstrumentMapper instrumentMapper;
     private final InstrumentFactory instrumentFactory;
-    InstrumentGraphRepository instrumentGraphRepository;
 
     @Autowired
-    public InstrumentService(InstrumentMapper instrumentMapper, InstrumentFactory instrumentFactory, InstrumentGraphRepository instrumentGraphRepository){
+    public InstrumentService(InstrumentMapper instrumentMapper, InstrumentFactory instrumentFactory){
         this.instrumentMapper = instrumentMapper;
         this.instrumentFactory = instrumentFactory;
-        this.instrumentGraphRepository = instrumentGraphRepository;
     }
 
     public Mono<Instrument> getInstrument(String businesskey) {

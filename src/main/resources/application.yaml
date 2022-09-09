@@ -24,6 +24,10 @@ spring.cloud.stream:
   bindings.messageProcessor-in-0:
     destination: instruments
     group: instrumentsGroup
+  bindings.instrumentupdates-out-0:
+    destination: instrumentupdates
+    producer:
+      required-groups: instrumentAuditGroup
 
 spring.cloud.stream.rabbit.bindings.messageProcessor-in-0.consumer:
   autoBindDlq: true

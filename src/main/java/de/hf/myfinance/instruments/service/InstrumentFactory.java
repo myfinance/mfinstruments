@@ -3,6 +3,7 @@ package de.hf.myfinance.instruments.service;
 import de.hf.framework.audit.AuditService;
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
+import de.hf.myfinance.instruments.events.out.EventHandler;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
@@ -22,8 +23,8 @@ public class InstrumentFactory {
     private final InstrumentEnvironmentWithGraphAndFactory instrumentEnvironment;
 
     @Autowired
-    public InstrumentFactory(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService) {
-        instrumentEnvironment = new InstrumentEnvironmentImpl(instrumentRepository, instrumentGraphRepository, auditService, this);
+    public InstrumentFactory(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, EventHandler eventHandler) {
+        instrumentEnvironment = new InstrumentEnvironmentImpl(instrumentRepository, instrumentGraphRepository, auditService, this, eventHandler);
     }
 
     /**

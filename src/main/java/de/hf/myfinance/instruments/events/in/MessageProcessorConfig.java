@@ -1,6 +1,7 @@
-package de.hf.myfinance.instruments.service;
+package de.hf.myfinance.instruments.events.in;
 
 import de.hf.myfinance.event.Event;
+import de.hf.myfinance.instruments.service.InstrumentService;
 import de.hf.myfinance.restmodel.Instrument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

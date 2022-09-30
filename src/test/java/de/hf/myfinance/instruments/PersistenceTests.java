@@ -6,15 +6,16 @@ import de.hf.myfinance.restmodel.InstrumentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@DataMongoTest
+@SpringBootTest(webEnvironment = RANDOM_PORT)
 @Testcontainers
 class PersistenceTests extends MongoDbTestBase{
 

@@ -9,17 +9,20 @@ import de.hf.myfinance.instruments.service.instrumentgraphhandler.InstrumentGrap
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
+import org.springframework.context.annotation.Import;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.test.StepVerifier;
 
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-
-@DataMongoTest
+@SpringBootTest(webEnvironment = RANDOM_PORT)
 @Testcontainers
+@Import({TestChannelBinderConfiguration.class})
 class AccountableInstrumentHandlerTest extends MongoDbTestBase{
     @Autowired
     InstrumentGraphRepository instrumentGraphRepository;

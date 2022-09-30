@@ -1,6 +1,7 @@
 package de.hf.myfinance.instruments;
 
 import de.hf.framework.exceptions.MFException;
+import de.hf.myfinance.event.Event;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.service.InstrumentService;
@@ -10,18 +11,25 @@ import de.hf.myfinance.restmodel.InstrumentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
+import org.springframework.context.annotation.Import;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.test.StepVerifier;
 
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@DataMongoTest
+
+@SpringBootTest(webEnvironment = RANDOM_PORT)
 @Testcontainers
+@Import({TestChannelBinderConfiguration.class})
 class InstrumentServiceTests extends MongoDbTestBase{
 
     @Autowired
@@ -31,10 +39,18 @@ class InstrumentServiceTests extends MongoDbTestBase{
     @Autowired
     InstrumentGraphRepository instrumentGraphRepository;
 
+    @Autowired
+    @Qualifier("messageProcessor")
+    private Consumer<Event<Integer, Instrument>> messageProcessor;
+
     @BeforeEach
     void setupDb() {
         instrumentRepository.deleteAll().block();
         instrumentGraphRepository.deleteAll().block();
+    }
+
+    @Test
+    void contextLoads() {
     }
 
     @Test

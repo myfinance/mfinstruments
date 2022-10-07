@@ -4,7 +4,7 @@ import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.service.accountableinstrumenthandler.TenantHandler;
-import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraphAndFactory;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithFactory;
 import de.hf.myfinance.instruments.service.instrumentgraphhandler.InstrumentGraphHandlerImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ class AccountableInstrumentHandlerTest extends MongoDbTestBase{
     InstrumentRepository instrumentRepository;
 
     @Autowired
-    InstrumentEnvironmentWithGraphAndFactory instrumentEnvironment;
+    InstrumentEnvironmentWithFactory instrumentEnvironment;
 
     @Autowired
     InstrumentGraphHandlerImpl instrumentGraphHandler;

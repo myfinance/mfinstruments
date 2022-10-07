@@ -1,6 +1,5 @@
 package de.hf.myfinance.instruments.service.securityhandler;
 
-import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
 import de.hf.myfinance.restmodel.AdditionalMaps;
 import de.hf.myfinance.restmodel.Instrument;
@@ -12,10 +11,8 @@ public class EquityHandler extends SecurityHandler {
     }
 
     @Override
-    protected InstrumentEntity createDomainObject() {
-        var theObj = new InstrumentEntity(InstrumentType.EQUITY, description, true, ts);
-        theObj.setBusinesskey(businesskey);
-        return theObj;
+    protected Instrument createDomainObject() {
+        return new Instrument(businesskey, description, InstrumentType.EQUITY, true, ts);
     }
 
     @Override

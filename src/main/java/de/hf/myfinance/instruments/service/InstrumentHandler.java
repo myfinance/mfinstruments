@@ -9,9 +9,9 @@ import reactor.core.publisher.Mono;
 public interface InstrumentHandler {
     String getInstrumentId();
     void setTreeLastChanged(LocalDateTime ts);
-    Mono<InstrumentEntity> save();
+    Mono<String> save();
     void setActive(boolean isActive);
     void setDescription(String description);
-    Mono<InstrumentEntity> loadInstrument();
+    Mono<Instrument> loadInstrument();
     void setValues(Instrument instrument);
 }

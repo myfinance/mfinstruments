@@ -1,7 +1,7 @@
 package de.hf.myfinance.instruments.service.securityhandler;
 
-import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
+import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 
 public class CurrencyHandler extends SecurityHandler {
@@ -10,10 +10,8 @@ public class CurrencyHandler extends SecurityHandler {
     }
 
     @Override
-    protected InstrumentEntity createDomainObject() {
-        var theObj = new InstrumentEntity(InstrumentType.CURRENCY, description, true, ts);
-        theObj.setBusinesskey(businesskey);
-        return theObj;
+    protected Instrument createDomainObject() {
+        return new Instrument(businesskey, description, InstrumentType.CURRENCY, true, ts);
     }
 
     @Override

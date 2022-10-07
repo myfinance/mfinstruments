@@ -1,27 +1,44 @@
 package de.hf.myfinance.instruments.service.instrumentgraphhandler;
 
 
+import de.hf.myfinance.instruments.persistence.DataReader;
 import de.hf.myfinance.instruments.persistence.entities.EdgeType;
-import de.hf.myfinance.instruments.persistence.entities.InstrumentGraphEntry;
-import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraph;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Component
-public class InstrumentGraphHandlerImpl extends InstrumentGraphHandlerBase{
+public class InstrumentGraphHandlerImpl implements InstrumentGraphHandler{
 
-    public InstrumentGraphHandlerImpl(final InstrumentEnvironmentWithGraph instrumentEnvironment) {
-        super(instrumentEnvironment);
+    final DataReader dataReader;
+
+    public InstrumentGraphHandlerImpl(final InstrumentEnvironment instrumentEnvironment) {
+        this.dataReader = instrumentEnvironment.getDataReader();
     }
 
     @Override
-    public Mono<InstrumentGraphEntry> addInstrumentToGraph(final String instrumentId, final String ancestorId){
-        return addInstrumentToGraph(instrumentId, ancestorId, EdgeType.TENANTGRAPH);
+    public Mono<String> getRootInstrument(final String instrumentId, final EdgeType edgeType) {
+        return dataReader.getRootInstrument(instrumentId, edgeType);
+    }
+
+    @Override
+    public Flux<String> getInstrumentChildIds(final String instrumentId, final EdgeType edgeType){
+        return getInstrumentChildIds(instrumentId, edgeType, 0);
+    }
+
+    @Override
+    public  Flux<String> getInstrumentChildIds(final String instrumentId, final EdgeType edgeType, int pathlength){
+        return dataReader.getInstrumentChildIds(instrumentId, edgeType, pathlength);
+    }
+
+    @Override
+    public Flux<String> getAncestorIds(final String instrumentId, final EdgeType edgeType) {
+        return dataReader.getAncestorIds(instrumentId, edgeType);
     }
 
     @Override
     public Mono<String> getRootInstrument(final String instrumentId) {
         return getRootInstrument(instrumentId, EdgeType.TENANTGRAPH);
     }
-
 }

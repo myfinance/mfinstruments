@@ -1,8 +1,8 @@
 package de.hf.myfinance.instruments.events.out;
 
 import de.hf.myfinance.event.Event;
-import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.InstrumentMapper;
+import de.hf.myfinance.restmodel.Instrument;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -21,9 +21,8 @@ public class EventHandler {
         this.instrumentMapper = instrumentMapper;
     }
 
-    public void sendInstrumentUpdatedEvent(InstrumentEntity instrumentEntity){
-        var instrument = instrumentMapper.entityToApi(instrumentEntity);
-        sendMessage("instrumentupdates-out-0",
+    public void sendInstrumentUpdatedEvent(Instrument instrument){
+        sendMessage("instrumentapproved-out-0",
                 new Event(CREATE, instrument.getBusinesskey().hashCode(), instrument));
     }
 

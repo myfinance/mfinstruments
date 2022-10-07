@@ -1,11 +1,11 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
-import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraph;
 
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
 
 public abstract class AbsCashInstrumentHandler extends AbsAccountableInstrumentHandler {
 
-    protected AbsCashInstrumentHandler(InstrumentEnvironmentWithGraph instrumentEnvironment, String description, String parentBusinesskey, String businesskey, boolean isNewInstrument) {
+    protected AbsCashInstrumentHandler(InstrumentEnvironment instrumentEnvironment, String description, String parentBusinesskey, String businesskey, boolean isNewInstrument) {
         super(instrumentEnvironment, description, parentBusinesskey, businesskey, isNewInstrument);
     }
 

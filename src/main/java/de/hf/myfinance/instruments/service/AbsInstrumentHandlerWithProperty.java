@@ -2,10 +2,10 @@ package de.hf.myfinance.instruments.service;
 
 import java.util.*;
 
-import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
 import de.hf.myfinance.restmodel.AdditionalMaps;
 import de.hf.myfinance.restmodel.AdditionalProperties;
+import de.hf.myfinance.restmodel.Instrument;
 
 public abstract class AbsInstrumentHandlerWithProperty extends AbsInstrumentHandler implements InstrumentHandler {
 
@@ -17,10 +17,10 @@ public abstract class AbsInstrumentHandlerWithProperty extends AbsInstrumentHand
     }
 
     @Override
-    protected InstrumentEntity setAdditionalValues(InstrumentEntity instrumentEntity) {
-        instrumentEntity.setAdditionalProperties(additionalProperties);
-        instrumentEntity.setAdditionalMaps(additionalMaps);
-        return instrumentEntity;
+    protected Instrument setAdditionalValues(Instrument instrument) {
+        instrument.setAdditionalProperties(additionalProperties);
+        instrument.setAdditionalMaps(additionalMaps);
+        return instrument;
     }
 
 }

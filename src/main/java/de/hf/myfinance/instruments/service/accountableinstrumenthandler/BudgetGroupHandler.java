@@ -2,7 +2,8 @@ package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.InstrumentFactory;
-import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraphAndFactory;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithFactory;
+import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import reactor.core.publisher.Mono;
 
@@ -11,7 +12,7 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
     private  final InstrumentFactory instrumentFactory;
     private static final String DEFAULT_INCOMEBUDGET_PREFIX = "incomeBgt_";
 
-    public BudgetGroupHandler(InstrumentEnvironmentWithGraphAndFactory instrumentEnvironment, String description, String budgetPFId, String businesskey, boolean isNewInstrument) {
+    public BudgetGroupHandler(InstrumentEnvironmentWithFactory instrumentEnvironment, String description, String budgetPFId, String businesskey, boolean isNewInstrument) {
         super(instrumentEnvironment, description, budgetPFId, businesskey, isNewInstrument);
         this.instrumentFactory = instrumentEnvironment.getInstrumentFactory();
     }
@@ -33,15 +34,15 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
     } 
 
     @Override
-    protected Mono<InstrumentEntity> saveNewInstrument(InstrumentEntity instrumentEntity){
+    protected Mono<String> saveNewInstrument(Instrument instrument){
         /*super.saveNewInstrument();
         var budgetHandler = instrumentFactory.getInstrumentHandler(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX + domainObject.getDescription(), instrumentId, null);
         budgetHandler.setTreeLastChanged(ts);
         budgetHandler.save();
         addProperty(InstrumentPropertyType.INCOMEBUDGETID, budgetHandler.getInstrumentId());*/
-        return super.saveNewInstrument(instrumentEntity)
+        return super.saveNewInstrument(instrument)
                 .flatMap(e->{
-                    var budgetHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX+e.getDescription(), e.getBusinesskey(), null);
+                    var budgetHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX+description, businesskey, null);
                     budgetHandler.setTreeLastChanged(ts);
                     return budgetHandler.save()
                             // Return again the mono of the tenant
@@ -50,8 +51,8 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
     }
 
     @Override
-    protected InstrumentEntity createDomainObject() {
-        return new InstrumentEntity(InstrumentType.BUDGETGROUP, description, true, ts);
+    protected Instrument createDomainObject() {
+        return new Instrument(businesskey, description, InstrumentType.BUDGETGROUP, true, ts);
     }
 
     @Override

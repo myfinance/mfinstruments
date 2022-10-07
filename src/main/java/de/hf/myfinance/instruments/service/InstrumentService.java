@@ -1,6 +1,5 @@
 package de.hf.myfinance.instruments.service;
 
-import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,45 +9,42 @@ import reactor.core.publisher.Mono;
 
 @Component
 public class InstrumentService {
-    private final InstrumentMapper instrumentMapper;
     private final InstrumentFactory instrumentFactory;
 
     @Autowired
-    public InstrumentService(InstrumentMapper instrumentMapper, InstrumentFactory instrumentFactory){
-        this.instrumentMapper = instrumentMapper;
+    public InstrumentService(InstrumentFactory instrumentFactory){
         this.instrumentFactory = instrumentFactory;
     }
 
     public Mono<Instrument> getInstrument(String businesskey) {
         var instrumentHandler = instrumentFactory.getInstrumentHandlerForExistingInstrument(businesskey);
-        return instrumentHandler.loadInstrument()
-                .map(e-> instrumentMapper.entityToApi(e));
+        return instrumentHandler.loadInstrument();
     }
 
-    public Mono<Instrument> addInstrument(Instrument instrument) {
+    public Mono<String> addInstrument(Instrument instrument) {
 
         var instrumentHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(instrument.getInstrumentType(), instrument.getDescription(), instrument.getParentBusinesskey(), instrument.getBusinesskey());
         instrumentHandler.setValues(instrument);
-        return instrumentHandler.save().map(e-> instrumentMapper.entityToApi(e));
+        return instrumentHandler.save();
     }
 
     public Flux<Instrument> listInstruments() {
-        return instrumentFactory.listInstruments().map(e-> instrumentMapper.entityToApi(e));
+        return instrumentFactory.listInstruments();
     }
 
     public Flux<Instrument> listTenants(){
-        return instrumentFactory.listTenants().map(e-> instrumentMapper.entityToApi(e));
+        return instrumentFactory.listTenants();
     }
 
     public Flux<Instrument> listInstruments(String tenantkey){
-        return instrumentFactory.getTenantHandler(tenantkey).listInstrumentChilds().map(e-> instrumentMapper.entityToApi(e));
+        return instrumentFactory.getTenantHandler(tenantkey).listInstrumentChilds();
     }
 
     public Flux<Instrument> listActiveInstruments(String tenantkey) {
-        return instrumentFactory.getTenantHandler(tenantkey).listActiveInstrumentChilds().map(e-> instrumentMapper.entityToApi(e));
+        return instrumentFactory.getTenantHandler(tenantkey).listActiveInstrumentChilds();
     }
 
     public Flux<Instrument> listInstrumentsByType(String tenantkey, InstrumentType instrumentType) {
-        return instrumentFactory.getTenantHandler(tenantkey).listInstrumentChilds(instrumentType, true).map(e-> instrumentMapper.entityToApi(e));
+        return instrumentFactory.getTenantHandler(tenantkey).listInstrumentChilds(instrumentType, true);
     }
 }

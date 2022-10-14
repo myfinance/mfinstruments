@@ -4,6 +4,7 @@ import de.hf.myfinance.event.Event;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
+import de.hf.testhelper.MongoDbTestBase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,7 +26,7 @@ import org.springframework.cloud.stream.binder.test.TestChannelBinderConfigurati
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Testcontainers
 @Import({TestChannelBinderConfiguration.class})
-class InstrumentserviceApplicationTests extends MongoDbTestBase{
+class InstrumentserviceApplicationTests extends MongoDbTestBase {
 
 	@Autowired
 	private WebTestClient client;

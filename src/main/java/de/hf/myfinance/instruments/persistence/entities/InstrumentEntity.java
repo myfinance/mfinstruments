@@ -79,6 +79,10 @@ public class InstrumentEntity implements java.io.Serializable {
     public InstrumentType getInstrumentType(){
         return instrumentType;
     }
+    public void setInstrumentType(InstrumentType instrumentType) {
+        this.instrumentType = instrumentType;
+        this.instrumentTypeId = instrumentType.getValue();
+    }
 
     public String getDescription() {
         return this.description;

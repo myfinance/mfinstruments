@@ -1,6 +1,10 @@
 package de.hf.myfinance.instruments.events.in;
 
+import de.hf.framework.audit.AuditService;
+import de.hf.framework.audit.Severity;
 import de.hf.myfinance.event.Event;
+import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
+import de.hf.myfinance.instruments.service.InstrumentMapper;
 import de.hf.myfinance.instruments.service.InstrumentService;
 import de.hf.myfinance.restmodel.Instrument;
 import org.slf4j.Logger;
@@ -15,15 +19,20 @@ import java.util.function.Consumer;
 public class SaveInstrumentProcessorConfig {
     private static final Logger LOG = LoggerFactory.getLogger(SaveInstrumentProcessorConfig.class);
 
-    private final InstrumentService instrumentService;
+    private final InstrumentMapper instrumentMapper;
+    private final AuditService auditService;
+    private final InstrumentRepository instrumentRepository;
+    protected static final String AUDIT_MSG_TYPE="SaveInstrumentProcessor_Event";
 
     @Autowired
-    public SaveInstrumentProcessorConfig(InstrumentService instrumentService) {
-        this.instrumentService = instrumentService;
+    public SaveInstrumentProcessorConfig(InstrumentMapper instrumentMapper, AuditService auditService, InstrumentRepository instrumentRepository) {
+        this.instrumentMapper = instrumentMapper;
+        this.auditService = auditService;
+        this.instrumentRepository = instrumentRepository;
     }
 
     @Bean
-    public Consumer<Event<Integer, Instrument>> messageProcessor() {
+    public Consumer<Event<Integer, Instrument>> saveInstrumentProcessor() {
         return event -> {
             LOG.info("Process message created at {}...", event.getEventCreatedAt());
 
@@ -32,7 +41,10 @@ public class SaveInstrumentProcessorConfig {
                 case CREATE:
                     Instrument instrument = event.getData();
                     LOG.info("Create instrument with ID: {}", instrument.getBusinesskey());
-                    instrumentService.addInstrument(instrument).block();
+                    var instrumentEntity = instrumentMapper.apiToEntity(instrument);
+                    instrumentRepository.save(instrumentEntity).block();
+                    auditService.saveMessage("Instrument updated:businesskey=" + instrument.getBusinesskey() + " desc=" + instrument.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
+
                     break;
 
                 default:

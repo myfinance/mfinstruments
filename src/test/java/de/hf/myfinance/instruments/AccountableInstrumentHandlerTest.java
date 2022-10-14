@@ -6,6 +6,7 @@ import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository
 import de.hf.myfinance.instruments.service.accountableinstrumenthandler.TenantHandler;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithFactory;
 import de.hf.myfinance.instruments.service.instrumentgraphhandler.InstrumentGraphHandlerImpl;
+import de.hf.testhelper.MongoDbTestBase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Testcontainers
 @Import({TestChannelBinderConfiguration.class})
-class AccountableInstrumentHandlerTest extends MongoDbTestBase{
+class AccountableInstrumentHandlerTest extends MongoDbTestBase {
     @Autowired
     InstrumentGraphRepository instrumentGraphRepository;
 

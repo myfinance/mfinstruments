@@ -46,7 +46,7 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
     @Override
     public Mono<Instrument> loadInstrument() {
         var instrumentMono = super.loadInstrument();
-        if(isNewInstrument && !isRootElement) {
+        if(isNewInstrument && !isRootElement && !isSimpleValidation) {
             var parentMono = loadParent();
             return Mono.zip(instrumentMono, parentMono, this::validateParent);
         }

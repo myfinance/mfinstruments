@@ -25,11 +25,13 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
                 .flatMap(e->{
                     var budgetPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETPORTFOLIO, DEFAULT_BUDGETPF_PREFIX+description, businesskey, null);
                     budgetPortfolioHandler.setTreeLastChanged(ts);
+                    budgetPortfolioHandler.setIsSimpleValidation(true);
                     return budgetPortfolioHandler.save().flatMap(bpf-> Mono.just(e));
                 })
                 .flatMap(e->{
                     var accPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.ACCOUNTPORTFOLIO, DEFAULT_ACCPF_PREFIX+description, businesskey, null);
                     accPortfolioHandler.setTreeLastChanged(ts);
+                    accPortfolioHandler.setIsSimpleValidation(true);
                     return accPortfolioHandler.save()
                             // Return again the mono of the tenant
                             .flatMap(bpf-> Mono.just(e));

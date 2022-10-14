@@ -33,6 +33,7 @@ public abstract class AbsInstrumentHandler {
     protected boolean isNewInstrument;
     private final EventHandler eventHandler;
     protected static final int MAX_BUSINESSKEY_SIZE = 32;
+    protected boolean isSimpleValidation = false;
 
     protected AbsInstrumentHandler(InstrumentEnvironment instrumentEnvironment, String description, String businesskey, boolean isNewInstrument) {
         this.dataReader = instrumentEnvironment.getDataReader();
@@ -164,6 +165,10 @@ public abstract class AbsInstrumentHandler {
         if(!isNewInstrument) {
             isActive = instrument.isIsactive();
         }
+    }
+
+    public void setIsSimpleValidation(boolean isSimpleValidation) {
+        this.isSimpleValidation = isSimpleValidation;
     }
 
     protected abstract Instrument createDomainObject();

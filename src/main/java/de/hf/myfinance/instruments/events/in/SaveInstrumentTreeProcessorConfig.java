@@ -5,6 +5,7 @@ import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentGraphEntry;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.restmodel.Instrument;
+import de.hf.myfinance.restmodel.InstrumentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ public class SaveInstrumentTreeProcessorConfig {
     }
 
     @Bean
-    public Consumer<Event<Integer, Instrument>> messageProcessor() {
+    public Consumer<Event<Integer, Instrument>> saveInstrumentTreeProcessor() {
         return event -> {
             LOG.info("Process message created at {}...", event.getEventCreatedAt());
 
@@ -36,6 +37,9 @@ public class SaveInstrumentTreeProcessorConfig {
                 case CREATE:
                     Instrument instrument = event.getData();
                     LOG.info("Create instrument with ID: {}", instrument.getBusinesskey());
+                    if(instrument.getInstrumentType().equals(InstrumentType.TENANT)) {
+                        instrument.setParentBusinesskey(instrument.getBusinesskey());
+                    }
                     if(instrument.getParentBusinesskey()!=null && !instrument.getParentBusinesskey().isEmpty()) {
                         addInstrumentToGraph(instrument.getBusinesskey(), instrument.getParentBusinesskey(), EdgeType.TENANTGRAPH).block();;
                     }

@@ -44,6 +44,7 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
                 .flatMap(e->{
                     var budgetHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX+description, businesskey, null);
                     budgetHandler.setTreeLastChanged(ts);
+                    budgetHandler.setIsSimpleValidation(true);
                     return budgetHandler.save()
                             // Return again the mono of the tenant
                             .flatMap(bpf-> Mono.just(e));

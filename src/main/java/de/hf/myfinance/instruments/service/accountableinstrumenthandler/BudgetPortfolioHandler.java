@@ -32,6 +32,7 @@ public class BudgetPortfolioHandler extends AbsAccountableInstrumentHandler {
                 .flatMap(e->{
                     var budgetGroupHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETGROUP, DEFAULT_BUDGETGROUP_PREFIX+description, businesskey, null);
                     budgetGroupHandler.setTreeLastChanged(ts);
+                    budgetGroupHandler.setIsSimpleValidation(true);
                     return budgetGroupHandler.save().flatMap(bg-> Mono.just(e));
                 });
     }

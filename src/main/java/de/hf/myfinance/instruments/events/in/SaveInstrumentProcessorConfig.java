@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import reactor.core.publisher.Mono;
 
 import java.util.function.Consumer;
 
@@ -42,7 +43,18 @@ public class SaveInstrumentProcessorConfig {
                     Instrument instrument = event.getData();
                     LOG.info("Create instrument with ID: {}", instrument.getBusinesskey());
                     var instrumentEntity = instrumentMapper.apiToEntity(instrument);
-                    instrumentRepository.save(instrumentEntity).block();
+                    instrumentRepository.findByBusinesskey(instrumentEntity.getBusinesskey())
+                            .switchIfEmpty(Mono.just(instrumentEntity))
+                            .map(e -> {
+                                e.setAdditionalMaps(instrumentEntity.getAdditionalMaps());
+                                e.setAdditionalProperties(instrumentEntity.getAdditionalProperties());
+                                e.setDescription(instrumentEntity.getDescription());
+                                e.setIsactive(instrumentEntity.isIsactive());
+                                e.setTreelastchanged(instrumentEntity.getTreelastchanged());
+                                return e;
+                            })
+                            .flatMap(e -> instrumentRepository.save(e))
+                            .block();
                     auditService.saveMessage("Instrument updated:businesskey=" + instrument.getBusinesskey() + " desc=" + instrument.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
 
                     break;

@@ -56,4 +56,29 @@ public class SaveInstrumentProcessorTest extends EventProcessorTestBase {
         assertTrue(savedInstrument.isIsactive());
         assertEquals(InstrumentType.BUDGET, savedInstrument.getInstrumentType());
     }
+
+    @Test
+    void createDuplicateTenant() {
+        var businessKey = "aTest@6";
+        var desc = "aTest";
+        var newInstrument = new Instrument(desc, InstrumentType.TENANT);
+        newInstrument.setBusinesskey(businessKey);
+        Event creatEvent = new Event(Event.Type.CREATE, businessKey, newInstrument);
+        saveInstrumentProcessor.accept(creatEvent);
+
+        var instruments = instrumentRepository.findAll().collectList().block();
+        assertEquals(1, instruments.size());
+
+        var savedInstrument = instruments.get(0);
+        assertEquals(businessKey, savedInstrument.getBusinesskey());
+        assertEquals(desc, savedInstrument.getDescription());
+        assertTrue(savedInstrument.isIsactive());
+        assertEquals(InstrumentType.TENANT, savedInstrument.getInstrumentType());
+
+        creatEvent = new Event(Event.Type.CREATE, businessKey, newInstrument);
+        saveInstrumentProcessor.accept(creatEvent);
+
+        instruments = instrumentRepository.findAll().collectList().block();
+        assertEquals(1, instruments.size());
+    }
 }

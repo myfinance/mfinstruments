@@ -47,11 +47,11 @@ class InstrumentserviceApplicationTests extends EventProcessorTestBase {
 
 	@Autowired
 	@Qualifier("saveInstrumentProcessor")
-	protected Consumer<Event<Integer, Instrument>> saveInstrumentProcessor;
+	protected Consumer<Event<String, Instrument>> saveInstrumentProcessor;
 
 	@Autowired
 	@Qualifier("saveInstrumentTreeProcessor")
-	protected Consumer<Event<Integer, Instrument>> saveInstrumentTreeProcessor;
+	protected Consumer<Event<String, Instrument>> saveInstrumentTreeProcessor;
 
 	@Test
 	void contextLoads() {

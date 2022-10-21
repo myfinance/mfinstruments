@@ -17,7 +17,7 @@ public class SaveInstrumentProcessorTest extends EventProcessorTestBase {
 
     @Autowired
     @Qualifier("saveInstrumentProcessor")
-    protected Consumer<Event<Integer, Instrument>> saveInstrumentProcessor;
+    protected Consumer<Event<String, Instrument>> saveInstrumentProcessor;
 
     @Test
     void createTenant() {

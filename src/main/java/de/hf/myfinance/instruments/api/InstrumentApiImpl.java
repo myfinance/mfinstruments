@@ -69,8 +69,8 @@ public class InstrumentApiImpl implements InstrumentApi {
     }
 
     @Override
-    public Mono<Instrument> saveInstrument(Instrument instrument) {
-        return instrumentService.addInstrument(instrument).map(e -> setServiceAddress(e));
+    public Mono<String> saveInstrument(Instrument instrument) {
+        return instrumentService.addInstrument(instrument);
     }
 
     private Instrument setServiceAddress(Instrument e) {

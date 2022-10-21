@@ -1,8 +1,8 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
-import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.InstrumentFactory;
-import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraphAndFactory;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithFactory;
+import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -12,33 +12,26 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
 
     private static final String DEFAULT_ACCPF_PREFIX = "accPf_";
     private static final String DEFAULT_BUDGETPF_PREFIX = "bgtPf_";
-    private static final String DEFAULT_BUDGETGROUP_PREFIX = "bgtGrp_";
 
-
-    public TenantHandler(InstrumentEnvironmentWithGraphAndFactory instrumentEnvironment, String description, String businesskey, boolean isNewInstrument) {
+    public TenantHandler(InstrumentEnvironmentWithFactory instrumentEnvironment, String description, String businesskey, boolean isNewInstrument) {
         super(instrumentEnvironment, description, null, businesskey, isNewInstrument);
         this.instrumentFactory = instrumentEnvironment.getInstrumentFactory();
         isRootElement = true;
     }
 
     @Override
-    protected Mono<InstrumentEntity> saveNewInstrument(InstrumentEntity instrumentEntity) {
-        return super.saveNewInstrument(instrumentEntity)
+    protected Mono<String> saveNewInstrument(Instrument instrument) {
+        return super.saveNewInstrument(instrument)
                 .flatMap(e->{
-                    var budgetPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETPORTFOLIO, DEFAULT_BUDGETPF_PREFIX+e.getDescription(), e.getBusinesskey(), null);
+                    var budgetPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETPORTFOLIO, DEFAULT_BUDGETPF_PREFIX+description, businesskey, null);
                     budgetPortfolioHandler.setTreeLastChanged(ts);
-                    return budgetPortfolioHandler.save()
-                            .flatMap(bpf-> {
-                                var budgetGroupHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETGROUP, DEFAULT_BUDGETGROUP_PREFIX+e.getDescription(), bpf.getBusinesskey(), null);
-                                budgetGroupHandler.setTreeLastChanged(ts);
-                                return budgetGroupHandler.save();
-                            })
-                            // Return again the mono of the tenant
-                            .flatMap(bpf-> Mono.just(e));
+                    budgetPortfolioHandler.setIsSimpleValidation(true);
+                    return budgetPortfolioHandler.save().flatMap(bpf-> Mono.just(e));
                 })
                 .flatMap(e->{
-                    var accPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.ACCOUNTPORTFOLIO, DEFAULT_ACCPF_PREFIX+e.getDescription(), e.getBusinesskey(), null);
+                    var accPortfolioHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.ACCOUNTPORTFOLIO, DEFAULT_ACCPF_PREFIX+description, businesskey, null);
                     accPortfolioHandler.setTreeLastChanged(ts);
+                    accPortfolioHandler.setIsSimpleValidation(true);
                     return accPortfolioHandler.save()
                             // Return again the mono of the tenant
                             .flatMap(bpf-> Mono.just(e));
@@ -47,22 +40,22 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
 
 
 
-    public Mono<InstrumentEntity> getAccountPortfolio() {
+    public Mono<Instrument> getAccountPortfolio() {
         return listFirstLevelInstrumentChilds(InstrumentType.ACCOUNTPORTFOLIO, true).next();
     }
 
-    public Mono<InstrumentEntity> getBudgetPortfolio() {
+    public Mono<Instrument> getBudgetPortfolio() {
         return listFirstLevelInstrumentChilds(InstrumentType.BUDGETPORTFOLIO, true).next();
     }
 
-    public Flux<InstrumentEntity> getAccounts() {
+    public Flux<Instrument> getAccounts() {
         return filterActiveInstrumentChilds( listInstrumentChilds(getAccountPortfolio(), 1));
 
     }
 
     @Override
-    protected InstrumentEntity createDomainObject() {
-        return new InstrumentEntity(InstrumentType.TENANT, description, true, ts);
+    protected Instrument createDomainObject() {
+        return new Instrument(businesskey, description, InstrumentType.TENANT, true, ts);
     }
 
     @Override

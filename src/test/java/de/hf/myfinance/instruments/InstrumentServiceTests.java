@@ -8,11 +8,13 @@ import de.hf.myfinance.instruments.service.InstrumentService;
 import de.hf.myfinance.restmodel.AdditionalMaps;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
+import de.hf.testhelper.JsonHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 import org.springframework.context.annotation.Import;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -20,6 +22,8 @@ import reactor.test.StepVerifier;
 
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -30,7 +34,22 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Testcontainers
 @Import({TestChannelBinderConfiguration.class})
-class InstrumentServiceTests extends MongoDbTestBase{
+class InstrumentServiceTests extends EventProcessorTestBase {
+
+    String tenantKey = "aTest@6";
+    String tenantDesc = "aTest";
+    String budgetPfdesc = "bgtPf_"+tenantDesc;
+    String budgetPfKey = budgetPfdesc+"@23";
+    String bgtGrpdesc = "bgtGrp_"+budgetPfdesc;
+    String bgtGrpKey = bgtGrpdesc+"@10";
+    String bgtdesc = "incomeBgt_"+bgtGrpdesc;
+    String bgtKey = bgtdesc+"@10";
+    String accPfdesc = "accPf_"+tenantDesc;
+    String accPfKey = accPfdesc+"@8";
+    String giroDesc = "newGiro";
+    String giroKey = "newGiro@1";
+    String currencyDesc = "newCurrency";
+    String currencyCode = "USD";
 
     @Autowired
     InstrumentService instrumentService;
@@ -40,13 +59,21 @@ class InstrumentServiceTests extends MongoDbTestBase{
     InstrumentGraphRepository instrumentGraphRepository;
 
     @Autowired
-    @Qualifier("messageProcessor")
-    private Consumer<Event<Integer, Instrument>> messageProcessor;
+    private OutputDestination target;
+
+    @Autowired
+    @Qualifier("saveInstrumentProcessor")
+    protected Consumer<Event<String, Instrument>> saveInstrumentProcessor;
+
+    @Autowired
+    @Qualifier("saveInstrumentTreeProcessor")
+    protected Consumer<Event<String, Instrument>> saveInstrumentTreeProcessor;
 
     @BeforeEach
     void setupDb() {
         instrumentRepository.deleteAll().block();
         instrumentGraphRepository.deleteAll().block();
+        purgeMessages("instrumentapproved-out-0");
     }
 
     @Test
@@ -55,11 +82,59 @@ class InstrumentServiceTests extends MongoDbTestBase{
 
     @Test
     void createTenant() {
-        var tenantKey = "aTest@6";
-        var tenantDesc = "aTest";
         var newTenant = new Instrument(tenantDesc, InstrumentType.TENANT);
         instrumentService.addInstrument(newTenant).block();
-        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(5).verifyComplete();
+        final List<String> messages = getMessages("instrumentapproved-out-0");
+        assertEquals(5, messages.size());
+        LOG.info(messages.get(0));
+        Event createTenantEvent = new Event(Event.Type.CREATE, tenantKey, newTenant);
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(tenantKey, data.get("businesskey"));
+        assertEquals(tenantDesc, data.get("description"));
+        assertEquals(true, data.get("isactive"));
+        assertEquals("TENANT", data.get("instrumentType"));
+        assertTrue(data.get("parentBusinesskey")==null);
+
+        data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(1))).get("data");
+        assertEquals("bgtPf_aTest@23", data.get("businesskey"));
+        assertEquals("bgtPf_aTest", data.get("description"));
+        assertEquals(true, data.get("isactive"));
+        assertEquals("BUDGETPORTFOLIO", data.get("instrumentType"));
+        assertEquals("aTest@6", data.get("parentBusinesskey"));
+
+        data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(2))).get("data");
+        assertEquals("bgtGrp_bgtPf_aTest@10", data.get("businesskey"));
+        assertEquals("bgtGrp_bgtPf_aTest", data.get("description"));
+        assertEquals(true, data.get("isactive"));
+        assertEquals("BUDGETGROUP", data.get("instrumentType"));
+        assertEquals("bgtPf_aTest@23", data.get("parentBusinesskey"));
+
+        data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(3))).get("data");
+        assertEquals("incomeBgt_bgtGrp_bgtPf_aTest@5", data.get("businesskey"));
+        assertEquals("incomeBgt_bgtGrp_bgtPf_aTest", data.get("description"));
+        assertEquals(true, data.get("isactive"));
+        assertEquals("BUDGET", data.get("instrumentType"));
+        assertEquals("bgtGrp_bgtPf_aTest@10", data.get("parentBusinesskey"));
+
+        data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(4))).get("data");
+        assertEquals("accPf_aTest@8", data.get("businesskey"));
+        assertEquals("accPf_aTest", data.get("description"));
+        assertEquals(true, data.get("isactive"));
+        assertEquals("ACCOUNTPORTFOLIO", data.get("instrumentType"));
+        assertEquals("aTest@6", data.get("parentBusinesskey"));
+    }
+
+    @Test
+    void getInstruments() {
+        setupTestTenant();
+
+        var instruments = instrumentRepository.findAll().collectList().block();
+        assertEquals(5, instruments.size());
+
+        var instrumentGraph = instrumentGraphRepository.findAll().collectList().block();
+        assertEquals(12, instrumentGraph.size());
+
 
         var tenants = instrumentService.listTenants().collectList().block();
         assertEquals(1, tenants.size());
@@ -70,63 +145,14 @@ class InstrumentServiceTests extends MongoDbTestBase{
 
         var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
         assertEquals(1, accPfs.size());
-        var accPf = accPfs.get(0);
-        assertEquals("accPf_aTest@8", accPf.getBusinesskey());
-        assertEquals("accPf_aTest", accPf.getDescription());
-        assertTrue(accPf.isIsactive());
-
-        var budgetPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.BUDGETPORTFOLIO).collectList().block();
-        assertEquals(1, budgetPfs.size());
-        var budgetPf = budgetPfs.get(0);
-        assertEquals("bgtPf_aTest@23", budgetPf.getBusinesskey());
-        assertEquals("bgtPf_aTest", budgetPf.getDescription());
-        assertTrue(budgetPf.isIsactive());
-
-        var budgetgroups = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.BUDGETGROUP).collectList().block();
-        assertEquals(1, budgetgroups.size());
-        var budgetgroup = budgetgroups.get(0);
-        assertEquals("bgtGrp_aTest@10", budgetgroup.getBusinesskey());
-        assertEquals("bgtGrp_aTest", budgetgroup.getDescription());
-        assertTrue(budgetgroup.isIsactive());
-
-        var budgets = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.BUDGET).collectList().block();
-        assertEquals(1, budgets.size());
-        var budget = budgets.get(0);
-        assertEquals("incomeBgt_bgtGrp_aTest@5", budget.getBusinesskey());
-        assertEquals("incomeBgt_bgtGrp_aTest", budget.getDescription());
-        assertTrue(budget.isIsactive());
+        var savedAcPf = accPfs.get(0);
+        assertEquals(accPfKey, savedAcPf.getBusinesskey());
+        assertEquals(accPfdesc, savedAcPf.getDescription());
+        assertTrue(savedAcPf.isIsactive());
 
         StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(4).verifyComplete();
     }
 
-    @Test
-    void createDuplicate() {
-        var tenantKey = "aTest@6";
-        var tenantDesc = "aTest";
-        var newTenant = new Instrument(tenantDesc, InstrumentType.TENANT);
-        instrumentService.addInstrument(newTenant).block();
-        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(5).verifyComplete();
-
-        var tenants = instrumentService.listTenants().collectList().block();
-        assertEquals(1, tenants.size());
-        var tenant = tenants.get(0);
-        assertEquals(tenantKey, tenant.getBusinesskey());
-        assertEquals(tenantDesc, tenant.getDescription());
-        assertTrue(tenant.isIsactive());
-
-
-
-        instrumentService.addInstrument(newTenant);
-        instrumentService.addInstrument(newTenant).block();
-        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(5).verifyComplete();
-
-        tenants = instrumentService.listTenants().collectList().block();
-        assertEquals(1, tenants.size());
-        tenant = tenants.get(0);
-        assertEquals(tenantKey, tenant.getBusinesskey());
-        assertEquals(tenantDesc, tenant.getDescription());
-        assertTrue(tenant.isIsactive());
-    }
 
     @Test
     void createInstrumentHandlerWithInvalidBusinesskey() {
@@ -137,11 +163,8 @@ class InstrumentServiceTests extends MongoDbTestBase{
 
     @Test
     void createGiro() {
-        var tenantKey = "aTest@6";
-        var tenantDesc = "aTest";
-        var newTenant = new Instrument(tenantDesc, InstrumentType.TENANT);
-        instrumentService.addInstrument(newTenant).block();
-        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(5).verifyComplete();
+
+        setupTestTenant();
 
         var tenants = instrumentService.listTenants().collectList().block();
         assertEquals(1, tenants.size());
@@ -153,18 +176,30 @@ class InstrumentServiceTests extends MongoDbTestBase{
         var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
         assertEquals(1, accPfs.size());
         var accPf = accPfs.get(0);
-        assertEquals("accPf_aTest@8", accPf.getBusinesskey());
-        assertEquals("accPf_aTest", accPf.getDescription());
+        assertEquals(accPfKey, accPf.getBusinesskey());
+        assertEquals(accPfdesc, accPf.getDescription());
         assertTrue(accPf.isIsactive());
 
 
-        var giroDesc = "newGiro";
-        var giroKey = "newGiro@1";
         var newGiro = new Instrument(giroDesc, InstrumentType.GIRO);
         newGiro.setParentBusinesskey(accPf.getBusinesskey());
-        var savedGiro = instrumentService.addInstrument(newGiro).block();
-        assertEquals(giroDesc, savedGiro.getDescription());
-        assertEquals(giroKey, savedGiro.getBusinesskey());
+        instrumentService.addInstrument(newGiro).block();
+        final List<String> messages = getMessages("instrumentapproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        Event createEvent = new Event(Event.Type.CREATE, giroKey, newGiro);
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(giroKey, data.get("businesskey"));
+        assertEquals(giroDesc, data.get("description"));
+        assertEquals(true, data.get("isactive"));
+        assertEquals("GIRO", data.get("instrumentType"));
+        assertEquals(accPfKey, data.get("parentBusinesskey"));
+
+        saveInstrumentProcessor.accept(createEvent);
+        saveInstrumentTreeProcessor.accept(createEvent);
+
+
         StepVerifier.create(instrumentService.listInstruments()).expectNextCount(6).verifyComplete();
 
         StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(5).verifyComplete();
@@ -172,13 +207,23 @@ class InstrumentServiceTests extends MongoDbTestBase{
 
     @Test
     void createCurrency() {
-        var desc = "newCurrency";
-        var currencyCode = "USD";
-        var currency = new Instrument(desc, InstrumentType.CURRENCY);
+
+        var currency = new Instrument(currencyDesc, InstrumentType.CURRENCY);
         currency.setBusinesskey(currencyCode);
-        var savedCurrency = instrumentService.addInstrument(currency).block();
-        assertEquals(desc, savedCurrency.getDescription());
-        assertEquals(currencyCode, savedCurrency.getBusinesskey());
+        instrumentService.addInstrument(currency).block();
+        final List<String> messages = getMessages("instrumentapproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        Event createEvent = new Event(Event.Type.CREATE, currencyCode, currency);
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(currencyCode, data.get("businesskey"));
+        assertEquals(currencyDesc, data.get("description"));
+        assertEquals(true, data.get("isactive"));
+        assertEquals("CURRENCY", data.get("instrumentType"));
+        assertNull(data.get("parentBusinesskey"));
+        saveInstrumentProcessor.accept(createEvent);
+        saveInstrumentTreeProcessor.accept(createEvent);
         StepVerifier.create(instrumentService.listInstruments()).expectNextCount(1).verifyComplete();
     }
 
@@ -194,10 +239,60 @@ class InstrumentServiceTests extends MongoDbTestBase{
         eq.setAdditionalMaps(additionalMaps);
         eq.setBusinesskey(isin);
         var savedEq = instrumentService.addInstrument(eq).block();
-        assertEquals(desc, savedEq.getDescription());
-        assertEquals(isin, savedEq.getBusinesskey());
-        assertEquals(1, savedEq.getAdditionalMaps().get(AdditionalMaps.EQUITYSYMBOLS).size());
-        assertEquals("USD", savedEq.getAdditionalMaps().get(AdditionalMaps.EQUITYSYMBOLS).get("MYSYMBOL"));
+        final List<String> messages = getMessages("instrumentapproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        Event createEvent = new Event(Event.Type.CREATE, isin, eq);
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(isin, data.get("businesskey"));
+        assertEquals(desc, data.get("description"));
+        assertEquals(true, data.get("isactive"));
+        assertEquals("EQUITY", data.get("instrumentType"));
+        assertNull(data.get("parentBusinesskey"));
+        var maps = (HashMap)data.get("additionalMaps");
+        assertEquals(1, maps.size());
+        assertEquals("USD", ((HashMap)maps.get("EQUITYSYMBOLS")).get("MYSYMBOL"));
+        saveInstrumentProcessor.accept(createEvent);
+        saveInstrumentTreeProcessor.accept(createEvent);
         StepVerifier.create(instrumentService.listInstruments()).expectNextCount(1).verifyComplete();
+    }
+
+    private void setupTestTenant() {
+        var newInstrument = new Instrument(tenantDesc, InstrumentType.TENANT);
+        newInstrument.setBusinesskey(tenantKey);
+        Event creatEvent = new Event(Event.Type.CREATE, tenantKey, newInstrument);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+
+        var budgetPf = new Instrument(budgetPfdesc, InstrumentType.BUDGETPORTFOLIO);
+        budgetPf.setBusinesskey(budgetPfKey);
+        budgetPf.setParentBusinesskey(tenantKey);
+        creatEvent = new Event(Event.Type.CREATE, budgetPfKey, budgetPf);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+
+        var bgtGrp = new Instrument(bgtGrpdesc, InstrumentType.BUDGETGROUP);
+        bgtGrp.setBusinesskey(bgtGrpKey);
+        bgtGrp.setParentBusinesskey(budgetPfKey);
+        creatEvent = new Event(Event.Type.CREATE, bgtGrpKey, bgtGrp);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+        var bgt = new Instrument(bgtGrpdesc, InstrumentType.BUDGET);
+        bgt.setBusinesskey(bgtKey);
+        bgt.setParentBusinesskey(bgtGrpKey);
+        creatEvent = new Event(Event.Type.CREATE, bgtKey, bgt);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+        var accPf = new Instrument(accPfdesc, InstrumentType.ACCOUNTPORTFOLIO);
+        accPf.setBusinesskey(accPfKey);
+        accPf.setParentBusinesskey(tenantKey);
+        creatEvent = new Event(Event.Type.CREATE, accPfKey, accPf);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
     }
 }

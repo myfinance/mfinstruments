@@ -1,20 +1,18 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
-import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
-import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraph;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
+import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 
 public class GiroHandler extends AbsCashInstrumentHandler {
 
-    public GiroHandler(InstrumentEnvironmentWithGraph instrumentEnvironment, String description, String tenantId, String businesskey, boolean isNewInstrument) {
+    public GiroHandler(InstrumentEnvironment instrumentEnvironment, String description, String tenantId, String businesskey, boolean isNewInstrument) {
         super(instrumentEnvironment, description, tenantId, businesskey, isNewInstrument);
     }
 
     @Override
-    protected InstrumentEntity createDomainObject() {
-        var theObj = new InstrumentEntity(InstrumentType.GIRO, description, true, ts);
-        theObj.setBusinesskey(businesskey);
-        return theObj;
+    protected Instrument createDomainObject() {
+        return new Instrument(businesskey, description, InstrumentType.GIRO, true, ts);
     }
 
     @Override

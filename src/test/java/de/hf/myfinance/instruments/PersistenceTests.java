@@ -3,6 +3,7 @@ package de.hf.myfinance.instruments;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.restmodel.InstrumentType;
+import de.hf.testhelper.MongoDbTestBase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +18,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Testcontainers
-class PersistenceTests extends MongoDbTestBase{
+class PersistenceTests extends MongoDbTestBase {
 
     @Autowired
     InstrumentRepository repository;

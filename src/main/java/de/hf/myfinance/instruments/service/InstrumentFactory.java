@@ -4,14 +4,15 @@ import de.hf.framework.audit.AuditService;
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.events.out.EventHandler;
+import de.hf.myfinance.instruments.persistence.DataReader;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
-import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.accountableinstrumenthandler.*;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentImpl;
-import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraphAndFactory;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithFactory;
 import de.hf.myfinance.instruments.service.securityhandler.CurrencyHandler;
 import de.hf.myfinance.instruments.service.securityhandler.EquityHandler;
+import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -20,11 +21,11 @@ import reactor.core.publisher.Flux;
 @Component
 public class InstrumentFactory {
 
-    private final InstrumentEnvironmentWithGraphAndFactory instrumentEnvironment;
+    private final InstrumentEnvironmentWithFactory instrumentEnvironment;
 
     @Autowired
-    public InstrumentFactory(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, AuditService auditService, EventHandler eventHandler) {
-        instrumentEnvironment = new InstrumentEnvironmentImpl(instrumentRepository, instrumentGraphRepository, auditService, this, eventHandler);
+    public InstrumentFactory(DataReader dataReader, AuditService auditService, EventHandler eventHandler) {
+        instrumentEnvironment = new InstrumentEnvironmentImpl(dataReader, auditService, this, eventHandler);
     }
 
     /**
@@ -96,11 +97,11 @@ public class InstrumentFactory {
         return new TenantHandler(instrumentEnvironment, null, businesskey, false);
     }
 
-    public Flux<InstrumentEntity> listInstruments() {
-        return instrumentEnvironment.getInstrumentRepository().findAll();
+    public Flux<Instrument> listInstruments() {
+        return instrumentEnvironment.getDataReader().findAll();
     }
 
-    public Flux<InstrumentEntity> listTenants(){
+    public Flux<Instrument> listTenants(){
         return listInstruments().filter(i->i.getInstrumentType().equals(InstrumentType.TENANT));
     }
 }

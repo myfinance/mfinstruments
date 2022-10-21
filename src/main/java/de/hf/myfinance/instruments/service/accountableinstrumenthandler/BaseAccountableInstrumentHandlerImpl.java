@@ -2,8 +2,8 @@ package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
-import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
-import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithGraph;
+import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
+import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import reactor.core.publisher.Mono;
 
@@ -15,12 +15,12 @@ import java.time.LocalDateTime;
 public final class BaseAccountableInstrumentHandlerImpl extends AbsAccountableInstrumentHandler implements BaseAccountableInstrumentHandler{
 
 
-    public BaseAccountableInstrumentHandlerImpl(InstrumentEnvironmentWithGraph instrumentEnvironment, String businesskey) {
+    public BaseAccountableInstrumentHandlerImpl(InstrumentEnvironment instrumentEnvironment, String businesskey) {
         super(instrumentEnvironment, businesskey);
     }
 
     @Override
-    protected InstrumentEntity createDomainObject() {
+    protected Instrument createDomainObject() {
         throw new MFException(MFMsgKey.WRONG_OPERATION_EXCEPTION,  " domainobject can not be spezified for BaseAccountableInstrumentHandler");
     }
 
@@ -30,7 +30,7 @@ public final class BaseAccountableInstrumentHandlerImpl extends AbsAccountableIn
     }
 
     @Override
-    public Mono<InstrumentEntity> save() {
+    public Mono<String> save() {
         throw new MFException(MFMsgKey.WRONG_OPERATION_EXCEPTION,  "BaseAccountableInstrumentHandler can not be saved");
     }
 

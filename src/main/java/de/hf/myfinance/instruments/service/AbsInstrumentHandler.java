@@ -108,8 +108,8 @@ public abstract class AbsInstrumentHandler {
         return Mono.just("Instrument update with businesskey=" + newInstrument.getBusinesskey() +"approved");
     }
 
-        protected Mono<Instrument> getInstrumentById(String instrumentId, String errMsg) {
-            return dataReader.findById(instrumentId)
+    protected Mono<Instrument> getInstrumentById(String instrumentId, String errMsg) {
+        return dataReader.findById(instrumentId)
                 .switchIfEmpty(
                     Mono.error(new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION, errMsg + " Instrument for id:" + instrumentId + " not found")));
     }

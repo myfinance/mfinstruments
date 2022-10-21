@@ -41,7 +41,10 @@ public class SaveInstrumentTreeProcessorConfig {
                         instrument.setParentBusinesskey(instrument.getBusinesskey());
                     }
                     if(instrument.getParentBusinesskey()!=null && !instrument.getParentBusinesskey().isEmpty()) {
-                        addInstrumentToGraph(instrument.getBusinesskey(), instrument.getParentBusinesskey(), EdgeType.TENANTGRAPH).block();;
+                        var existingEntries = instrumentGraphRepository.findByDescendantAndEdgetype(instrument.getBusinesskey(), EdgeType.TENANTGRAPH).collectList().block();
+                        if( existingEntries == null || existingEntries.isEmpty()) {
+                            addInstrumentToGraph(instrument.getBusinesskey(), instrument.getParentBusinesskey(), EdgeType.TENANTGRAPH).block();
+                        }
                     }
                     break;
 

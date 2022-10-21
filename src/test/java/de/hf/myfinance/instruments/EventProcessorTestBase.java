@@ -1,14 +1,10 @@
 package de.hf.myfinance.instruments;
 
-import de.hf.myfinance.event.Event;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
-import de.hf.myfinance.instruments.service.InstrumentService;
-import de.hf.myfinance.restmodel.Instrument;
 import de.hf.testhelper.MongoDbTestBase;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.stream.binder.test.OutputDestination;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
@@ -18,7 +14,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 

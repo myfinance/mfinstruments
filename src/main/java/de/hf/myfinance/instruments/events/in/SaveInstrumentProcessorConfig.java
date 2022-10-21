@@ -33,7 +33,7 @@ public class SaveInstrumentProcessorConfig {
     }
 
     @Bean
-    public Consumer<Event<Integer, Instrument>> saveInstrumentProcessor() {
+    public Consumer<Event<String, Instrument>> saveInstrumentProcessor() {
         return event -> {
             LOG.info("Process message created at {}...", event.getEventCreatedAt());
 

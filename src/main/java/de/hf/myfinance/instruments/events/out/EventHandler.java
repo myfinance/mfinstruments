@@ -18,7 +18,7 @@ public class EventHandler {
         this.streamBridge = streamBridge;
     }
 
-    public void sendInstrumentUpdatedEvent(Instrument instrument){
+    public void sendInstrumentApprovedEvent(Instrument instrument){
         sendMessage("instrumentapproved-out-0",
                 new Event(CREATE, instrument.getBusinesskey(), instrument));
     }

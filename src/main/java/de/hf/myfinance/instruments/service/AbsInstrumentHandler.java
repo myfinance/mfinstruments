@@ -92,7 +92,7 @@ public abstract class AbsInstrumentHandler {
     protected Mono<String> saveNewInstrument(Instrument instrument) {
         var newInstrument = setAdditionalValues(instrument);
         auditService.saveMessage(domainObjectName+" inserted: businesskey=" + newInstrument.getBusinesskey() + " desc=" + newInstrument.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
-        eventHandler.sendInstrumentUpdatedEvent(newInstrument);
+        eventHandler.sendInstrumentApprovedEvent(newInstrument);
         return Mono.just("new Instrument with businesskey=" + newInstrument.getBusinesskey() +"approved");
     }
 
@@ -104,7 +104,7 @@ public abstract class AbsInstrumentHandler {
         }
         var newInstrument = setAdditionalValues(instrument);
         auditService.saveMessage(domainObjectName + " updated:businesskey=" + newInstrument.getBusinesskey() + " desc=" + newInstrument.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
-        eventHandler.sendInstrumentUpdatedEvent(newInstrument);
+        eventHandler.sendInstrumentApprovedEvent(newInstrument);
         return Mono.just("Instrument update with businesskey=" + newInstrument.getBusinesskey() +"approved");
     }
 

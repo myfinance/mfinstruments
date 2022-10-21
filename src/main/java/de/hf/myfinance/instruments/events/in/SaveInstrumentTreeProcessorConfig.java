@@ -28,7 +28,7 @@ public class SaveInstrumentTreeProcessorConfig {
     }
 
     @Bean
-    public Consumer<Event<Integer, Instrument>> saveInstrumentTreeProcessor() {
+    public Consumer<Event<String, Instrument>> saveInstrumentTreeProcessor() {
         return event -> {
             LOG.info("Process message created at {}...", event.getEventCreatedAt());
 

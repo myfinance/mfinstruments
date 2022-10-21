@@ -19,26 +19,39 @@ springdoc:
   packagesToScan: de.hf.myfinance
   pathsToMatch: /**
 
+spring:
+  cloud:
+    function:
+      definition: messageProcessor;saveInstrumentProcessor;saveInstrumentTreeProcessor
+
 spring.cloud.stream:
   defaultBinder: rabbit
   default.contentType: application/json
   bindings.messageProcessor-in-0:
     destination: instruments
     group: instrumentsGroup
-  bindings.saveInstrumentProcessor-in-0:
-    destination: instrumentapproved
-    group: saveInstrumentsGroup
-  bindings.saveInstrumentTreeProcessor-in-0:
-    destination: instrumentapproved
-    group: saveinstrumentTreeGroup
   bindings.instrumentapproved-out-0:
     destination: instrumentapproved
     producer:
       required-groups: instrumentApprovedAuditGroup
+  bindings.saveInstrumentProcessor-in-0:
+    destination: instrumentapproved
+    group: saveInstrumentsLocalGroup
+  bindings.saveInstrumentTreeProcessor-in-0:
+    destination: instrumentapproved
+    group: saveinstrumentTreeGroup
 
-spring.cloud.stream.rabbit.bindings.messageProcessor-in-0.consumer:
-  autoBindDlq: true
-  republishToDlq: true
+spring.cloud.stream.rabbit.bindings:
+  messageProcessor-in-0.consumer:
+    autoBindDlq: true
+    republishToDlq: true
+  saveInstrumentProcessor-in-0:
+    autoBindDlq: true
+    republishToDlq: true
+  saveInstrumentTreeProcessor-in-0:
+    autoBindDlq: true
+    republishToDlq: true
+
 
 spring.rabbitmq:
   host: 192.168.100.73

@@ -30,9 +30,13 @@ public class BudgetPortfolioHandler extends AbsAccountableInstrumentHandler {
     protected Mono<String> saveNewInstrument(Instrument instrument) {
         return super.saveNewInstrument(instrument)
                 .flatMap(e->{
-                    var budgetGroupHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETGROUP, DEFAULT_BUDGETGROUP_PREFIX+description, businesskey, null);
+                    var budgetGroupHandler = (AccountableInstrumentHandler)instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETGROUP, DEFAULT_BUDGETGROUP_PREFIX+description, businesskey, null);
                     budgetGroupHandler.setTreeLastChanged(ts);
                     budgetGroupHandler.setIsSimpleValidation(true);
+                    if(isSimpleValidation) {
+                        // block is ok here. Due to the simplevalidate the tenantbusinesskey is not read from the db but create with just
+                        budgetGroupHandler.setTenant(this.getTenant().block());
+                    }
                     return budgetGroupHandler.save().flatMap(bg-> Mono.just(e));
                 });
     }

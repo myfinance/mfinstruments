@@ -73,7 +73,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     void setupDb() {
         instrumentRepository.deleteAll().block();
         instrumentGraphRepository.deleteAll().block();
-        purgeMessages("instrumentapproved-out-0");
+        purgeMessages("instrumentApproved-out-0");
     }
 
     @Test
@@ -84,7 +84,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     void createTenant() {
         var newTenant = new Instrument(tenantDesc, InstrumentType.TENANT);
         instrumentService.addInstrument(newTenant).block();
-        final List<String> messages = getMessages("instrumentapproved-out-0");
+        final List<String> messages = getMessages("instrumentApproved-out-0");
         assertEquals(5, messages.size());
         LOG.info(messages.get(0));
         Event createTenantEvent = new Event(Event.Type.CREATE, tenantKey, newTenant);
@@ -95,6 +95,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(true, data.get("isactive"));
         assertEquals("TENANT", data.get("instrumentType"));
         assertTrue(data.get("parentBusinesskey")==null);
+        assertTrue(data.get("tenantBusinesskey")==null);
 
         data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(1))).get("data");
         assertEquals("bgtPf_aTest@23", data.get("businesskey"));
@@ -102,6 +103,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(true, data.get("isactive"));
         assertEquals("BUDGETPORTFOLIO", data.get("instrumentType"));
         assertEquals("aTest@6", data.get("parentBusinesskey"));
+        assertEquals("aTest@6", data.get("tenantBusinesskey"));
 
         data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(2))).get("data");
         assertEquals("bgtGrp_bgtPf_aTest@10", data.get("businesskey"));
@@ -109,6 +111,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(true, data.get("isactive"));
         assertEquals("BUDGETGROUP", data.get("instrumentType"));
         assertEquals("bgtPf_aTest@23", data.get("parentBusinesskey"));
+        assertEquals("aTest@6", data.get("tenantBusinesskey"));
 
         data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(3))).get("data");
         assertEquals("incomeBgt_bgtGrp_bgtPf_aTest@5", data.get("businesskey"));
@@ -116,6 +119,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(true, data.get("isactive"));
         assertEquals("BUDGET", data.get("instrumentType"));
         assertEquals("bgtGrp_bgtPf_aTest@10", data.get("parentBusinesskey"));
+        assertEquals("aTest@6", data.get("tenantBusinesskey"));
 
         data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(4))).get("data");
         assertEquals("accPf_aTest@8", data.get("businesskey"));
@@ -123,6 +127,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(true, data.get("isactive"));
         assertEquals("ACCOUNTPORTFOLIO", data.get("instrumentType"));
         assertEquals("aTest@6", data.get("parentBusinesskey"));
+        assertEquals("aTest@6", data.get("tenantBusinesskey"));
     }
 
     @Test
@@ -184,7 +189,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         var newGiro = new Instrument(giroDesc, InstrumentType.GIRO);
         newGiro.setParentBusinesskey(accPf.getBusinesskey());
         instrumentService.addInstrument(newGiro).block();
-        final List<String> messages = getMessages("instrumentapproved-out-0");
+        final List<String> messages = getMessages("instrumentApproved-out-0");
         assertEquals(1, messages.size());
         LOG.info(messages.get(0));
         Event createEvent = new Event(Event.Type.CREATE, giroKey, newGiro);
@@ -195,6 +200,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(true, data.get("isactive"));
         assertEquals("GIRO", data.get("instrumentType"));
         assertEquals(accPfKey, data.get("parentBusinesskey"));
+        assertEquals("aTest@6", data.get("tenantBusinesskey"));
 
         saveInstrumentProcessor.accept(createEvent);
         saveInstrumentTreeProcessor.accept(createEvent);
@@ -211,7 +217,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         var currency = new Instrument(currencyDesc, InstrumentType.CURRENCY);
         currency.setBusinesskey(currencyCode);
         instrumentService.addInstrument(currency).block();
-        final List<String> messages = getMessages("instrumentapproved-out-0");
+        final List<String> messages = getMessages("instrumentApproved-out-0");
         assertEquals(1, messages.size());
         LOG.info(messages.get(0));
         Event createEvent = new Event(Event.Type.CREATE, currencyCode, currency);
@@ -222,6 +228,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(true, data.get("isactive"));
         assertEquals("CURRENCY", data.get("instrumentType"));
         assertNull(data.get("parentBusinesskey"));
+        assertNull(data.get("tenantBusinesskey"));
         saveInstrumentProcessor.accept(createEvent);
         saveInstrumentTreeProcessor.accept(createEvent);
         StepVerifier.create(instrumentService.listInstruments()).expectNextCount(1).verifyComplete();
@@ -239,7 +246,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         eq.setAdditionalMaps(additionalMaps);
         eq.setBusinesskey(isin);
         var savedEq = instrumentService.addInstrument(eq).block();
-        final List<String> messages = getMessages("instrumentapproved-out-0");
+        final List<String> messages = getMessages("instrumentApproved-out-0");
         assertEquals(1, messages.size());
         LOG.info(messages.get(0));
         Event createEvent = new Event(Event.Type.CREATE, isin, eq);
@@ -250,6 +257,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(true, data.get("isactive"));
         assertEquals("EQUITY", data.get("instrumentType"));
         assertNull(data.get("parentBusinesskey"));
+        assertNull(data.get("tenantBusinesskey"));
         var maps = (HashMap)data.get("additionalMaps");
         assertEquals(1, maps.size());
         assertEquals("USD", ((HashMap)maps.get("EQUITYSYMBOLS")).get("MYSYMBOL"));

@@ -34,7 +34,7 @@ public class InstrumentFactory {
      * @param instrumentId the id of the instrument
      * @return the BaseAccountableInstrumentHandler
      */
-    public BaseAccountableInstrumentHandler getBaseInstrumentHandler(String instrumentId) {
+    public AccountableInstrumentHandler getBaseInstrumentHandler(String instrumentId) {
         return new BaseAccountableInstrumentHandlerImpl(instrumentEnvironment, instrumentId);
     }
 

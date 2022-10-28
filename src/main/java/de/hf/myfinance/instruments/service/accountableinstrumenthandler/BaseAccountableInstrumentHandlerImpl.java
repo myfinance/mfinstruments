@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 /**
  * this is the most simple instrumenthandler to get type independent informations for the instrument and his tenant without loading it. You only need the instrumentId
  */
-public final class BaseAccountableInstrumentHandlerImpl extends AbsAccountableInstrumentHandler implements BaseAccountableInstrumentHandler{
+public final class BaseAccountableInstrumentHandlerImpl extends AbsAccountableInstrumentHandler implements AccountableInstrumentHandler{
 
 
     public BaseAccountableInstrumentHandlerImpl(InstrumentEnvironment instrumentEnvironment, String businesskey) {

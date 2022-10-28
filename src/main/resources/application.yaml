@@ -22,23 +22,23 @@ springdoc:
 spring:
   cloud:
     function:
-      definition: messageProcessor;saveInstrumentProcessor;saveInstrumentTreeProcessor
+      definition: validateInstrumentProcessor;saveInstrumentProcessor;saveInstrumentTreeProcessor
 
 spring.cloud.stream:
   defaultBinder: rabbit
   default.contentType: application/json
-  bindings.messageProcessor-in-0:
-    destination: instruments
-    group: instrumentsGroup
-  bindings.instrumentapproved-out-0:
-    destination: instrumentapproved
+  bindings.validateInstrumentProcessor-in-0:
+    destination: validateInstrumentRequest
+    group: validateInstrumentsGroup
+  bindings.instrumentApproved-out-0:
+    destination: instrumentApproved
     producer:
       required-groups: instrumentApprovedAuditGroup
   bindings.saveInstrumentProcessor-in-0:
-    destination: instrumentapproved
-    group: saveInstrumentsLocalGroup
+    destination: instrumentApproved
+    group: saveInstrumentGroup
   bindings.saveInstrumentTreeProcessor-in-0:
-    destination: instrumentapproved
+    destination: instrumentApproved
     group: saveinstrumentTreeGroup
 
 spring.cloud.stream.rabbit.bindings:

@@ -11,6 +11,7 @@ import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 import java.util.ArrayList;
 
@@ -20,6 +21,7 @@ import java.util.ArrayList;
  */
 public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandlerWithProperty implements AccountableInstrumentHandler{
     private String parentBusinesskey;
+    private String tenantBusinesskey;
     protected final InstrumentGraphHandler instrumentGraphHandler;
     boolean isRootElement = false;
 
@@ -27,7 +29,6 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
         super(instrumentEnvironment, description, businesskey, isNewInstrument);
         this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentEnvironment);
         this.parentBusinesskey = parentBusinesskey;
-        if(isRootElement) this.parentBusinesskey = businesskey;
     }
 
     protected AbsAccountableInstrumentHandler(InstrumentEnvironment instrumentEnvironment, String businesskey) {
@@ -46,12 +47,40 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
     @Override
     public Mono<Instrument> loadInstrument() {
         var instrumentMono = super.loadInstrument();
-        if(isNewInstrument && !isRootElement && !isSimpleValidation) {
-            var parentMono = loadParent();
-            return Mono.zip(instrumentMono, parentMono, this::validateParent);
+        if(!isRootElement) {
+
+            instrumentMono = Mono.zip(instrumentMono, getTenant(), this::addTenant2Instrument);
+            if(isNewInstrument && !isSimpleValidation) {
+                var parentMono = loadParent();
+                instrumentMono = Mono.zip(instrumentMono, parentMono, this::validateParent);
+            }
         }
 
         return instrumentMono;
+    }
+
+
+
+    private Instrument addTenant2Instrument(Instrument instrument, String tenantBusinesskey) {
+        instrument.setTenantBusinesskey(tenantBusinesskey);
+        return instrument;
+    }
+
+    public void setTenant(String tenantBusinesskey) {
+        this.tenantBusinesskey = tenantBusinesskey;
+    }
+
+    public Mono<String> getTenant() {
+        if(isSimpleValidation){
+            return Mono.just(tenantBusinesskey);
+        } else {
+            return instrumentGraphHandler.getRootInstrument(parentBusinesskey, EdgeType.TENANTGRAPH).switchIfEmpty(
+                    Mono.error(new MFException(MFMsgKey.UNKNOWN_PARENT_EXCEPTION, "no tenant found for parentId:"+parentBusinesskey)));
+        }
+    }
+
+    public Flux<Instrument> getInstrumentChilds(EdgeType edgeType, int pathlength){
+        return getInstrumentChilds(businesskey, edgeType, pathlength);
     }
 
     protected Mono<Instrument> loadParent() {
@@ -81,15 +110,6 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
 
     protected InstrumentType getParentType() {
         return InstrumentType.TENANT;
-    }
-
-
-    public Mono<String> getTenant() {
-        return instrumentGraphHandler.getRootInstrument(instrumentId, EdgeType.TENANTGRAPH);
-    }
-
-    public Flux<Instrument> getInstrumentChilds(EdgeType edgeType, int pathlength){
-        return getInstrumentChilds(businesskey, edgeType, pathlength);
     }
 
     protected Flux<Instrument> getInstrumentChilds(String businesskey, EdgeType edgeType, int pathlength){
@@ -156,4 +176,6 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
         }
         return instruments;
     }
+
+
 }

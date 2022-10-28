@@ -42,8 +42,8 @@ class InstrumentserviceApplicationTests extends EventProcessorTestBase {
 	InstrumentRepository instrumentRepository;
 
 	@Autowired
-	@Qualifier("messageProcessor")
-	private Consumer<Event<Integer, Instrument>> gateWayMessageProcessor;
+	@Qualifier("validateInstrumentProcessor")
+	private Consumer<Event<Integer, Instrument>> validateInstrumentProcessor;
 
 	@Autowired
 	@Qualifier("saveInstrumentProcessor")
@@ -61,14 +61,14 @@ class InstrumentserviceApplicationTests extends EventProcessorTestBase {
 	void createTenantViaApi() {
 		var tenant = new Instrument("testTenant", InstrumentType.TENANT);
 		postAndVerifyTenant(tenant, OK);
-		final List<String> messages = getMessages("instrumentapproved-out-0");
+		final List<String> messages = getMessages("instrumentApproved-out-0");
 		assertEquals(5, messages.size());
 	}
 
 	@Test
 	void createTenantViaMsg() {
 		sendCreateInstrumentEvent("nextTenant", InstrumentType.TENANT);
-		final List<String> messages = getMessages("instrumentapproved-out-0");
+		final List<String> messages = getMessages("instrumentApproved-out-0");
 		assertEquals(5, messages.size());
 
 	}
@@ -110,7 +110,7 @@ class InstrumentserviceApplicationTests extends EventProcessorTestBase {
 	private void sendCreateInstrumentEvent(String desc, InstrumentType type) {
 		var instrument = new Instrument(desc, type);
 		Event<Integer, Instrument> event = new Event(CREATE, desc, instrument);
-		gateWayMessageProcessor.accept(event);
+		validateInstrumentProcessor.accept(event);
 	}
 
 }

@@ -11,19 +11,19 @@ import org.springframework.context.annotation.Configuration;
 import java.util.function.Consumer;
 
 @Configuration
-public class MessageProcessorConfig {
+public class ValidateInstrumentProcessorConfig {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MessageProcessorConfig.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ValidateInstrumentProcessorConfig.class);
 
     private final InstrumentService instrumentService;
 
     @Autowired
-    public MessageProcessorConfig(InstrumentService instrumentService) {
+    public ValidateInstrumentProcessorConfig(InstrumentService instrumentService) {
         this.instrumentService = instrumentService;
     }
 
     @Bean
-    public Consumer<Event<Integer, Instrument>> messageProcessor() {
+    public Consumer<Event<Integer, Instrument>> validateInstrumentProcessor() {
         return event -> {
             LOG.info("Process message created at {}...", event.getEventCreatedAt());
 

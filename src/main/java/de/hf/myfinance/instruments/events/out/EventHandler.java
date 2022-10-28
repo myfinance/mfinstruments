@@ -19,7 +19,7 @@ public class EventHandler {
     }
 
     public void sendInstrumentApprovedEvent(Instrument instrument){
-        sendMessage("instrumentapproved-out-0",
+        sendMessage("instrumentApproved-out-0",
                 new Event(CREATE, instrument.getBusinesskey(), instrument));
     }
 

@@ -50,8 +50,8 @@ public class DataReaderImpl implements DataReader{
     }
 
     @Override
-    public Mono<String> getRootInstrument(final String instrumentId, final EdgeType edgeType) {
-        return instrumentGraphRepository.findByDescendantAndEdgetype(instrumentId, edgeType)
+    public Mono<String> getRootInstrument(final String businessKey, final EdgeType edgeType) {
+        return instrumentGraphRepository.findByDescendantAndEdgetype(businessKey, edgeType)
                 .reduce((e1, e2) -> {
                     if(e1.getPathlength() >= e2.getPathlength()) {
                         return e1;

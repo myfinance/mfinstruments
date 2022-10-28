@@ -2,11 +2,11 @@ package de.hf.myfinance.instruments.api;
 
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
-import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.InstrumentService;
 import de.hf.myfinance.restapi.InstrumentApi;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RestController;
 
 import de.hf.framework.utils.ServiceUtil;
@@ -19,6 +19,9 @@ public class InstrumentApiImpl implements InstrumentApi {
     ServiceUtil serviceUtil;
     InstrumentService instrumentService;
 
+    @Value("${api.common.version}")
+    String apiVersion;
+
     @Autowired
     public InstrumentApiImpl(InstrumentService instrumentService, ServiceUtil serviceUtil) {
         this.serviceUtil = serviceUtil;
@@ -27,7 +30,7 @@ public class InstrumentApiImpl implements InstrumentApi {
 
     @Override
     public String index() {
-        return "Hello my InstrumentService";
+        return "Hello my InstrumentService version:"+apiVersion;
     }
 
     @Override

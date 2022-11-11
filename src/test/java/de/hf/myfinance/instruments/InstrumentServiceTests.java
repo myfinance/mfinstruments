@@ -53,10 +53,6 @@ class InstrumentServiceTests extends EventProcessorTestBase {
 
     @Autowired
     InstrumentService instrumentService;
-    @Autowired
-    InstrumentRepository instrumentRepository;
-    @Autowired
-    InstrumentGraphRepository instrumentGraphRepository;
 
     @Autowired
     private OutputDestination target;
@@ -69,12 +65,6 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     @Qualifier("saveInstrumentTreeProcessor")
     protected Consumer<Event<String, Instrument>> saveInstrumentTreeProcessor;
 
-    @BeforeEach
-    void setupDb() {
-        instrumentRepository.deleteAll().block();
-        instrumentGraphRepository.deleteAll().block();
-        purgeMessages("instrumentApproved-out-0");
-    }
 
     @Test
     void contextLoads() {

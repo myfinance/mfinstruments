@@ -43,7 +43,7 @@ class InstrumentserviceApplicationTests extends EventProcessorTestBase {
 
 	@Autowired
 	@Qualifier("validateInstrumentProcessor")
-	private Consumer<Event<Integer, Instrument>> validateInstrumentProcessor;
+	private Consumer<Event<String, Instrument>> validateInstrumentProcessor;
 
 	@Autowired
 	@Qualifier("saveInstrumentProcessor")
@@ -109,7 +109,7 @@ class InstrumentserviceApplicationTests extends EventProcessorTestBase {
 
 	private void sendCreateInstrumentEvent(String desc, InstrumentType type) {
 		var instrument = new Instrument(desc, type);
-		Event<Integer, Instrument> event = new Event(CREATE, desc, instrument);
+		Event<String, Instrument> event = new Event(CREATE, desc, instrument);
 		validateInstrumentProcessor.accept(event);
 	}
 

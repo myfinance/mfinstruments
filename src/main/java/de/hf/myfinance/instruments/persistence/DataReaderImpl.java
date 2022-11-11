@@ -4,7 +4,6 @@ import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentGraphEntry;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
-import de.hf.myfinance.instruments.service.InstrumentMapper;
 import de.hf.myfinance.restmodel.Instrument;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;

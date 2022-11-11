@@ -23,7 +23,7 @@ public class ValidateInstrumentProcessorConfig {
     }
 
     @Bean
-    public Consumer<Event<Integer, Instrument>> validateInstrumentProcessor() {
+    public Consumer<Event<String, Instrument>> validateInstrumentProcessor() {
         return event -> {
             LOG.info("Process message created at {}...", event.getEventCreatedAt());
 

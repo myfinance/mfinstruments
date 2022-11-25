@@ -50,7 +50,7 @@ public abstract class AbsInstrumentHandler {
         return this.dataReader.findByBusinesskey(businesskey)
                 .switchIfEmpty(handleNotExistingInstrument(isNewInstrument))
                 .map(e -> {
-                    validateInstrument(e, getInstrumentType(), "");
+                    validateInstrumentType(e, getInstrumentType(), "");
                     return e;
                 });
     }
@@ -70,7 +70,7 @@ public abstract class AbsInstrumentHandler {
         return object;
     }
 
-    protected void validateInstrument(Instrument instrument, InstrumentType instrumentType, String errMsg) {
+    protected void validateInstrumentType(Instrument instrument, InstrumentType instrumentType, String errMsg) {
         if(instrument.getInstrumentType()!=instrumentType){
             throw new MFException(MFMsgKey.WRONG_INSTRUMENTTYPE_EXCEPTION, errMsg+" instrument has wrong type:"+instrument.getInstrumentType());
         }

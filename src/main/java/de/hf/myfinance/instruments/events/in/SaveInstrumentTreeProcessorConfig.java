@@ -76,7 +76,7 @@ public class SaveInstrumentTreeProcessorConfig {
     }
 
     private Flux<InstrumentGraphEntry> handleNotExistingEntry(final String instrumentId, final String ancestorId, final EdgeType edgeType){
-        if(instrumentId!=ancestorId){
+        if(!instrumentId.equals(ancestorId)){
             final InstrumentGraphEntry newEntry = new InstrumentGraphEntry(ancestorId, ancestorId, edgeType);
             return Flux.just(newEntry);
         }

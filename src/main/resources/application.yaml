@@ -42,7 +42,7 @@ spring.cloud.stream:
     group: saveinstrumentTreeGroup
 
 spring.cloud.stream.rabbit.bindings:
-  messageProcessor-in-0.consumer:
+  validateInstrumentProcessor-in-0:
     autoBindDlq: true
     republishToDlq: true
   saveInstrumentProcessor-in-0:

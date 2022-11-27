@@ -32,7 +32,7 @@ public class ValidateInstrumentProcessorConfig {
                 case CREATE:
                     Instrument instrument = event.getData();
                     LOG.info("Create instrument with ID: {}", instrument.getBusinesskey());
-                    instrumentService.addInstrument(instrument).block();
+                    instrumentService.saveInstrument(instrument).block();
                     break;
 
                 default:

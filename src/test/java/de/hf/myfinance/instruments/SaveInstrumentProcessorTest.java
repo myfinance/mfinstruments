@@ -34,7 +34,7 @@ public class SaveInstrumentProcessorTest extends EventProcessorTestBase {
         var savedInstrument = instruments.get(0);
         assertEquals(businessKey, savedInstrument.getBusinesskey());
         assertEquals(desc, savedInstrument.getDescription());
-        assertTrue(savedInstrument.isIsactive());
+        assertTrue(savedInstrument.isActive());
         assertEquals(InstrumentType.TENANT, savedInstrument.getInstrumentType());
     }
 
@@ -53,7 +53,7 @@ public class SaveInstrumentProcessorTest extends EventProcessorTestBase {
         var savedInstrument = instruments.get(0);
         assertEquals(businessKey, savedInstrument.getBusinesskey());
         assertEquals(desc, savedInstrument.getDescription());
-        assertTrue(savedInstrument.isIsactive());
+        assertTrue(savedInstrument.isActive());
         assertEquals(InstrumentType.BUDGET, savedInstrument.getInstrumentType());
     }
 
@@ -72,7 +72,7 @@ public class SaveInstrumentProcessorTest extends EventProcessorTestBase {
         var savedInstrument = instruments.get(0);
         assertEquals(businessKey, savedInstrument.getBusinesskey());
         assertEquals(desc, savedInstrument.getDescription());
-        assertTrue(savedInstrument.isIsactive());
+        assertTrue(savedInstrument.isActive());
         assertEquals(InstrumentType.TENANT, savedInstrument.getInstrumentType());
 
         creatEvent = new Event(Event.Type.CREATE, businessKey, newInstrument);

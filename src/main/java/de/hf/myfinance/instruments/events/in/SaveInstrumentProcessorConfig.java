@@ -48,7 +48,7 @@ public class SaveInstrumentProcessorConfig {
                                 e.setAdditionalMaps(instrumentEntity.getAdditionalMaps());
                                 e.setAdditionalProperties(instrumentEntity.getAdditionalProperties());
                                 e.setDescription(instrumentEntity.getDescription());
-                                e.setIsactive(instrumentEntity.isIsactive());
+                                e.setActive(instrumentEntity.isActive());
                                 e.setTreelastchanged(instrumentEntity.getTreelastchanged());
                                 return e;
                             })

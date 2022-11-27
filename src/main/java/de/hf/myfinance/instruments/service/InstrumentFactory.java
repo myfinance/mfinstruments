@@ -27,33 +27,21 @@ public class InstrumentFactory {
     }
 
     /**
-     * returns a baseinstrumenthandler with type indifferent functions like getTenant().
-     * use this if you do not know the type and it doesn't matter for your purpose
-     * @param instrumentId the id of the instrument
-     * @return the BaseAccountableInstrumentHandler
-     */
-    public AccountableInstrumentHandler getBaseInstrumentHandler(String instrumentId) {
-        return new BaseAccountableInstrumentHandlerImpl(instrumentEnvironment, instrumentId);
-    }
-
-    /**
      * creates an Instrumenthandler for a new Instrument
-     * @param instrumentType the type of the new instrument
-     * @param description the description
-     * @param parentId the id of the parent
+     * @param instrument the instrument for that we need the handler
      * @return Instrumenthandler for the instrumenttype of the new instrument
      */
-    public InstrumentHandler getInstrumentHandlerForNewInstrument(InstrumentType instrumentType, String description, String parentId, String businesskey) {
-        return switch (instrumentType) {
-            case TENANT -> new TenantHandler(instrumentEnvironment, description, null, true);
-            case BUDGETPORTFOLIO -> new BudgetPortfolioHandler(instrumentEnvironment, description, parentId, null, true);
-            case ACCOUNTPORTFOLIO -> new AccountPortfolioHandler(instrumentEnvironment, description, parentId, null, true);
-            case BUDGETGROUP -> new BudgetGroupHandler(instrumentEnvironment, description, parentId, null, true);
-            case BUDGET -> new BudgetHandler(instrumentEnvironment, description, parentId, null, true);
-            case GIRO -> new GiroHandler(instrumentEnvironment, description, parentId, null, true);
-            case CURRENCY -> new CurrencyHandler(instrumentEnvironment, description, businesskey, true);
-            case EQUITY -> new EquityHandler(instrumentEnvironment, description, businesskey, true);
-            default -> throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:" + instrumentType);
+    public InstrumentHandler getInstrumentHandler(Instrument instrument) {
+        return switch (instrument.getInstrumentType()) {
+            case TENANT -> new TenantHandler(instrumentEnvironment, instrument);
+            case BUDGETPORTFOLIO -> new BudgetPortfolioHandler(instrumentEnvironment, instrument);
+            case ACCOUNTPORTFOLIO -> new AccountPortfolioHandler(instrumentEnvironment, instrument);
+            case BUDGETGROUP -> new BudgetGroupHandler(instrumentEnvironment, instrument);
+            case BUDGET -> new BudgetHandler(instrumentEnvironment, instrument);
+            case GIRO -> new GiroHandler(instrumentEnvironment, instrument);
+            case CURRENCY -> new CurrencyHandler(instrumentEnvironment, instrument);
+            case EQUITY -> new EquityHandler(instrumentEnvironment, instrument);
+            default -> throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:" + instrument.getInstrumentType());
         };
     }
 
@@ -71,17 +59,9 @@ public class InstrumentFactory {
         } catch (Exception e) {
             throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, " no valid businesskey, the Instrumenttype seems not to be included:"+businesskey);
         }
-        return switch (instrumentType) {
-            case TENANT -> new TenantHandler(instrumentEnvironment, null, businesskey, false);
-            case BUDGETPORTFOLIO -> new BudgetPortfolioHandler(instrumentEnvironment, null, null, businesskey, false);
-            case ACCOUNTPORTFOLIO -> new AccountPortfolioHandler(instrumentEnvironment, null, null, businesskey, false);
-            case BUDGETGROUP -> new BudgetGroupHandler(instrumentEnvironment, null, null, businesskey, false);
-            case BUDGET -> new BudgetHandler(instrumentEnvironment, null, null, businesskey, false);
-            case GIRO -> new GiroHandler(instrumentEnvironment, null, null, businesskey, false);
-            case CURRENCY -> new CurrencyHandler(instrumentEnvironment, null, businesskey, false);
-            case EQUITY -> new EquityHandler(instrumentEnvironment, null, businesskey, false);
-            default -> throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:" + instrumentType);
-        };
+        var instrument = new Instrument(businesskey);
+        instrument.setInstrumentType(instrumentType);
+        return getInstrumentHandler(instrument);
     }
 
     /**
@@ -92,7 +72,9 @@ public class InstrumentFactory {
      * @return TenantHandler
      */
     public TenantHandler getTenantHandler(String businesskey) {
-        return new TenantHandler(instrumentEnvironment, null, businesskey, false);
+        var instrument = new Instrument(businesskey);
+        instrument.setInstrumentType(InstrumentType.TENANT);
+        return new TenantHandler(instrumentEnvironment, instrument);
     }
 
     public Flux<Instrument> listInstruments() {

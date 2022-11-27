@@ -52,7 +52,7 @@ class PersistenceTests extends MongoDbTestBase {
         assertEquals(expectedEntity.getInstrumentType(),        actualEntity.getInstrumentType());
         assertEquals(expectedEntity.getBusinesskey(),   actualEntity.getBusinesskey());
         assertEquals(expectedEntity.getDescription(), actualEntity.getDescription());
-        assertEquals(expectedEntity.isIsactive(),  actualEntity.isIsactive());
+        assertEquals(expectedEntity.isActive(),  actualEntity.isActive());
         assertEquals(expectedEntity.getTreelastchanged().getSecond(),    actualEntity.getTreelastchanged().getSecond());
     }
 

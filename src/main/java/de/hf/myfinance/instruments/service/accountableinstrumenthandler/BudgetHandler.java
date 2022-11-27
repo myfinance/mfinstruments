@@ -6,13 +6,13 @@ import de.hf.myfinance.restmodel.InstrumentType;
 
 public class BudgetHandler extends AbsCashInstrumentHandler {
 
-    public BudgetHandler(InstrumentEnvironment instrumentEnvironment, String description, String budgetGroupId, String businesskey, boolean isNewInstrument) {
-        super(instrumentEnvironment, description, budgetGroupId, businesskey, isNewInstrument);
+    public BudgetHandler(InstrumentEnvironment instrumentEnvironment, Instrument instrument) {
+        super(instrumentEnvironment, instrument);
     }
 
     @Override
     protected Instrument createDomainObject() {
-        return new Instrument(businesskey, description, InstrumentType.BUDGET, true, ts);
+        return new Instrument(businesskey, requestedInstrument.getDescription(), InstrumentType.BUDGET, true, ts);
     }
 
     @Override
@@ -23,11 +23,5 @@ public class BudgetHandler extends AbsCashInstrumentHandler {
     @Override
     protected InstrumentType getInstrumentType() {
         return InstrumentType.BUDGET;
-    }
-
-    @Override
-    public void setDescription(String description) {
-        super.setDescription(description);
-        super.setBusinesskey();
     }
 }

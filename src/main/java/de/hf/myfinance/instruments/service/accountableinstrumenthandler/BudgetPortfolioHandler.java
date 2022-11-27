@@ -11,14 +11,14 @@ public class BudgetPortfolioHandler extends AbsAccountableInstrumentHandler {
 
     private static final String DEFAULT_BUDGETGROUP_PREFIX = "bgtGrp_";
     
-    public BudgetPortfolioHandler(InstrumentEnvironmentWithFactory instrumentEnvironment, String description, String tenantId, String businesskey, boolean isNewInstrument) {
-        super(instrumentEnvironment, description, tenantId, businesskey, isNewInstrument);
+    public BudgetPortfolioHandler(InstrumentEnvironmentWithFactory instrumentEnvironment, Instrument instrument) {
+        super(instrumentEnvironment, instrument);
         this.instrumentFactory = instrumentEnvironment.getInstrumentFactory();
     }
 
     @Override
     protected Instrument createDomainObject() {
-        return new Instrument(businesskey, description, InstrumentType.BUDGETPORTFOLIO, true, ts);
+        return new Instrument(businesskey, requestedInstrument.getDescription(), InstrumentType.BUDGETPORTFOLIO, true, ts);
     }
 
     @Override
@@ -27,17 +27,17 @@ public class BudgetPortfolioHandler extends AbsAccountableInstrumentHandler {
     }
 
     @Override
-    protected Mono<String> saveNewInstrument(Instrument instrument) {
-        return super.saveNewInstrument(instrument)
-                .flatMap(e->{
-                    var budgetGroupHandler = (AccountableInstrumentHandler)instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETGROUP, DEFAULT_BUDGETGROUP_PREFIX+description, businesskey, null);
-                    budgetGroupHandler.setTreeLastChanged(ts);
-                    budgetGroupHandler.setIsSimpleValidation(true);
-                    if(isSimpleValidation) {
-                        // block is ok here. Due to the simplevalidate the tenantbusinesskey is not read from the db but create with just
-                        budgetGroupHandler.setTenant(this.getTenant().block());
-                    }
-                    return budgetGroupHandler.save().flatMap(bg-> Mono.just(e));
-                });
+    protected Mono<String> postApproveAction(String msg){
+        var budgetGroup = new Instrument(DEFAULT_BUDGETGROUP_PREFIX+requestedInstrument.getDescription(), InstrumentType.BUDGETGROUP);
+        budgetGroup.setParentBusinesskey(businesskey);
+
+        var budgetGroupHandler = (AccountableInstrumentHandler)instrumentFactory.getInstrumentHandler(budgetGroup);
+        budgetGroupHandler.setTreeLastChanged(ts);
+        budgetGroupHandler.setIsSimpleValidation(true);
+        if(isSimpleValidation) {
+            // block is ok here. Due to the simplevalidate the tenantbusinesskey is not read from the db but create with just
+            budgetGroupHandler.setTenant(this.getTenant().block());
+        }
+        return budgetGroupHandler.save();
     }
 }

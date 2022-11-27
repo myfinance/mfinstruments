@@ -12,8 +12,8 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
     private  final InstrumentFactory instrumentFactory;
     private static final String DEFAULT_INCOMEBUDGET_PREFIX = "incomeBgt_";
 
-    public BudgetGroupHandler(InstrumentEnvironmentWithFactory instrumentEnvironment, String description, String budgetPFId, String businesskey, boolean isNewInstrument) {
-        super(instrumentEnvironment, description, budgetPFId, businesskey, isNewInstrument);
+    public BudgetGroupHandler(InstrumentEnvironmentWithFactory instrumentEnvironment, Instrument instrument) {
+        super(instrumentEnvironment, instrument);
         this.instrumentFactory = instrumentEnvironment.getInstrumentFactory();
     }
 
@@ -31,34 +31,26 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
         
         return incomeBudget.get();*/
         return null;
-    } 
+    }
 
     @Override
-    protected Mono<String> saveNewInstrument(Instrument instrument){
-        /*super.saveNewInstrument();
-        var budgetHandler = instrumentFactory.getInstrumentHandler(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX + domainObject.getDescription(), instrumentId, null);
+    protected Mono<String> postApproveAction(String msg){
+        var budget = new Instrument(DEFAULT_INCOMEBUDGET_PREFIX+requestedInstrument.getDescription(), InstrumentType.BUDGET);
+        budget.setParentBusinesskey(businesskey);
+        var budgetHandler = (AccountableInstrumentHandler)instrumentFactory.getInstrumentHandler(budget);
         budgetHandler.setTreeLastChanged(ts);
-        budgetHandler.save();
-        addProperty(InstrumentPropertyType.INCOMEBUDGETID, budgetHandler.getInstrumentId());*/
-        return super.saveNewInstrument(instrument)
-                .flatMap(e->{
-                    var budgetHandler = (AccountableInstrumentHandler)instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGET, DEFAULT_INCOMEBUDGET_PREFIX+description, businesskey, null);
-                    budgetHandler.setTreeLastChanged(ts);
-                    budgetHandler.setIsSimpleValidation(true);
+        budgetHandler.setIsSimpleValidation(true);
 
-                    if(isSimpleValidation) {
-                        // block is ok here. Due to the simplevalidate the tenantbusinesskey is not read from the db but create with just
-                        budgetHandler.setTenant(this.getTenant().block());
-                    }
-                    return budgetHandler.save()
-                            // Return again the mono of the tenant
-                            .flatMap(bpf-> Mono.just(e));
-                });
+        if(isSimpleValidation) {
+            // block is ok here. Due to the simplevalidate the tenantbusinesskey is not read from the db but create with just
+            budgetHandler.setTenant(this.getTenant().block());
+        }
+        return budgetHandler.save();
     }
 
     @Override
     protected Instrument createDomainObject() {
-        return new Instrument(businesskey, description, InstrumentType.BUDGETGROUP, true, ts);
+        return new Instrument(businesskey, requestedInstrument.getDescription(), InstrumentType.BUDGETGROUP, true, ts);
     }
 
     @Override
@@ -66,23 +58,6 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
         return InstrumentType.BUDGETGROUP;
     }
 
-    //@Override
-    protected void updateInstrument() {
-        /*super.updateInstrument();
-        var incomeBudget = getIncomeBudget();
-        var handler = instrumentFactory.getInstrumentHandler(incomeBudget.getInstrumentid());
-        handler.setDescription(DEFAULT_INCOMEBUDGET_PREFIX + domainObject.getDescription());
-        handler.save();*/
-    }
-
-    //@Override
-    protected void validateInstrument4Inactivation() {
-        /*for(InstrumentEntity budget : getInstrumentChilds(EdgeType.TENANTGRAPH, 1)) {
-            var budgetHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(budget.getInstrumentid());
-            budgetHandler.setActive(false);
-            budgetHandler.save();
-        }*/
-    }
 
     @Override
     protected InstrumentType getParentType() {

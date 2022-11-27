@@ -3,7 +3,7 @@ package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.persistence.entities.EdgeType;
-import de.hf.myfinance.instruments.service.AbsInstrumentHandlerWithProperty;
+import de.hf.myfinance.instruments.service.AbsInstrumentHandler;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
 import de.hf.myfinance.instruments.service.instrumentgraphhandler.InstrumentGraphHandler;
 import de.hf.myfinance.instruments.service.instrumentgraphhandler.InstrumentGraphHandlerImpl;
@@ -11,7 +11,6 @@ import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
 
 import java.util.ArrayList;
 
@@ -19,47 +18,77 @@ import java.util.ArrayList;
  * This abstract class is the base for all Instruments a Tenant can be directly connected with and the Tenant it self.
  * Securities like Equities  and Bonds are only connected via Trades and so use a different base class
  */
-public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandlerWithProperty implements AccountableInstrumentHandler{
-    private String parentBusinesskey;
+public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandler implements AccountableInstrumentHandler{
     private String tenantBusinesskey;
     protected final InstrumentGraphHandler instrumentGraphHandler;
     boolean isRootElement = false;
 
-    protected AbsAccountableInstrumentHandler(InstrumentEnvironment instrumentEnvironment, String description, String parentBusinesskey, String businesskey, boolean isNewInstrument) {
-        super(instrumentEnvironment, description, businesskey, isNewInstrument);
-        this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentEnvironment);
-        this.parentBusinesskey = parentBusinesskey;
-    }
-
-    protected AbsAccountableInstrumentHandler(InstrumentEnvironment instrumentEnvironment, String businesskey) {
-        super(instrumentEnvironment, "", businesskey, false);
+    protected AbsAccountableInstrumentHandler(InstrumentEnvironment instrumentEnvironment, Instrument instrument) {
+        super(instrumentEnvironment, instrument);
         this.instrumentGraphHandler = new InstrumentGraphHandlerImpl(instrumentEnvironment);
     }
 
     @Override
-    protected Instrument initNewDomainObject() {
-
-        var object = super.initNewDomainObject();
-        object.setParentBusinesskey(parentBusinesskey);
-        return object;
-    }
-
-    @Override
-    public Mono<Instrument> loadInstrument() {
-        var instrumentMono = super.loadInstrument();
-        if(!isRootElement) {
-
-            instrumentMono = Mono.zip(instrumentMono, getTenant(), this::addTenant2Instrument);
-            if(isNewInstrument && !isSimpleValidation) {
-                var parentMono = loadParent();
-                instrumentMono = Mono.zip(instrumentMono, parentMono, this::validateParent);
+    protected Mono<Instrument> setBasicValues(Instrument loadedInstrument) {
+        if(isNewInstrument){
+            if(!isRootElement) {
+                if( requestedInstrument.getParentBusinesskey()==null || requestedInstrument.getParentBusinesskey().isEmpty()) {
+                    return Mono.error(new MFException(MFMsgKey.NO_VALID_INSTRUMENT, "instrument has no valid parent:"));
+                }
+                if(isSimpleValidation) {
+                    loadedInstrument.setTenantBusinesskey(tenantBusinesskey);
+                }
+                loadedInstrument.setParentBusinesskey(requestedInstrument.getParentBusinesskey());
             }
         }
-
-        return instrumentMono;
+        return super.setBasicValues(loadedInstrument);
     }
 
+    @Override
+    protected Mono<Instrument> validateInstrument(Instrument instrument){
+        if(isNewInstrument && !isSimpleValidation && !isRootElement) {
+            return Mono.zip(Mono.just(instrument), loadParent(), this::validateParent)
+                    .flatMap(this::loadTenant);
+        }
+        return Mono.just(instrument);
+    }
 
+    protected Mono<Instrument> loadParent() {
+        if(isRootElement) {
+            // the tenant or Root element has no parent
+            return Mono.empty();
+        }
+        return dataReader.findByBusinesskey(requestedInstrument.getParentBusinesskey())
+                .switchIfEmpty(Mono.error(new MFException(MFMsgKey.UNKNOWN_PARENT_EXCEPTION, domainObjectName+" not saved: unknown parent:"+ requestedInstrument.getParentBusinesskey())));
+    }
+
+    protected Instrument validateParent(Instrument instrument, Instrument parent) {
+        if(isRootElement) {
+            // the tenant or Root element has no parent
+            return instrument;
+        }
+        if(parent.getInstrumentType() != getParentType()){
+            throw new MFException(MFMsgKey.WRONG_INSTRUMENTTYPE_EXCEPTION,  domainObjectName+" not saved: Instrument with Id "+ parent.getBusinesskey() + " has the wrong type");
+        }
+        return instrument;
+    }
+
+    private Mono<Instrument> loadTenant(Instrument loadedInstrument){
+        var loadedInstrumentMono = Mono.just(loadedInstrument);
+        if(!isRootElement && isNewInstrument) {
+            return Mono.zip(loadedInstrumentMono, getTenant(), this::addTenant2Instrument);
+        }
+        return loadedInstrumentMono;
+    }
+
+    public Mono<String> getTenant() {
+        if(isSimpleValidation){
+            return Mono.just(tenantBusinesskey);
+        } else {
+            return instrumentGraphHandler.getRootInstrument(requestedInstrument.getParentBusinesskey(), EdgeType.TENANTGRAPH).switchIfEmpty(
+                    Mono.error(new MFException(MFMsgKey.UNKNOWN_PARENT_EXCEPTION, "no tenant found for parentId:"+requestedInstrument.getParentBusinesskey())));
+        }
+    }
 
     private Instrument addTenant2Instrument(Instrument instrument, String tenantBusinesskey) {
         instrument.setTenantBusinesskey(tenantBusinesskey);
@@ -70,43 +99,20 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
         this.tenantBusinesskey = tenantBusinesskey;
     }
 
-    public Mono<String> getTenant() {
-        if(isSimpleValidation){
-            return Mono.just(tenantBusinesskey);
-        } else {
-            return instrumentGraphHandler.getRootInstrument(parentBusinesskey, EdgeType.TENANTGRAPH).switchIfEmpty(
-                    Mono.error(new MFException(MFMsgKey.UNKNOWN_PARENT_EXCEPTION, "no tenant found for parentId:"+parentBusinesskey)));
-        }
-    }
+
 
     public Flux<Instrument> getInstrumentChilds(EdgeType edgeType, int pathlength){
         return getInstrumentChilds(businesskey, edgeType, pathlength);
     }
 
-    protected Mono<Instrument> loadParent() {
-        if(isRootElement) {
-            // the tenant or Root element has no parent
-            return Mono.empty();
-        }
-        return dataReader.findByBusinesskey(parentBusinesskey)
-                .switchIfEmpty(Mono.error(new MFException(MFMsgKey.UNKNOWN_PARENT_EXCEPTION, domainObjectName+" not saved: unknown parent:"+ parentBusinesskey)));
-    }
+
 
     protected Flux<Instrument> getAllInstrumentChildsWithType(InstrumentType instrumentType) {
         return getInstrumentChilds(businesskey, EdgeType.TENANTGRAPH, 0)
                 .filter(e -> e.getInstrumentType().equals(instrumentType));
     }
 
-    protected Instrument validateParent(Instrument instrument, Instrument parent) {
-        if(isRootElement) {
-            // the tenant or Root element has no parent
-            return instrument;
-        }
-        if(parent.getInstrumentType() != getParentType()){
-            throw new MFException(MFMsgKey.WRONG_INSTRUMENTTYPE_EXCEPTION,  domainObjectName+" not saved: Instrument with Id "+ parentBusinesskey + " has the wrong type");
-        }
-        return instrument;
-    }
+
 
     protected InstrumentType getParentType() {
         return InstrumentType.TENANT;
@@ -168,7 +174,7 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
     protected Flux<Instrument> filterInstrumentChilds(Flux<Instrument> childs, boolean filterInstrumentType, InstrumentType instrumentType, boolean onlyActive) {
         Flux<Instrument> instruments = childs;
         if(onlyActive) {
-            instruments = childs.filter(Instrument::isIsactive);
+            instruments = childs.filter(Instrument::isActive);
         }
         if(filterInstrumentType) {
             instruments = instruments.filter(i->

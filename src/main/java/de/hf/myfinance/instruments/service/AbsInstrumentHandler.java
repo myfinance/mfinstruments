@@ -16,47 +16,65 @@ import reactor.core.publisher.Mono;
 /**
  * Base class for alle instrument handler
  */
-public abstract class AbsInstrumentHandler {
+public abstract class AbsInstrumentHandler implements InstrumentHandler{
     protected final DataReader dataReader;
     private final AuditService auditService;
+    protected final Instrument requestedInstrument;
+    protected String businesskey = "";
+    protected boolean isNewInstrument = false;
+
     protected String instrumentId;
-    protected boolean initialized = false;
     protected boolean exists = true;
-    protected boolean isPropertyInit = false;
     protected LocalDateTime ts;
     protected static final String AUDIT_MSG_TYPE="InstrumentHandler_User_Event";
     protected String domainObjectName;
-    protected String description = "";
-    protected String businesskey = "";
-    protected String oldDesc;
-    protected boolean isActive = true;
-    protected boolean isNewInstrument;
-    private final EventHandler eventHandler;
-    protected static final int MAX_BUSINESSKEY_SIZE = 32;
+
     protected boolean isSimpleValidation = false;
 
-    protected AbsInstrumentHandler(InstrumentEnvironment instrumentEnvironment, String description, String businesskey, boolean isNewInstrument) {
+
+    private final EventHandler eventHandler;
+    protected static final int MAX_BUSINESSKEY_SIZE = 32;
+
+    protected AbsInstrumentHandler(InstrumentEnvironment instrumentEnvironment, Instrument instrument) {
         this.dataReader = instrumentEnvironment.getDataReader();
         this.auditService = instrumentEnvironment.getAuditService();
         ts = LocalDateTime.now();
-        this.description = description;
-        this.businesskey = businesskey;
-        this.isNewInstrument = isNewInstrument;
         this.eventHandler = instrumentEnvironment.getEventHandler();
+        this.requestedInstrument = instrument;
         setBusinesskey();
+    }
+
+    private void setBusinesskey() {
+        this.businesskey = requestedInstrument.getBusinesskey();
+        if(this.businesskey==null || this.businesskey.isEmpty()) {
+            this.businesskey = initBusinesskey().replace(" ", "").trim();
+            if(this.businesskey.length()> MAX_BUSINESSKEY_SIZE) this.businesskey = this.businesskey.substring(0, MAX_BUSINESSKEY_SIZE);
+            this.businesskey = this.businesskey+"@"+getInstrumentType().getValue();
+            isNewInstrument = true;
+        } else {
+            isNewInstrument = false;
+        }
+    }
+
+    protected String initBusinesskey() {
+        if(requestedInstrument.getDescription()==null || requestedInstrument.getDescription().isEmpty()){
+            throw new MFException(MFMsgKey.NO_VALID_INSTRUMENT, "wether this businesskey nor the description ist defined for the instrument");
+        }
+        return requestedInstrument.getDescription();
     }
 
     public Mono<Instrument> loadInstrument() {
         return this.dataReader.findByBusinesskey(businesskey)
-                .switchIfEmpty(handleNotExistingInstrument(isNewInstrument))
+                .switchIfEmpty(handleNotExistingInstrument())
                 .map(e -> {
-                    validateInstrumentType(e, getInstrumentType(), "");
+                    validateLoadedInstrument(e, getInstrumentType(), "");
                     return e;
                 });
     }
 
-    private Mono<Instrument> handleNotExistingInstrument(boolean isNewInstrument){
+    private Mono<Instrument> handleNotExistingInstrument(){
         if(isNewInstrument) {
+            exists = false;
             return Mono.just(initNewDomainObject());
         } else {
             return Mono.error(new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION, "Instrument for businesskey:"+businesskey + " does not exists."));
@@ -70,101 +88,75 @@ public abstract class AbsInstrumentHandler {
         return object;
     }
 
-    protected void validateInstrumentType(Instrument instrument, InstrumentType instrumentType, String errMsg) {
+    protected void validateLoadedInstrument(Instrument instrument, InstrumentType instrumentType, String errMsg) {
         if(instrument.getInstrumentType()!=instrumentType){
             throw new MFException(MFMsgKey.WRONG_INSTRUMENTTYPE_EXCEPTION, errMsg+" instrument has wrong type:"+instrument.getInstrumentType());
+        }
+        if(isNewInstrument && exists){
+            throw new MFException(MFMsgKey.NO_VALID_INSTRUMENT, errMsg+" you try to insert a new instrument with description :"+requestedInstrument.getDescription() + ", but the generated businesskey allready exists:" + instrument.getBusinesskey());
         }
     }
 
     public Mono<String> save() {
-        return loadInstrument().flatMap(this::saveOrUpdate);
+        return loadInstrument()
+                .flatMap(this::setBasicValues)
+                .flatMap(this::setAdditionalValues)
+                .flatMap(this::validateIsActive)
+                .flatMap(this::validateInstrument)
+                .flatMap(this::instrumentApproved)
+                .flatMap(this::postApproveAction);
     }
 
-    private Mono<String> saveOrUpdate(Instrument instrument) {
-        if(exists) {
-            return updateInstrument(instrument);
-        } else {
-            exists = true;
-            return saveNewInstrument(instrument);
+    protected Mono<String> postApproveAction(String msg){
+        return Mono.just("post approve action done");
+    }
+
+    private Mono<String> instrumentApproved(Instrument validatedInstrument) {
+        auditService.saveMessage(domainObjectName + " validated:businesskey=" + validatedInstrument.getBusinesskey() + " desc=" + validatedInstrument.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
+        eventHandler.sendInstrumentApprovedEvent(validatedInstrument);
+        return Mono.just("Instrument update with businesskey=" + validatedInstrument.getBusinesskey() +"approved");
+    }
+
+    protected Mono<Instrument> setBasicValues(Instrument validatedInstrument) {
+        if (requestedInstrument.getDescription() != null && !requestedInstrument.getDescription().isEmpty()) {
+            validatedInstrument.setDescription(requestedInstrument.getDescription());
         }
+        validatedInstrument.setTreelastchanged(ts);
+        return Mono.just(validatedInstrument);
     }
 
-    protected Mono<String> saveNewInstrument(Instrument instrument) {
-        var newInstrument = setAdditionalValues(instrument);
-        auditService.saveMessage(domainObjectName+" inserted: businesskey=" + newInstrument.getBusinesskey() + " desc=" + newInstrument.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
-        eventHandler.sendInstrumentApprovedEvent(newInstrument);
-        return Mono.just("new Instrument with businesskey=" + newInstrument.getBusinesskey() +"approved");
-    }
-
-    protected Mono<String> updateInstrument(Instrument instrument) {
-        checkInstrumentInactivation(instrument, isActive);
-        oldDesc = instrument.getDescription();
-        if (description != null && !description.equals("")) {
-            instrument.setDescription(description);
+    private Mono<Instrument> validateIsActive(Instrument instrument) {
+        if(!requestedInstrument.isActive() && !instrument.isActive()) {
+            return Mono.error(new MFException(MFMsgKey.NO_VALID_INSTRUMENT, "you can not change inactive instruments"));
         }
-        var newInstrument = setAdditionalValues(instrument);
-        auditService.saveMessage(domainObjectName + " updated:businesskey=" + newInstrument.getBusinesskey() + " desc=" + newInstrument.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
-        eventHandler.sendInstrumentApprovedEvent(newInstrument);
-        return Mono.just("Instrument update with businesskey=" + newInstrument.getBusinesskey() +"approved");
+        if(!requestedInstrument.isActive() && instrument.isActive()) {
+            return validateInstrument4Inactivation(instrument);
+        }
+        instrument.setActive(requestedInstrument.isActive());
+        return Mono.just(instrument);
+    }
+
+    protected Mono<Instrument> validateInstrument4Inactivation(Instrument instrument) {
+        //check per instrumenttype if it is allowed to set the instrument inactive or if an iactivationRequest has to be sent first (e.G. for giro the valuationservice has ot answer with a value=0 message)
+        return Mono.error(new MFException(MFMsgKey.NO_VALID_INSTRUMENT_FOR_DEACTIVATION, "instrument with id:"+instrument.getBusinesskey() + " not deactivated. Instruments with type:"+ instrument.getInstrumentType() + " can not be deactivated"));
+    }
+
+    protected Mono<Instrument> setAdditionalValues(Instrument instrument) {
+        return Mono.just(instrument);
     }
 
     protected Mono<Instrument> getInstrumentById(String instrumentId, String errMsg) {
         return dataReader.findById(instrumentId)
                 .switchIfEmpty(
-                    Mono.error(new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION, errMsg + " Instrument for id:" + instrumentId + " not found")));
+                        Mono.error(new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION, errMsg + " Instrument for id:" + instrumentId + " not found")));
     }
 
-    protected Instrument setAdditionalValues(Instrument instrument) {
-        return instrument;
-    }
-
-    protected void checkInstrumentInactivation(Instrument oldInstrument,  boolean isActiveAfterUpdate) {
-        // try to deactivate instrument ?
-
-        if(!isActiveAfterUpdate && oldInstrument.isIsactive()) {
-            validateInstrument4Inactivation(oldInstrument);
-        }
-    }
-
-    protected void validateInstrument4Inactivation(Instrument oldInstrument) {
-        throw new MFException(MFMsgKey.NO_VALID_INSTRUMENT_FOR_DEACTIVATION, "instrument with id:"+instrumentId + " not deactivated. Instruments with type:"+ oldInstrument.getInstrumentType() + " can not deactivated");
-    }
-
-    public void setActive(boolean isActive) {
-        this.isActive = isActive;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    protected void setBusinesskey() {
-        if(isNewInstrument) {
-            if(businesskey==null) {
-                this.businesskey = description.trim();
-            }
-            this.businesskey = this.businesskey.replace(" ", "");
-            if(this.businesskey.length()> MAX_BUSINESSKEY_SIZE) this.businesskey = this.businesskey.substring(0, MAX_BUSINESSKEY_SIZE);
-            this.businesskey = this.businesskey+"@"+getInstrumentType().getValue();
-        }
+    protected Mono<Instrument> validateInstrument(Instrument instrument){
+        return Mono.just(instrument);
     }
 
     public void setTreeLastChanged(LocalDateTime ts){
         this.ts = ts;
-    }
-
-    public String getInstrumentId() {
-        return this.instrumentId;
-    }
-    public void setInstrumentId(String instrumentId) {
-        initialized = true;
-        this.instrumentId = instrumentId;
-    }
-
-    public void setValues(Instrument instrument){
-        if(!isNewInstrument) {
-            isActive = instrument.isIsactive();
-        }
     }
 
     public void setIsSimpleValidation(boolean isSimpleValidation) {

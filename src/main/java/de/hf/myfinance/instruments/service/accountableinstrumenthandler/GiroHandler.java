@@ -6,13 +6,13 @@ import de.hf.myfinance.restmodel.InstrumentType;
 
 public class GiroHandler extends AbsCashInstrumentHandler {
 
-    public GiroHandler(InstrumentEnvironment instrumentEnvironment, String description, String tenantId, String businesskey, boolean isNewInstrument) {
-        super(instrumentEnvironment, description, tenantId, businesskey, isNewInstrument);
+    public GiroHandler(InstrumentEnvironment instrumentEnvironment, Instrument instrument) {
+        super(instrumentEnvironment, instrument);
     }
 
     @Override
     protected Instrument createDomainObject() {
-        return new Instrument(businesskey, description, InstrumentType.GIRO, true, ts);
+        return new Instrument(businesskey, requestedInstrument.getDescription(), InstrumentType.GIRO, true, ts);
     }
 
     @Override
@@ -23,11 +23,5 @@ public class GiroHandler extends AbsCashInstrumentHandler {
     @Override
     protected InstrumentType getInstrumentType() {
         return InstrumentType.GIRO;
-    }
-
-    @Override
-    public void setDescription(String description) {
-        super.setDescription(description);
-        super.setBusinesskey();
     }
 }

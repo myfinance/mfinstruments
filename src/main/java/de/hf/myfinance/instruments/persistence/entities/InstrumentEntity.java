@@ -43,7 +43,7 @@ public class InstrumentEntity implements java.io.Serializable {
     private Integer instrumentTypeId;
     private InstrumentType instrumentType;
     private String description;
-    private boolean isactive;
+    private boolean active;
     private LocalDateTime treelastchanged;
     @Indexed(unique = true)
     private String businesskey;
@@ -54,10 +54,10 @@ public class InstrumentEntity implements java.io.Serializable {
     public InstrumentEntity() {
     }
 
-    public InstrumentEntity(InstrumentType instrumentType, String description, boolean isactive, LocalDateTime treelastchanged) {
+    public InstrumentEntity(InstrumentType instrumentType, String description, boolean active, LocalDateTime treelastchanged) {
         setInstrumentTypeId(instrumentType.getValue());
         this.description = description;
-        this.isactive = isactive;
+        this.active = active;
         this.treelastchanged = treelastchanged;
     }
 
@@ -91,11 +91,11 @@ public class InstrumentEntity implements java.io.Serializable {
         this.description = description;
     }
 
-    public boolean isIsactive() {
-        return this.isactive;
+    public boolean isActive() {
+        return active;
     }
-    public void setIsactive(boolean isactive) {
-        this.isactive = isactive;
+    public void setActive(boolean active) {
+        this.active = active;
     }
     
     public LocalDateTime getTreelastchanged() {

@@ -21,11 +21,8 @@ public class InstrumentService {
         return instrumentHandler.loadInstrument();
     }
 
-    public Mono<String> addInstrument(Instrument instrument) {
-
-        var instrumentHandler = instrumentFactory.getInstrumentHandlerForNewInstrument(instrument.getInstrumentType(), instrument.getDescription(), instrument.getParentBusinesskey(), instrument.getBusinesskey());
-        instrumentHandler.setValues(instrument);
-        return instrumentHandler.save();
+    public Mono<String> saveInstrument(Instrument instrument) {
+        return instrumentFactory.getInstrumentHandler(instrument).save();
     }
 
     public Flux<Instrument> listInstruments() {

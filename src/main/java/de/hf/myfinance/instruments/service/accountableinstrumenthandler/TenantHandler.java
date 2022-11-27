@@ -4,6 +4,7 @@ import de.hf.myfinance.instruments.service.InstrumentFactory;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithFactory;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
+import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -13,33 +14,38 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
     private static final String DEFAULT_ACCPF_PREFIX = "accPf_";
     private static final String DEFAULT_BUDGETPF_PREFIX = "bgtPf_";
 
-    public TenantHandler(InstrumentEnvironmentWithFactory instrumentEnvironment, String description, String businesskey, boolean isNewInstrument) {
-        super(instrumentEnvironment, description, null, businesskey, isNewInstrument);
+    public TenantHandler(InstrumentEnvironmentWithFactory instrumentEnvironment, Instrument instrument) {
+        super(instrumentEnvironment, instrument);
         this.instrumentFactory = instrumentEnvironment.getInstrumentFactory();
         isRootElement = true;
     }
 
     @Override
-    protected Mono<String> saveNewInstrument(Instrument instrument) {
-        return super.saveNewInstrument(instrument)
-                .flatMap(e->{
-                    var budgetPortfolioHandler = (AccountableInstrumentHandler)instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.BUDGETPORTFOLIO, DEFAULT_BUDGETPF_PREFIX+description, businesskey, null);
-                    budgetPortfolioHandler.setTreeLastChanged(ts);
-                    budgetPortfolioHandler.setIsSimpleValidation(true);
-                    budgetPortfolioHandler.setTenant(this.businesskey);
-                    return budgetPortfolioHandler.save().flatMap(bpf-> Mono.just(e));
-                })
-                .flatMap(e->{
-                    var accPortfolioHandler = (AccountableInstrumentHandler)instrumentFactory.getInstrumentHandlerForNewInstrument(InstrumentType.ACCOUNTPORTFOLIO, DEFAULT_ACCPF_PREFIX+description, businesskey, null);
-                    accPortfolioHandler.setTreeLastChanged(ts);
-                    accPortfolioHandler.setIsSimpleValidation(true);
-                    accPortfolioHandler.setTenant(this.businesskey);
-                    return accPortfolioHandler.save()
-                            // Return again the mono of the tenant
-                            .flatMap(bpf-> Mono.just(e));
-                });
+    protected Mono<String> postApproveAction(String msg){
+        return Mono.just(msg)
+                .flatMap(this::saveBudgetPortfolio)
+                .flatMap(this::saveAccPortfolio);
     }
 
+    private Mono<String> saveBudgetPortfolio(String msg) {
+        var budgetPortfolio = new Instrument(DEFAULT_BUDGETPF_PREFIX+requestedInstrument.getDescription(), InstrumentType.BUDGETPORTFOLIO);
+        budgetPortfolio.setParentBusinesskey(businesskey);
+        var budgetPortfolioHandler = (AccountableInstrumentHandler)instrumentFactory.getInstrumentHandler(budgetPortfolio);
+        budgetPortfolioHandler.setTreeLastChanged(ts);
+        budgetPortfolioHandler.setIsSimpleValidation(true);
+        budgetPortfolioHandler.setTenant(this.businesskey);
+        return budgetPortfolioHandler.save();
+    }
+
+    private Mono<String> saveAccPortfolio(String msg) {
+        var accPortfolio = new Instrument(DEFAULT_ACCPF_PREFIX+requestedInstrument.getDescription(), InstrumentType.ACCOUNTPORTFOLIO);
+        accPortfolio.setParentBusinesskey(businesskey);
+        var accPortfolioHandler = (AccountableInstrumentHandler)instrumentFactory.getInstrumentHandler(accPortfolio);
+        accPortfolioHandler.setTreeLastChanged(ts);
+        accPortfolioHandler.setIsSimpleValidation(true);
+        accPortfolioHandler.setTenant(this.businesskey);
+        return accPortfolioHandler.save();
+    }
 
 
     public Mono<Instrument> getAccountPortfolio() {
@@ -57,7 +63,7 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
 
     @Override
     protected Instrument createDomainObject() {
-        return new Instrument(businesskey, description, InstrumentType.TENANT, true, ts);
+        return new Instrument(businesskey, requestedInstrument.getDescription(), InstrumentType.TENANT, true, ts);
     }
 
     @Override

@@ -6,13 +6,13 @@ import de.hf.myfinance.restmodel.InstrumentType;
 
 public class AccountPortfolioHandler extends AbsAccountableInstrumentHandler {
 
-    public AccountPortfolioHandler(InstrumentEnvironment instrumentEnvironment, String description, String tenantId, String businesskey, boolean isNewInstrument) {
-        super(instrumentEnvironment, description, tenantId, businesskey, isNewInstrument);
+    public AccountPortfolioHandler(InstrumentEnvironment instrumentEnvironment, Instrument instrument) {
+        super(instrumentEnvironment, instrument);
     }
 
     @Override
     protected Instrument createDomainObject() {
-        return new Instrument(businesskey, description, InstrumentType.ACCOUNTPORTFOLIO, true, ts);
+        return new Instrument(businesskey, requestedInstrument.getDescription(), InstrumentType.ACCOUNTPORTFOLIO, true, ts);
     }
 
     @Override

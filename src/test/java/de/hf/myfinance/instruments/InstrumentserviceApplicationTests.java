@@ -19,6 +19,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static de.hf.myfinance.event.Event.Type.CREATE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static reactor.core.publisher.Mono.just;
 import static org.springframework.http.HttpStatus.OK;
@@ -55,6 +56,7 @@ class InstrumentserviceApplicationTests extends EventProcessorTestBase {
 
 	@Test
 	void contextLoads() {
+		assertTrue(true);
 	}
 
 	@Test

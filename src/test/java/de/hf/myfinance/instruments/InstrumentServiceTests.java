@@ -63,12 +63,6 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     @Qualifier("saveInstrumentTreeProcessor")
     protected Consumer<Event<String, Instrument>> saveInstrumentTreeProcessor;
 
-
-    @Test
-    void contextLoads() {
-        assertTrue(true);
-    }
-
     @Test
     void createTenant() {
         var newTenant = new Instrument(tenantDesc, InstrumentType.TENANT);

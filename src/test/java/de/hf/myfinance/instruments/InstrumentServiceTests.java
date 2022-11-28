@@ -66,6 +66,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
 
     @Test
     void contextLoads() {
+        assertTrue(true);
     }
 
     @Test

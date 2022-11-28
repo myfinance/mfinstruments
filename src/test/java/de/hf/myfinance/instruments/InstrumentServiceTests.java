@@ -82,8 +82,8 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(tenantDesc, data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("TENANT", data.get("instrumentType"));
-        assertTrue(data.get("parentBusinesskey")==null);
-        assertTrue(data.get("tenantBusinesskey")==null);
+        assertNull(data.get("parentBusinesskey"));
+        assertNull(data.get("tenantBusinesskey"));
 
         data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(1))).get("data");
         assertEquals("bgtPf_aTest@23", data.get("businesskey"));
@@ -244,14 +244,14 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         var properties = new HashMap<AdditionalProperties, String>();
         properties.put(AdditionalProperties.CURRENCYCODE, currencyCode);
         currency.setAdditionalProperties(properties);
-        instrumentService.saveInstrument(currency).block();
-        List<String> messages = getMessages("instrumentApproved-out-0");
-        assertEquals(1, messages.size());
+        currency.setBusinesskey("USD"+"@13");
+        Event creatEvent = new Event(Event.Type.CREATE, "USD"+"@13", currency);
+        saveInstrumentProcessor.accept(creatEvent);
 
         var desc = "newEquity";
         var isin = "de0000000001";
         var symbols = new HashMap<String, String>();
-        symbols.put("MYSYMBOL", "USD");
+        symbols.put("MYSYMBOL", "USD"+"@13");
         Map<AdditionalMaps, Map<String, String>> additionalMaps = new HashMap<>();
         additionalMaps.put(AdditionalMaps.EQUITYSYMBOLS, symbols);
         var eq = new Instrument(desc, InstrumentType.EQUITY);
@@ -261,7 +261,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         eq.setAdditionalProperties(eqProperties);
 
         var savedEq = instrumentService.saveInstrument(eq).block();
-        messages = getMessages("instrumentApproved-out-0");
+        var messages = getMessages("instrumentApproved-out-0");
         assertEquals(1, messages.size());
         LOG.info(messages.get(0));
         Event createEvent = new Event(Event.Type.CREATE, isin, eq);
@@ -275,7 +275,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertNull(data.get("tenantBusinesskey"));
         var maps = (HashMap)data.get("additionalMaps");
         assertEquals(1, maps.size());
-        assertEquals("USD", ((HashMap)maps.get("EQUITYSYMBOLS")).get("MYSYMBOL"));
+        assertEquals("USD"+"@13", ((HashMap)maps.get("EQUITYSYMBOLS")).get("MYSYMBOL"));
 
         var propertiesMap = (HashMap)data.get("additionalProperties");
         assertEquals(1, propertiesMap.size());
@@ -283,7 +283,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
 
         saveInstrumentProcessor.accept(createEvent);
         saveInstrumentTreeProcessor.accept(createEvent);
-        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(1).verifyComplete();
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(2).verifyComplete();
     }
 
     @Test
@@ -300,9 +300,9 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         eqProperties.put(AdditionalProperties.ISIN, isin);
         eq.setAdditionalProperties(eqProperties);
 
-        var savedEq = instrumentService.saveInstrument(eq).block();
-        final List<String> messages = getMessages("instrumentApproved-out-0");
-        //assertEquals(0, messages.size());
+        assertThrows(MFException.class, () -> {
+            instrumentService.saveInstrument(eq).block();
+        });
     }
 
     private void setupTestTenant() {

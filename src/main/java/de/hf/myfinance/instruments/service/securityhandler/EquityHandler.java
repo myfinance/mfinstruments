@@ -53,6 +53,30 @@ public class EquityHandler extends AbsInstrumentHandler {
     }
 
     @Override
+    protected Mono<Instrument> validateInstrument(Instrument instrument){
+        var instrumentMono = super.validateInstrument(instrument);
+        if(requestedInstrument.getAdditionalMaps()!=null
+                && requestedInstrument.getAdditionalMaps().size()>0
+                && requestedInstrument.getAdditionalMaps().get(AdditionalMaps.EQUITYSYMBOLS)!= null) {
+
+            var currencies = requestedInstrument.getAdditionalMaps().get(AdditionalMaps.EQUITYSYMBOLS).values();
+            for (String currency : currencies) {
+                instrumentMono=Mono.zip(instrumentMono, loadCurrency(currency), this::validateSymbolCurrency);
+            }
+        }
+        return instrumentMono;
+    }
+
+    protected Instrument validateSymbolCurrency(Instrument instrument, Instrument currency) {
+        return instrument;
+    }
+
+    private Mono<Instrument> loadCurrency(String Businesskey) {
+        return dataReader.findByBusinesskey(Businesskey)
+                .switchIfEmpty(Mono.error(new MFException(MFMsgKey.NO_VALID_INSTRUMENT, domainObjectName+" not saved: Currency for Symbol unknown:"+ Businesskey)));
+    }
+
+    @Override
     protected String initBusinesskey() {
         if(requestedInstrument.getAdditionalProperties()==null
                 || requestedInstrument.getAdditionalProperties().get(AdditionalProperties.ISIN)==null

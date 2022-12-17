@@ -75,4 +75,12 @@ public class DataReaderImpl implements DataReader{
     public Flux<String> getAncestorIds(final String businesskey, final EdgeType edgeType) {
         return instrumentGraphRepository.findByDescendantAndEdgetype(businesskey, edgeType).map(InstrumentGraphEntry::getAncestor);
     }
+
+    @Override
+    public Flux<Instrument> findActiveInstruments() {
+        return instrumentRepository.findByActive(true)
+                .map(e->
+                        instrumentMapper.entityToApi(e)
+                );
+    }
 }

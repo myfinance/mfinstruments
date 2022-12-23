@@ -25,9 +25,7 @@ import static reactor.core.publisher.Mono.just;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import org.springframework.cloud.stream.binder.test.TestChannelBinderConfiguration;
 

@@ -136,9 +136,10 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
         return Mono.just(instrument);
     }
 
+    //the default allowes to inactivate the instrument
     protected Mono<Instrument> validateInstrument4Inactivation(Instrument instrument) {
-        //check per instrumenttype if it is allowed to set the instrument inactive or if an iactivationRequest has to be sent first (e.G. for giro the valuationservice has ot answer with a value=0 message)
-        return Mono.error(new MFException(MFMsgKey.NO_VALID_INSTRUMENT_FOR_DEACTIVATION, "instrument with id:"+instrument.getBusinesskey() + " not deactivated. Instruments with type:"+ instrument.getInstrumentType() + " can not be deactivated"));
+        instrument.setActive(false);
+        return Mono.just(instrument);
     }
 
     protected Mono<Instrument> setAdditionalValues(Instrument instrument) {

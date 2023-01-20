@@ -413,4 +413,45 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         });
 
     }
+
+    @Test
+    void inactivateEquityAllwaysAllowed() {
+        setupTestTenant();
+        var desc = "newEquity";
+        var isin = "de0000000001";
+        var newEq = new Instrument(desc, InstrumentType.EQUITY);
+        newEq.setBusinesskey(isin);
+
+        Event creatEvent = new Event(Event.Type.CREATE, isin, newEq);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+        var valueCurve = new ValueCurve();
+        TreeMap<LocalDate, Double> values = new TreeMap<>();
+        values.put(LocalDate.of(2022,1,1), 0.0);
+        values.put(LocalDate.of(2022,1,2), 1000.0);
+        values.put(LocalDate.of(2022,1,3), 100.0);
+        valueCurve.setValueCurve(values);
+        valueCurve.setInstrumentBusinesskey(isin);
+        Event createValueEvent = new Event(Event.Type.CREATE, isin, valueCurve);
+        valueProcessor.accept(createValueEvent);
+
+        var savedInstrument = instrumentRepository.findByBusinesskey(isin).block();
+        assertEquals(isin, savedInstrument.getBusinesskey());
+        assertEquals(true, savedInstrument.isActive());
+
+        newEq.setActive(false);
+
+        instrumentService.saveInstrument(newEq).block();
+        final List<String> messages = getMessages("instrumentApproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(isin, data.get("businesskey"));
+        assertEquals(desc, data.get("description"));
+        assertEquals(false, data.get("active"));
+        assertEquals("EQUITY", data.get("instrumentType"));
+
+    }
 }

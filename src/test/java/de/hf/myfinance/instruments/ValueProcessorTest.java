@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 class ValueProcessorTest extends EventProcessorTestBase{
@@ -35,16 +35,16 @@ class ValueProcessorTest extends EventProcessorTestBase{
         values.put(LocalDate.of(2022,1,3), 0.0);
         valueCurve.setValueCurve(values);
         valueCurve.setInstrumentBusinesskey(businesskey);
-        Event creatEvent = new Event(Event.Type.CREATE, businesskey, valueCurve);
+        Event<String, ValueCurve> creatEvent = new Event<>(Event.Type.CREATE, businesskey, valueCurve);
         valueProcessor.accept(creatEvent);
 
         var inActivationInfo = inActivationInfoRepository.findAll().collectList().block();
-
+        assertNotNull(inActivationInfo);
         assertEquals(1, inActivationInfo.size());
 
         var inActivationInfoEntry = inActivationInfo.get(0);
         assertEquals(businesskey, inActivationInfoEntry.getBusinesskey());
-        assertEquals(true, inActivationInfoEntry.isInactivateable());
+        assertTrue(inActivationInfoEntry.isInactivateable());
     }
 
     @Test
@@ -57,16 +57,17 @@ class ValueProcessorTest extends EventProcessorTestBase{
         values.put(LocalDate.of(2022,1,3), 1010.0);
         valueCurve.setValueCurve(values);
         valueCurve.setInstrumentBusinesskey(businesskey);
-        Event creatEvent = new Event(Event.Type.CREATE, businesskey, valueCurve);
+        Event<String, ValueCurve> creatEvent = new Event<>(Event.Type.CREATE, businesskey, valueCurve);
         valueProcessor.accept(creatEvent);
 
         var inActivationInfo = inActivationInfoRepository.findAll().collectList().block();
 
+        assertNotNull(inActivationInfo);
         assertEquals(1, inActivationInfo.size());
 
         var inActivationInfoEntry = inActivationInfo.get(0);
         assertEquals(businesskey, inActivationInfoEntry.getBusinesskey());
-        assertEquals(false, inActivationInfoEntry.isInactivateable());
+        assertFalse( inActivationInfoEntry.isInactivateable());
     }
 
     @Test
@@ -85,16 +86,17 @@ class ValueProcessorTest extends EventProcessorTestBase{
         values.put(LocalDate.of(2022,1,4), 1010.0);
         valueCurve.setValueCurve(values);
         valueCurve.setInstrumentBusinesskey(businesskey);
-        Event creatEvent = new Event(Event.Type.CREATE, businesskey, valueCurve);
+        Event<String, ValueCurve> creatEvent = new Event<>(Event.Type.CREATE, businesskey, valueCurve);
         valueProcessor.accept(creatEvent);
 
         var inActivationInfo = inActivationInfoRepository.findAll().collectList().block();
 
+        assertNotNull(inActivationInfo);
         assertEquals(1, inActivationInfo.size());
 
         var inActivationInfoEntry = inActivationInfo.get(0);
         assertEquals(businesskey, inActivationInfoEntry.getBusinesskey());
-        assertEquals(false, inActivationInfoEntry.isInactivateable());
+        assertFalse(inActivationInfoEntry.isInactivateable());
 
         final List<String> messages = getMessages("validateInstrumentRequest-out-0");
 
@@ -102,6 +104,39 @@ class ValueProcessorTest extends EventProcessorTestBase{
         JsonHelper jsonHelper = new JsonHelper();
         var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
         assertEquals(businesskey, data.get("businesskey"));
-        assertEquals(true, data.get("active"));
+        assertTrue((boolean)data.get("active"));
+    }
+
+    @Test
+    void setUnInactivatableWithInactiveEquity() {
+        var businesskey = "theEquity";
+
+        var instrument = new InstrumentEntity(InstrumentType.EQUITY, "test Equity", false, LocalDateTime.now());
+        instrument.setBusinesskey(businesskey);
+        instrumentRepository.save(instrument).block();
+
+        var valueCurve = new ValueCurve();
+        TreeMap<LocalDate, Double> values = new TreeMap<>();
+        values.put(LocalDate.of(2022,1,1), 0.0);
+        values.put(LocalDate.of(2022,1,2), 1000.0);
+        values.put(LocalDate.of(2022,1,3), 0.0);
+        values.put(LocalDate.of(2022,1,4), 1010.0);
+        valueCurve.setValueCurve(values);
+        valueCurve.setInstrumentBusinesskey(businesskey);
+        Event<String, ValueCurve> creatEvent = new Event<>(Event.Type.CREATE, businesskey, valueCurve);
+        valueProcessor.accept(creatEvent);
+
+        var inActivationInfo = inActivationInfoRepository.findAll().collectList().block();
+
+        assertNotNull(inActivationInfo);
+        assertEquals(1, inActivationInfo.size());
+
+        var inActivationInfoEntry = inActivationInfo.get(0);
+        assertEquals(businesskey, inActivationInfoEntry.getBusinesskey());
+        assertFalse(inActivationInfoEntry.isInactivateable());
+
+        final List<String> messages = getMessages("validateInstrumentRequest-out-0");
+
+        assertEquals(0, messages.size());
     }
 }

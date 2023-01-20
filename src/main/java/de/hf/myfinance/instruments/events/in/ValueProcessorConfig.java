@@ -7,6 +7,7 @@ import de.hf.myfinance.instruments.events.out.ValidateInstrumentEventHandler;
 import de.hf.myfinance.instruments.persistence.DataReader;
 import de.hf.myfinance.instruments.persistence.entities.InActivationInfoEntity;
 import de.hf.myfinance.instruments.persistence.repositories.InActivationInfoRepository;
+import de.hf.myfinance.restmodel.InstrumentTypeGroup;
 import de.hf.myfinance.restmodel.ValueCurve;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -50,7 +51,14 @@ public class ValueProcessorConfig {
                             if (!e.isInactivateable()) {
                                 return dataReader.findByBusinesskey(event.getData().getInstrumentBusinesskey())
                                         .flatMap(i -> {
-                                            if (!i.isActive()) {
+                                            if (!i.isActive() &&
+                                                    (i.getInstrumentType().getTypeGroup().equals(InstrumentTypeGroup.CASHACCOUNT)
+                                                        || i.getInstrumentType().getTypeGroup().equals(InstrumentTypeGroup.DEPOT)
+                                                        || i.getInstrumentType().getTypeGroup().equals(InstrumentTypeGroup.DEPRECATIONOBJECT)
+                                                        || i.getInstrumentType().getTypeGroup().equals(InstrumentTypeGroup.PORTFOLIO)
+                                                        || i.getInstrumentType().getTypeGroup().equals(InstrumentTypeGroup.LOAN)
+                                                    )
+                                            ) {
                                                 i.setActive(true);
                                                 eventHandler.sendValidateInstrumentRequestEvent(i);
                                             }

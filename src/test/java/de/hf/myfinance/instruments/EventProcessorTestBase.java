@@ -39,6 +39,7 @@ public abstract class EventProcessorTestBase  extends MongoDbTestBase {
         instrumentGraphRepository.deleteAll().block();
         inActivationInfoRepository.deleteAll().block();
         purgeMessages("instrumentApproved-out-0");
+        purgeMessages("validateInstrumentRequest-out-0");
     }
 
     protected void purgeMessages(String bindingName) {

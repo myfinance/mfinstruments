@@ -3,7 +3,7 @@ package de.hf.myfinance.instruments.service;
 import de.hf.framework.audit.AuditService;
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
-import de.hf.myfinance.instruments.events.out.EventHandler;
+import de.hf.myfinance.instruments.events.out.InstrumentApprovedEventHandler;
 import de.hf.myfinance.instruments.persistence.DataReader;
 import de.hf.myfinance.instruments.service.accountableinstrumenthandler.*;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentImpl;
@@ -22,7 +22,7 @@ public class InstrumentFactory {
     private final InstrumentEnvironmentWithFactory instrumentEnvironment;
 
     @Autowired
-    public InstrumentFactory(DataReader dataReader, AuditService auditService, EventHandler eventHandler) {
+    public InstrumentFactory(DataReader dataReader, AuditService auditService, InstrumentApprovedEventHandler eventHandler) {
         instrumentEnvironment = new InstrumentEnvironmentImpl(dataReader, auditService, this, eventHandler);
     }
 

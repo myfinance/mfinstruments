@@ -6,7 +6,7 @@ import de.hf.framework.audit.AuditService;
 import de.hf.framework.audit.Severity;
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
-import de.hf.myfinance.instruments.events.out.EventHandler;
+import de.hf.myfinance.instruments.events.out.InstrumentApprovedEventHandler;
 import de.hf.myfinance.instruments.persistence.DataReader;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
 import de.hf.myfinance.restmodel.Instrument;
@@ -32,7 +32,7 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
     protected boolean isSimpleValidation = false;
 
 
-    private final EventHandler eventHandler;
+    private final InstrumentApprovedEventHandler eventHandler;
     protected static final int MAX_BUSINESSKEY_SIZE = 32;
 
     protected AbsInstrumentHandler(InstrumentEnvironment instrumentEnvironment, Instrument instrument) {

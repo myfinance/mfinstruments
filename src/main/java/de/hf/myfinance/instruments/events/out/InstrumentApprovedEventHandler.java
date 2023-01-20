@@ -10,21 +10,21 @@ import org.springframework.stereotype.Component;
 import static de.hf.myfinance.event.Event.Type.CREATE;
 
 @Component
-public class EventHandler {
+public class InstrumentApprovedEventHandler {
 
     private final StreamBridge streamBridge;
 
-    public EventHandler(StreamBridge streamBridge){
+    public InstrumentApprovedEventHandler(StreamBridge streamBridge){
         this.streamBridge = streamBridge;
     }
 
     public void sendInstrumentApprovedEvent(Instrument instrument){
         sendMessage("instrumentApproved-out-0",
-                new Event(CREATE, instrument.getBusinesskey(), instrument));
+                new Event<>(CREATE, instrument.getBusinesskey(), instrument));
     }
 
-    private void sendMessage(String bindingName, Event event) {
-        Message message = MessageBuilder.withPayload(event)
+    private void sendMessage(String bindingName, Event<String, Instrument> event) {
+        Message<Event<String, Instrument>> message = MessageBuilder.withPayload(event)
                 .setHeader("partitionKey", event.getKey())
                 .build();
         streamBridge.send(bindingName, message);

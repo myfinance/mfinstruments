@@ -43,6 +43,10 @@ spring.cloud.stream:
   bindings.valueProcessor-in-0:
     destination: valueCurveCalculated
     group: instrumentValueGroup
+  bindings.validateInstrumentRequest-out-0:
+    destination: validateInstrumentRequest
+    producer:
+      required-groups: validateInstrumentauditGroup
 
 spring.cloud.stream.rabbit.bindings:
   validateInstrumentProcessor-in-0:

@@ -15,4 +15,5 @@ public interface DataReader {
     Flux<String> getInstrumentChildIds(final String instrumentId, final EdgeType edgeType, int pathlength);
     Flux<String> getAncestorIds(final String businesskey, final EdgeType edgeType);
     Flux<Instrument> findActiveInstruments();
+    Mono<Boolean> isInactivateable(String businesskey);
 }

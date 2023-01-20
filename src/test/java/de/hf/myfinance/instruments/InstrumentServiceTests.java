@@ -3,10 +3,7 @@ package de.hf.myfinance.instruments;
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.event.Event;
 import de.hf.myfinance.instruments.service.InstrumentService;
-import de.hf.myfinance.restmodel.AdditionalMaps;
-import de.hf.myfinance.restmodel.AdditionalProperties;
-import de.hf.myfinance.restmodel.Instrument;
-import de.hf.myfinance.restmodel.InstrumentType;
+import de.hf.myfinance.restmodel.*;
 import de.hf.testhelper.JsonHelper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +16,8 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.test.StepVerifier;
 
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -62,6 +57,10 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     @Autowired
     @Qualifier("saveInstrumentTreeProcessor")
     protected Consumer<Event<String, Instrument>> saveInstrumentTreeProcessor;
+
+    @Autowired
+    @Qualifier("valueProcessor")
+    protected Consumer<Event<String, ValueCurve>> valueProcessor;
 
     @Test
     void createTenant() {
@@ -336,5 +335,82 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         creatEvent = new Event(Event.Type.CREATE, accPfKey, accPf);
         saveInstrumentProcessor.accept(creatEvent);
         saveInstrumentTreeProcessor.accept(creatEvent);
+    }
+
+
+    @Test
+    void inactivateGiro() {
+
+        setupTestTenant();
+
+        var newGiro = new Instrument(giroDesc, InstrumentType.GIRO);
+        newGiro.setBusinesskey(giroKey);
+        newGiro.setParentBusinesskey(accPfKey);
+
+        Event creatEvent = new Event(Event.Type.CREATE, giroKey, newGiro);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+        var valueCurve = new ValueCurve();
+        TreeMap<LocalDate, Double> values = new TreeMap<>();
+        values.put(LocalDate.of(2022,1,1), 0.0);
+        values.put(LocalDate.of(2022,1,2), 1000.0);
+        values.put(LocalDate.of(2022,1,3), 0.0);
+        valueCurve.setValueCurve(values);
+        valueCurve.setInstrumentBusinesskey(giroKey);
+        Event createValueEvent = new Event(Event.Type.CREATE, giroKey, valueCurve);
+        valueProcessor.accept(createValueEvent);
+
+        var savedInstrument = instrumentRepository.findByBusinesskey(giroKey).block();
+        assertEquals(giroKey, savedInstrument.getBusinesskey());
+        assertEquals(true, savedInstrument.isActive());
+
+        newGiro.setActive(false);
+        instrumentService.saveInstrument(newGiro).block();
+
+        final List<String> messages = getMessages("instrumentApproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(giroKey, data.get("businesskey"));
+        assertEquals(giroDesc, data.get("description"));
+        assertEquals(false, data.get("active"));
+        assertEquals("GIRO", data.get("instrumentType"));
+    }
+
+    @Test
+    void inactivateGiroNotAllowed() {
+
+        setupTestTenant();
+
+        var newGiro = new Instrument(giroDesc, InstrumentType.GIRO);
+        newGiro.setBusinesskey(giroKey);
+        newGiro.setParentBusinesskey(accPfKey);
+
+        Event creatEvent = new Event(Event.Type.CREATE, giroKey, newGiro);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+        var valueCurve = new ValueCurve();
+        TreeMap<LocalDate, Double> values = new TreeMap<>();
+        values.put(LocalDate.of(2022,1,1), 0.0);
+        values.put(LocalDate.of(2022,1,2), 1000.0);
+        values.put(LocalDate.of(2022,1,3), 100.0);
+        valueCurve.setValueCurve(values);
+        valueCurve.setInstrumentBusinesskey(giroKey);
+        Event createValueEvent = new Event(Event.Type.CREATE, giroKey, valueCurve);
+        valueProcessor.accept(createValueEvent);
+
+        var savedInstrument = instrumentRepository.findByBusinesskey(giroKey).block();
+        assertEquals(giroKey, savedInstrument.getBusinesskey());
+        assertEquals(true, savedInstrument.isActive());
+
+        newGiro.setActive(false);
+
+        assertThrows(MFException.class, () -> {
+            instrumentService.saveInstrument(newGiro).block();
+        });
+
     }
 }

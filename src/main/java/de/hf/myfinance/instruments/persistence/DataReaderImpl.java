@@ -1,7 +1,9 @@
 package de.hf.myfinance.instruments.persistence;
 
 import de.hf.myfinance.instruments.persistence.entities.EdgeType;
+import de.hf.myfinance.instruments.persistence.entities.InActivationInfoEntity;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentGraphEntry;
+import de.hf.myfinance.instruments.persistence.repositories.InActivationInfoRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.restmodel.Instrument;
@@ -15,12 +17,14 @@ public class DataReaderImpl implements DataReader{
     private final InstrumentRepository instrumentRepository;
     private final InstrumentGraphRepository instrumentGraphRepository;
     private final InstrumentMapper instrumentMapper;
+    private final InActivationInfoRepository inActivationInfoRepository;
 
     @Autowired
-    public DataReaderImpl(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, InstrumentMapper instrumentMapper) {
+    public DataReaderImpl(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, InstrumentMapper instrumentMapper, InActivationInfoRepository inActivationInfoRepository) {
         this.instrumentRepository = instrumentRepository;
         this.instrumentGraphRepository = instrumentGraphRepository;
         this.instrumentMapper = instrumentMapper;
+        this.inActivationInfoRepository = inActivationInfoRepository;
     }
 
     @Override
@@ -82,5 +86,14 @@ public class DataReaderImpl implements DataReader{
                 .map(e->
                         instrumentMapper.entityToApi(e)
                 );
+    }
+
+    @Override
+    public Mono<Boolean> isInactivateable(String businesskey) {
+        return inActivationInfoRepository.findByBusinesskey(businesskey)
+                .switchIfEmpty(Mono.just(new InActivationInfoEntity(businesskey, false)))
+                .flatMap(i-> {
+                    return Mono.just(i.isInactivateable());
+                });
     }
 }

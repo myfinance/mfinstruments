@@ -183,5 +183,15 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
         return instruments;
     }
 
+    protected Mono<Instrument> validateInstrument4Inactivation(Instrument instrument) {
+        return dataReader.isInactivateable(instrument.getBusinesskey()).flatMap(i-> {
+            if(i) {
+                instrument.setActive(false);
+                return Mono.just(instrument);
+            } else {
+                return Mono.error(new MFException(MFMsgKey.NO_VALID_INSTRUMENT_FOR_DEACTIVATION, "instrument with id:"+instrument.getBusinesskey() + " not deactivated. it is not inactivatable"));
+            }
+        });
+    }
 
 }

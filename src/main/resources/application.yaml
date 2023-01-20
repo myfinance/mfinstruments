@@ -40,6 +40,9 @@ spring.cloud.stream:
   bindings.saveInstrumentTreeProcessor-in-0:
     destination: instrumentApproved
     group: saveinstrumentTreeGroup
+  bindings.valueProcessor-in-0:
+    destination: valueCurveCalculated
+    group: instrumentValueGroup
 
 spring.cloud.stream.rabbit.bindings:
   validateInstrumentProcessor-in-0:

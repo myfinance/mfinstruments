@@ -1,5 +1,6 @@
 package de.hf.myfinance.instruments;
 
+import de.hf.myfinance.instruments.persistence.repositories.InActivationInfoRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.testhelper.MongoDbTestBase;
@@ -26,6 +27,8 @@ public abstract class EventProcessorTestBase  extends MongoDbTestBase {
     InstrumentRepository instrumentRepository;
     @Autowired
     InstrumentGraphRepository instrumentGraphRepository;
+    @Autowired
+    InActivationInfoRepository inActivationInfoRepository;
 
     @Autowired
     private OutputDestination target;
@@ -34,6 +37,7 @@ public abstract class EventProcessorTestBase  extends MongoDbTestBase {
     void setupDb() {
         instrumentRepository.deleteAll().block();
         instrumentGraphRepository.deleteAll().block();
+        inActivationInfoRepository.deleteAll().block();
         purgeMessages("instrumentApproved-out-0");
     }
 

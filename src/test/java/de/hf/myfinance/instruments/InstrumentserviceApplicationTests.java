@@ -99,7 +99,7 @@ class InstrumentserviceApplicationTests extends EventProcessorTestBase {
 
 	private WebTestClient.BodyContentSpec getAndVerifyInstrument(String businesskey, HttpStatus expectedStatus) {
 		return client.get()
-				.uri("/instrument/"+businesskey)
+				.uri("/instrument?businesskey="+businesskey)
 				.accept(APPLICATION_JSON)
 				.exchange()
 				.expectStatus().isEqualTo(expectedStatus)

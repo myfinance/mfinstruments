@@ -6,8 +6,6 @@ import de.hf.myfinance.event.Event;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.persistence.InstrumentMapper;
 import de.hf.myfinance.restmodel.Instrument;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +15,6 @@ import java.util.function.Consumer;
 
 @Configuration
 public class SaveInstrumentProcessorConfig {
-    private static final Logger LOG = LoggerFactory.getLogger(SaveInstrumentProcessorConfig.class);
 
     private final InstrumentMapper instrumentMapper;
     private final AuditService auditService;
@@ -34,13 +31,13 @@ public class SaveInstrumentProcessorConfig {
     @Bean
     public Consumer<Event<String, Instrument>> saveInstrumentProcessor() {
         return event -> {
-            LOG.info("Process message created at {}...", event.getEventCreatedAt());
+            auditService.saveMessage("Process message created at " + event.getEventCreatedAt(), Severity.INFO, AUDIT_MSG_TYPE);
 
             switch (event.getEventType()) {
 
                 case CREATE:
                     Instrument instrument = event.getData();
-                    LOG.info("Create instrument with ID: {}", instrument.getBusinesskey());
+                    auditService.saveMessage("Create instrument with ID: " + instrument.getBusinesskey(), Severity.INFO, AUDIT_MSG_TYPE);
                     var instrumentEntity = instrumentMapper.apiToEntity(instrument);
                     instrumentRepository.findByBusinesskey(instrumentEntity.getBusinesskey())
                             .switchIfEmpty(Mono.just(instrumentEntity))
@@ -60,10 +57,10 @@ public class SaveInstrumentProcessorConfig {
 
                 default:
                     String errorMessage = "Incorrect event type: " + event.getEventType() + ", expected a CREATE event";
-                    LOG.warn(errorMessage);
+                    auditService.saveMessage(errorMessage, Severity.WARN, AUDIT_MSG_TYPE);
             }
 
-            LOG.info("Message processing done!");
+            auditService.saveMessage("Message processing done!", Severity.INFO, AUDIT_MSG_TYPE);
 
         };
     }

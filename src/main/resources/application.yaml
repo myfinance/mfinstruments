@@ -61,7 +61,7 @@ spring.cloud.stream.rabbit.bindings:
 
 
 spring.rabbitmq:
-  host: 192.168.100.73
+  host: localhost
   port: 30021
   username: user
   password: vulkan
@@ -78,3 +78,16 @@ api:
     badRequest.description: Bad Request, invalid format of the request. See response message for more information
     notFound.description: Not found, the specified id does not exist
     unprocessableEntity.description: Unprocessable entity, input parameters caused the processing to fail. See response message for more information
+
+
+---
+
+spring.config.activate.on-profile: local
+spring.data.mongodb:
+  host: localhost
+  port: 30023
+  authentication-database: admin
+  database: instrument-db
+  username: root
+  password: vulkan
+  auto-index-creation: true

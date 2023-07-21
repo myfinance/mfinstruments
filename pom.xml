@@ -8,15 +8,15 @@
     <parent>
 		<groupId>de.hf.myfinance</groupId>
 		<artifactId>root</artifactId>
-        <!--<version>0.0.0-0-SNAPSHOT</version>-->
-        <version>0.23.0-alpha.318b72947c422183740254f41e050755b6ce929a</version>
+        <version>0.0.0-0-SNAPSHOT</version>
+        <!--<version>0.23.0-alpha.318b72947c422183740254f41e050755b6ce929a</version>-->
 		<relativePath/> 
 	</parent>
     <properties>
         <NEXUS_URL>192.168.100.73:31001</NEXUS_URL>
         <!--<MFFrameWork.Version>0.22.06b0e0cc1a07c4ce2758f80a29847dd2198d24171</MFFrameWork.Version>-->
-        <MFFrameWork.Version>0.23.0-alpha.318b72947c422183740254f41e050755b6ce929a</MFFrameWork.Version>
-        <!--<MFFrameWork.Version>0.0.0-0-SNAPSHOT</MFFrameWork.Version>-->
+        <!--<MFFrameWork.Version>0.23.0-alpha.318b72947c422183740254f41e050755b6ce929a</MFFrameWork.Version>-->
+        <MFFrameWork.Version>0.0.0-0-SNAPSHOT</MFFrameWork.Version>
        <jib.container-name>holgerfischer/myfinance-mfinstruments:</jib.container-name>
    </properties>
 
@@ -38,11 +38,11 @@
             <artifactId>mapstruct</artifactId>
             <version>${mapstruct.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-webflux-ui</artifactId>
-            <version>${springdoc.version}</version>
-        </dependency>
+       <dependency>
+           <groupId>org.springdoc</groupId>
+           <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+           <version>${openapistarter.version}</version>
+       </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
@@ -50,7 +50,6 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-stream-rabbit</artifactId>
-            <scope>compile</scope>
         </dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -72,13 +71,11 @@
             <artifactId>mongodb</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-stream</artifactId>
-            <type>test-jar</type>
-            <classifier>test-binder</classifier>
-            <scope>test</scope>
-        </dependency>
+       <dependency>
+           <groupId>org.springframework.cloud</groupId>
+           <artifactId>spring-cloud-stream-test-binder</artifactId>
+           <scope>test</scope>
+       </dependency>
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-test</artifactId>
@@ -143,7 +140,7 @@
         </plugins>
     </build>
 
-    <repositories>
+    <!--<repositories>
      <repository>
       <id>mynexus-release</id>
       <name>mynexus release</name>
@@ -155,6 +152,6 @@
        <enabled>false</enabled>
       </snapshots>
      </repository>     
-   </repositories>  
+   </repositories>  -->
 
 </project>

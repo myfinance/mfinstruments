@@ -1,17 +1,21 @@
-server.port: 7001
+server.port: 30031
+server.host: localhost
+# in case you want to run rabbitMq and keycloak on a dev server and not on your local machine like the software componentens(MFcomposite, mfinstrument...)
+env.host: ${server.host}
 logging:
   level:
     root: INFO
     de.hf.myfinance: DEBUG
 
 spring.data.mongodb:
-  host: 192.168.100.73
+  host: ${env.host}
   port: 30023
-  database: instrument-db
   authentication-database: admin
+  database: instrument-db
   username: root
   password: vulkan
   auto-index-creation: true
+
 
 springdoc:
   swagger-ui.path: /openapi/swagger-ui.html
@@ -61,7 +65,7 @@ spring.cloud.stream.rabbit.bindings:
 
 
 spring.rabbitmq:
-  host: localhost
+  host: ${env.host}
   port: 30021
   username: user
   password: vulkan
@@ -78,16 +82,3 @@ api:
     badRequest.description: Bad Request, invalid format of the request. See response message for more information
     notFound.description: Not found, the specified id does not exist
     unprocessableEntity.description: Unprocessable entity, input parameters caused the processing to fail. See response message for more information
-
-
----
-
-spring.config.activate.on-profile: local
-spring.data.mongodb:
-  host: localhost
-  port: 30023
-  authentication-database: admin
-  database: instrument-db
-  username: root
-  password: vulkan
-  auto-index-creation: true

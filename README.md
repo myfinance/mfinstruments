@@ -3,7 +3,7 @@ Service to load, save and update instruments like accounts, budgets equities etc
 
 # build
 
-mvn clean install
+mvn clean install -s settings.xml
 
 # run local
 

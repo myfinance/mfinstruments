@@ -1,10 +1,12 @@
 package de.hf.myfinance.instruments.events.in;
 
 import de.hf.framework.audit.AuditService;
+import de.hf.framework.audit.AuditType;
 import de.hf.framework.audit.Severity;
 import de.hf.myfinance.event.Event;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.persistence.InstrumentMapper;
+import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.restmodel.Instrument;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -31,13 +33,13 @@ public class SaveInstrumentProcessorConfig {
     @Bean
     public Consumer<Event<String, Instrument>> saveInstrumentProcessor() {
         return event -> {
-            auditService.saveMessage("Process message created at " + event.getEventCreatedAt(), Severity.INFO, AUDIT_MSG_TYPE);
+            auditService.saveMessage("Process message created at " + event.getEventCreatedAt(), Severity.DEBUG, AUDIT_MSG_TYPE);
 
             switch (event.getEventType()) {
 
                 case CREATE:
                     Instrument instrument = event.getData();
-                    auditService.saveMessage("Create instrument with ID: " + instrument.getBusinesskey(), Severity.INFO, AUDIT_MSG_TYPE);
+                    auditService.saveMessage("Create instrument with ID: " + instrument.getBusinesskey(), Severity.DEBUG, AUDIT_MSG_TYPE);
                     var instrumentEntity = instrumentMapper.apiToEntity(instrument);
                     instrumentRepository.findByBusinesskey(instrumentEntity.getBusinesskey())
                             .switchIfEmpty(Mono.just(instrumentEntity))
@@ -50,8 +52,8 @@ public class SaveInstrumentProcessorConfig {
                                 return e;
                             })
                             .flatMap(e -> instrumentRepository.save(e))
+                            .flatMap(this::logEvent)
                             .block();
-                    auditService.saveMessage("Instrument updated:businesskey=" + instrument.getBusinesskey() + " desc=" + instrument.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
 
                     break;
 
@@ -60,8 +62,13 @@ public class SaveInstrumentProcessorConfig {
                     auditService.saveMessage(errorMessage, Severity.WARN, AUDIT_MSG_TYPE);
             }
 
-            auditService.saveMessage("Message processing done!", Severity.INFO, AUDIT_MSG_TYPE);
+            auditService.saveMessage("Message processing done!", Severity.DEBUG, AUDIT_MSG_TYPE);
 
         };
+    }
+
+    private Mono<InstrumentEntity> logEvent(InstrumentEntity instrument){
+        auditService.saveMessage("Instrument saved:businesskey=" + instrument.getBusinesskey() + " desc=" + instrument.getDescription(), Severity.INFO, AUDIT_MSG_TYPE, "NA", AuditType.INSTRUMENTEVENT);
+        return Mono.just(instrument);
     }
 }

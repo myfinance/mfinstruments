@@ -53,6 +53,10 @@ spring.cloud.stream:
     destination: validateInstrumentRequest
     producer:
       required-groups: validateInstrumentauditGroup
+  bindings.mflog-out-0:
+    destination: logStream
+    producer:
+      required-groups: mflogauditGroup
 
 spring.cloud.stream.rabbit.bindings:
   validateInstrumentProcessor-in-0:

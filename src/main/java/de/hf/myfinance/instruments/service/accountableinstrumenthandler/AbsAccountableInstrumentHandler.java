@@ -1,5 +1,6 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
+import de.hf.framework.audit.Severity;
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.persistence.entities.EdgeType;
@@ -189,7 +190,9 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
                 instrument.setActive(false);
                 return Mono.just(instrument);
             } else {
-                return Mono.error(new MFException(MFMsgKey.NO_VALID_INSTRUMENT_FOR_DEACTIVATION, "instrument with id:"+instrument.getBusinesskey() + " not deactivated. it is not inactivatable"));
+                var msg = "instrument with id:"+instrument.getBusinesskey() + " not deactivated. it is not inactivatable";
+                auditService.saveMessage(msg, Severity.ERROR, AUDIT_MSG_TYPE);
+                return Mono.error(new MFException(MFMsgKey.NO_VALID_INSTRUMENT_FOR_DEACTIVATION, msg));
             }
         });
     }

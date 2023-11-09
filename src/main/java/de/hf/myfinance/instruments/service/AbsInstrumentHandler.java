@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
  */
 public abstract class AbsInstrumentHandler implements InstrumentHandler{
     protected final DataReader dataReader;
-    private final AuditService auditService;
+    protected final AuditService auditService;
     protected final Instrument requestedInstrument;
     protected String businesskey = "";
     protected boolean isNewInstrument = false;

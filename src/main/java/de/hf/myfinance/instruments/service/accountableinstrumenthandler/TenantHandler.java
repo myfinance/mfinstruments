@@ -69,4 +69,10 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
     protected InstrumentType getInstrumentType() {
         return InstrumentType.TENANT;
     }
+
+    // you can allways inactivate a tenant
+    protected Mono<Instrument> validateInstrument4Inactivation(Instrument instrument) {
+        instrument.setActive(false);
+        return Mono.just(instrument);
+    }
 }

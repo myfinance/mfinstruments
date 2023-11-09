@@ -1,5 +1,6 @@
 package de.hf.myfinance.instruments.events.in;
 
+import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.event.Event;
 import de.hf.myfinance.instruments.service.InstrumentService;
 import de.hf.myfinance.restmodel.Instrument;
@@ -32,7 +33,11 @@ public class ValidateInstrumentProcessorConfig {
                 case CREATE:
                     Instrument instrument = event.getData();
                     LOG.info("Create instrument with ID: {}", instrument.getBusinesskey());
-                    instrumentService.saveInstrument(instrument).block();
+                    try{
+                        instrumentService.saveInstrument(instrument).block();
+                    }catch(MFException e){
+                        //no need to throw mfExceptions. These are Validation-Errors and retry the message makes no sense.  
+                    }
                     break;
 
                 default:

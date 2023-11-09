@@ -21,9 +21,12 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
 
     @Override
     protected Mono<String> postApproveAction(String msg){
-        return Mono.just(msg)
+        if(isNewInstrument){
+            return Mono.just(msg)
                 .flatMap(this::saveBudgetPortfolio)
                 .flatMap(this::saveAccPortfolio);
+        }
+        return Mono.just(msg);
     }
 
     private Mono<String> saveBudgetPortfolio(String msg) {

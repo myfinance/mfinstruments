@@ -14,7 +14,8 @@
 	</parent>
     <properties>
         <NEXUS_URL>192.168.100.73:31001</NEXUS_URL>
-         <MFFrameWork.Version>0.23.0-alpha.3767c1b975b11c0b8db39188bde374b00f44e5f9</MFFrameWork.Version>
+        <!--<MFFrameWork.Version>0.23.0-alpha.3767c1b975b11c0b8db39188bde374b00f44e5f9</MFFrameWork.Version>-->
+        <MFFrameWork.Version>0.23.0fe1337418d812ad204a8bc03db4b0774a0ed44aa</MFFrameWork.Version>
         <!--<MFFrameWork.Version>0.0.0-0-SNAPSHOT</MFFrameWork.Version>-->
        <jib.container-name>holgerfischer/myfinance-mfinstruments:</jib.container-name>
    </properties>

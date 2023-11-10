@@ -1,7 +1,5 @@
 package de.hf.myfinance.instruments.service.securityhandler;
 
-
-import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.service.AbsInstrumentHandler;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
@@ -47,11 +45,11 @@ public class CurrencyHandler extends AbsInstrumentHandler {
         if(requestedInstrument.getAdditionalProperties()==null
                 || requestedInstrument.getAdditionalProperties().get(AdditionalProperties.CURRENCYCODE)==null
                 || requestedInstrument.getAdditionalProperties().get(AdditionalProperties.CURRENCYCODE).isEmpty()){
-            throw new MFException(MFMsgKey.NO_VALID_INSTRUMENT, "wether this businesskey nor the isin is defined for the instrument");
+            auditService.throwException("wether this businesskey nor the isin is defined for the instrument", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT);
         }
         var currencyCode = requestedInstrument.getAdditionalProperties().get(AdditionalProperties.CURRENCYCODE);
         if(currencyCode.length()!=3) {
-            throw new MFException(MFMsgKey.NO_VALID_INSTRUMENT, "currencycode has the wrong size:"+ currencyCode);
+            auditService.throwException("currencycode has the wrong size:"+ currencyCode, AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT);
         }
         return currencyCode.toUpperCase();
     }

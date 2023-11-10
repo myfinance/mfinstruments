@@ -3,6 +3,7 @@ package de.hf.myfinance.instruments.events.in;
 import de.hf.framework.audit.AuditService;
 import de.hf.framework.audit.AuditType;
 import de.hf.framework.audit.Severity;
+import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.event.Event;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.instruments.persistence.InstrumentMapper;
@@ -38,23 +39,30 @@ public class SaveInstrumentProcessorConfig {
             switch (event.getEventType()) {
 
                 case CREATE:
-                    Instrument instrument = event.getData();
-                    auditService.saveMessage("Create instrument with ID: " + instrument.getBusinesskey(), Severity.DEBUG, AUDIT_MSG_TYPE);
-                    var instrumentEntity = instrumentMapper.apiToEntity(instrument);
-                    instrumentRepository.findByBusinesskey(instrumentEntity.getBusinesskey())
-                            .switchIfEmpty(Mono.just(instrumentEntity))
-                            .map(e -> {
-                                e.setAdditionalMaps(instrumentEntity.getAdditionalMaps());
-                                e.setAdditionalProperties(instrumentEntity.getAdditionalProperties());
-                                e.setDescription(instrumentEntity.getDescription());
-                                e.setActive(instrumentEntity.isActive());
-                                e.setTreelastchanged(instrumentEntity.getTreelastchanged());
-                                return e;
-                            })
-                            .flatMap(e -> instrumentRepository.save(e))
-                            .flatMap(this::logEvent)
-                            .block();
-
+                    try{
+                        Instrument instrument = event.getData();
+                        auditService.saveMessage("Create instrument with ID: " + instrument.getBusinesskey(), Severity.DEBUG, AUDIT_MSG_TYPE);
+                        var instrumentEntity = instrumentMapper.apiToEntity(instrument);
+                        instrumentRepository.findByBusinesskey(instrumentEntity.getBusinesskey())
+                                .switchIfEmpty(Mono.just(instrumentEntity))
+                                .map(e -> {
+                                    e.setAdditionalMaps(instrumentEntity.getAdditionalMaps());
+                                    e.setAdditionalProperties(instrumentEntity.getAdditionalProperties());
+                                    e.setDescription(instrumentEntity.getDescription());
+                                    e.setActive(instrumentEntity.isActive());
+                                    e.setTreelastchanged(instrumentEntity.getTreelastchanged());
+                                    return e;
+                                })
+                                .flatMap(e -> instrumentRepository.save(e))
+                                .flatMap(this::logEvent)
+                                .block();
+                    }catch(MFException e){
+                        //no need to throw mfExceptions. These are Validation-Errors and retry the message makes no sense.  
+                    }
+                    catch(Exception e){
+                        auditService.saveMessage("unexpected error", Severity.FATAL, AUDIT_MSG_TYPE);
+                        throw e;
+                    }
                     break;
 
                 default:

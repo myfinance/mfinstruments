@@ -73,7 +73,7 @@ public class EquityHandler extends AbsInstrumentHandler {
 
     private Mono<Instrument> loadCurrency(String Businesskey) {
         return dataReader.findByBusinesskey(Businesskey)
-                .switchIfEmpty(Mono.error(new MFException(MFMsgKey.NO_VALID_INSTRUMENT, domainObjectName+" not saved: Currency for Symbol unknown:"+ Businesskey)));
+                .switchIfEmpty(auditService.handleMonoError("Instrument not saved: Currency for Symbol unknown:"+ Businesskey, AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT).cast(Instrument.class));
     }
 
     @Override
@@ -85,7 +85,7 @@ public class EquityHandler extends AbsInstrumentHandler {
         }
         var isin = requestedInstrument.getAdditionalProperties().get(AdditionalProperties.ISIN);
         if(isin.length()!=12) {
-            throw new MFException(MFMsgKey.NO_VALID_INSTRUMENT, "isin has the wrong size:"+ isin);
+            auditService.throwException("isin has the wrong size:"+ isin, AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT);
         }
         return isin.toUpperCase();
     }

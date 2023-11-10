@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 import de.hf.framework.audit.AuditService;
 import de.hf.framework.audit.Severity;
-import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.events.out.InstrumentApprovedEventHandler;
 import de.hf.myfinance.instruments.persistence.DataReader;
@@ -27,7 +26,6 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
     protected boolean exists = true;
     protected LocalDateTime ts;
     protected static final String AUDIT_MSG_TYPE="InstrumentHandler_User_Event";
-    protected String domainObjectName;
 
     protected boolean isSimpleValidation = false;
 
@@ -58,7 +56,7 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
 
     protected String initBusinesskey() {
         if(requestedInstrument.getDescription()==null || requestedInstrument.getDescription().isEmpty()){
-            throw new MFException(MFMsgKey.NO_VALID_INSTRUMENT, "wether this businesskey nor the description ist defined for the instrument");
+            auditService.throwException("wether this businesskey nor the description is defined for the instrument", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT);
         }
         return requestedInstrument.getDescription();
     }
@@ -77,7 +75,7 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
             exists = false;
             return Mono.just(initNewDomainObject());
         } else {
-            return Mono.error(new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION, "Instrument for businesskey:"+businesskey + " does not exists."));
+            return auditService.handleMonoError("Instrument for businesskey:"+businesskey + " does not exists.", AUDIT_MSG_TYPE, MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION).cast(Instrument.class);
         }
     }
 
@@ -90,10 +88,10 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
 
     protected void validateLoadedInstrument(Instrument instrument, InstrumentType instrumentType, String errMsg) {
         if(instrument.getInstrumentType()!=instrumentType){
-            throw new MFException(MFMsgKey.WRONG_INSTRUMENTTYPE_EXCEPTION, errMsg+" instrument has wrong type:"+instrument.getInstrumentType());
+            auditService.throwException(errMsg+" instrument has wrong type:"+instrument.getInstrumentType(), AUDIT_MSG_TYPE, MFMsgKey.WRONG_INSTRUMENTTYPE_EXCEPTION);
         }
         if(isNewInstrument && exists){
-            throw new MFException(MFMsgKey.NO_VALID_INSTRUMENT, errMsg+" you try to insert a new instrument with description :"+requestedInstrument.getDescription() + ", but the generated businesskey allready exists:" + instrument.getBusinesskey());
+            auditService.throwException(errMsg+" you try to insert a new instrument with description :"+requestedInstrument.getDescription() + ", but the generated businesskey allready exists:" + instrument.getBusinesskey(), AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT);
         }
     }
 
@@ -112,7 +110,7 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
     }
 
     private Mono<String> instrumentApproved(Instrument validatedInstrument) {
-        auditService.saveMessage(domainObjectName + " validated:businesskey=" + validatedInstrument.getBusinesskey() + " desc=" + validatedInstrument.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
+        auditService.saveMessage("Instrument validated:businesskey=" + validatedInstrument.getBusinesskey() + " desc=" + validatedInstrument.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
         eventHandler.sendInstrumentApprovedEvent(validatedInstrument);
         return Mono.just("Instrument update with businesskey=" + validatedInstrument.getBusinesskey() +"approved");
     }
@@ -127,7 +125,7 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
 
     private Mono<Instrument> validateIsActive(Instrument instrument) {
         if(!requestedInstrument.isActive() && !instrument.isActive()) {
-            return Mono.error(new MFException(MFMsgKey.NO_VALID_INSTRUMENT, "you can not change inactive instruments"));
+            return auditService.handleMonoError("you can not change inactive instruments", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT).cast(Instrument.class);
         }
         if(!requestedInstrument.isActive() && instrument.isActive()) {
             return validateInstrument4Inactivation(instrument);
@@ -149,7 +147,8 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
     protected Mono<Instrument> getInstrumentById(String instrumentId, String errMsg) {
         return dataReader.findById(instrumentId)
                 .switchIfEmpty(
-                        Mono.error(new MFException(MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION, errMsg + " Instrument for id:" + instrumentId + " not found")));
+                        auditService.handleMonoError(errMsg + " Instrument for id:" + instrumentId + " not found", AUDIT_MSG_TYPE, MFMsgKey.UNKNOWN_INSTRUMENT_EXCEPTION).cast(Instrument.class)
+                        );
     }
 
     protected Mono<Instrument> validateInstrument(Instrument instrument){

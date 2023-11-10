@@ -113,6 +113,17 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     }
 
     @Test
+    void updateTenantFailedDueToMissingInstrument() {
+
+        var newTenant = new Instrument(tenantDesc, InstrumentType.TENANT);   
+        newTenant.setBusinesskey("bla");  
+
+        assertThrows(MFException.class, () -> {
+            instrumentService.saveInstrument(newTenant).block();   
+        });
+    }
+
+    @Test
     void getInstruments() {
         setupTestTenant();
 

@@ -1,7 +1,5 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
-import de.hf.framework.audit.Severity;
-import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.service.AbsInstrumentHandler;
@@ -34,7 +32,7 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
         if(isNewInstrument){
             if(!isRootElement) {
                 if( requestedInstrument.getParentBusinesskey()==null || requestedInstrument.getParentBusinesskey().isEmpty()) {
-                    return Mono.error(new MFException(MFMsgKey.NO_VALID_INSTRUMENT, "instrument has no valid parent:"));
+                    return auditService.handleMonoError("Instrument for businesskey:"+businesskey + " has no valid parent.", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT).cast(Instrument.class);
                 }
                 if(isSimpleValidation) {
                     loadedInstrument.setTenantBusinesskey(tenantBusinesskey);
@@ -60,7 +58,7 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
             return Mono.empty();
         }
         return dataReader.findByBusinesskey(requestedInstrument.getParentBusinesskey())
-                .switchIfEmpty(Mono.error(new MFException(MFMsgKey.UNKNOWN_PARENT_EXCEPTION, domainObjectName+" not saved: unknown parent:"+ requestedInstrument.getParentBusinesskey())));
+                .switchIfEmpty(auditService.handleMonoError("Instrument not saved: unknown parent:"+ requestedInstrument.getParentBusinesskey(), AUDIT_MSG_TYPE, MFMsgKey.UNKNOWN_PARENT_EXCEPTION).cast(Instrument.class));
     }
 
     protected Instrument validateParent(Instrument instrument, Instrument parent) {
@@ -69,7 +67,7 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
             return instrument;
         }
         if(parent.getInstrumentType() != getParentType()){
-            throw new MFException(MFMsgKey.WRONG_INSTRUMENTTYPE_EXCEPTION,  domainObjectName+" not saved: Instrument with Id "+ parent.getBusinesskey() + " has the wrong type");
+            auditService.throwException("Instrument not saved with Id "+ parent.getBusinesskey() + " has the wrong type", AUDIT_MSG_TYPE, MFMsgKey.WRONG_INSTRUMENTTYPE_EXCEPTION);
         }
         return instrument;
     }
@@ -87,7 +85,7 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
             return Mono.just(tenantBusinesskey);
         } else {
             return instrumentGraphHandler.getRootInstrument(requestedInstrument.getParentBusinesskey(), EdgeType.TENANTGRAPH).switchIfEmpty(
-                    Mono.error(new MFException(MFMsgKey.UNKNOWN_PARENT_EXCEPTION, "no tenant found for parentId:"+requestedInstrument.getParentBusinesskey())));
+                    auditService.handleMonoError("no tenant found for parentId:"+requestedInstrument.getParentBusinesskey(), AUDIT_MSG_TYPE, MFMsgKey.UNKNOWN_PARENT_EXCEPTION).cast(String.class));
         }
     }
 
@@ -191,8 +189,7 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
                 return Mono.just(instrument);
             } else {
                 var msg = "instrument with id:"+instrument.getBusinesskey() + " not deactivated. it is not inactivatable";
-                auditService.saveMessage(msg, Severity.ERROR, AUDIT_MSG_TYPE);
-                return Mono.error(new MFException(MFMsgKey.NO_VALID_INSTRUMENT_FOR_DEACTIVATION, msg));
+                return auditService.handleMonoError(msg, AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT_FOR_DEACTIVATION).cast(Instrument.class);
             }
         });
     }

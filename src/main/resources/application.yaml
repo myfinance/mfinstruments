@@ -28,7 +28,7 @@ springdoc:
 spring:
   cloud:
     function:
-      definition: validateInstrumentProcessor;saveInstrumentProcessor;saveInstrumentTreeProcessor
+      definition: validateInstrumentProcessor;saveInstrumentProcessor;saveInstrumentTreeProcessor;valueProcessor
 
 spring.cloud.stream:
   defaultBinder: rabbit

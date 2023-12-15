@@ -47,6 +47,8 @@ public class InstrumentEntity implements java.io.Serializable {
     private LocalDateTime treelastchanged;
     @Indexed(unique = true)
     private String businesskey;
+    private String parentBusinesskey;
+    private String tenantBusinesskey;
 
     private Map<AdditionalMaps, Map<String, String>> additionalMaps = new HashMap<>();
     private Map<AdditionalProperties, String> additionalProperties = new HashMap<>();
@@ -131,5 +133,20 @@ public class InstrumentEntity implements java.io.Serializable {
     }
     public void setVersion(Integer version) {
         this.version = version;
+    }
+
+    public String getParentBusinesskey() {
+        return parentBusinesskey;
+    }
+
+    public void setParentBusinesskey(String parentBusinesskey) {
+        this.parentBusinesskey = parentBusinesskey;
+    }
+
+    public String getTenantBusinesskey() {
+        return tenantBusinesskey;
+    }
+    public void setTenantBusinesskey(String tenantBusinesskey) {
+        this.tenantBusinesskey = tenantBusinesskey;
     }
 }

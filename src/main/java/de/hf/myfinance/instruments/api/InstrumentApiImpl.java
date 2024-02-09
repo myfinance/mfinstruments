@@ -1,5 +1,6 @@
 package de.hf.myfinance.instruments.api;
 
+import de.hf.framework.audit.AuditService;
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.service.InstrumentService;
@@ -18,14 +19,17 @@ import reactor.core.publisher.Mono;
 public class InstrumentApiImpl implements InstrumentApi {
     ServiceUtil serviceUtil;
     InstrumentService instrumentService;
+    protected final AuditService auditService;
+    protected static final String AUDIT_MSG_TYPE="InstrumentApiImpl_User_Event";
 
     @Value("${api.common.version}")
     String apiVersion;
 
     @Autowired
-    public InstrumentApiImpl(InstrumentService instrumentService, ServiceUtil serviceUtil) {
+    public InstrumentApiImpl(InstrumentService instrumentService, ServiceUtil serviceUtil, AuditService auditService) {
         this.serviceUtil = serviceUtil;
         this.instrumentService = instrumentService;
+        this.auditService = auditService;
     }
 
     @Override
@@ -42,7 +46,8 @@ public class InstrumentApiImpl implements InstrumentApi {
             throw e;
         }
         catch(Exception e) {
-            throw new MFException(MFMsgKey.UNSPECIFIED, e.getMessage());
+            auditService.throwException(e.getMessage(), AUDIT_MSG_TYPE, MFMsgKey.UNSPECIFIED);
+            return null;
         }
     }
 
@@ -53,11 +58,17 @@ public class InstrumentApiImpl implements InstrumentApi {
 
     @Override
     public Flux<Instrument> listInstrumentsForTenant(String tenantbusinesskey) {
+        if(tenantbusinesskey==null || tenantbusinesskey.isEmpty()){
+            auditService.throwException("can not select instruments for empty tenant", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT);
+        }
         return instrumentService.listInstruments(tenantbusinesskey);
     }
 
     @Override
     public Flux<Instrument> listActiveInstrumentsForTenant(String tenantbusinesskey) {
+        if(tenantbusinesskey==null || tenantbusinesskey.isEmpty()){
+            auditService.throwException("can not select instruments for empty tenant", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT);
+        }
         return instrumentService.listActiveInstruments(tenantbusinesskey);
     }
 

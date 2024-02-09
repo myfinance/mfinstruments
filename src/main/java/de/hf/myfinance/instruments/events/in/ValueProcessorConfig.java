@@ -42,12 +42,12 @@ public class ValueProcessorConfig {
         return event -> {
 
             try {
-                auditService.saveMessage("Process message created at " + event.getEventCreatedAt(), Severity.INFO,
+                auditService.saveMessage("Process Value in InstrumentService. message created at " + event.getEventCreatedAt(), Severity.DEBUG,
                         AUDIT_MSG_TYPE);
 
                 if (event.getEventType() == Event.Type.CREATE) {
-                    auditService.saveMessage("process valueCurve of instrument with businesskey=" + event.getKey(),
-                            Severity.INFO, AUDIT_MSG_TYPE);
+                    auditService.saveMessage("process valueCurve for inactivatablecheck of instrument with businesskey=" + event.getKey(),
+                            Severity.DEBUG, AUDIT_MSG_TYPE);
 
                     inActivationInfoRepository.findByBusinesskey(event.getData().getInstrumentBusinesskey())
                             .switchIfEmpty(handleNotExistingInstrument(event.getData().getInstrumentBusinesskey()))
@@ -83,7 +83,7 @@ public class ValueProcessorConfig {
                     String errorMessage = "Incorrect event type: " + event.getEventType() + ", expected a Create event";
                     auditService.saveMessage(errorMessage, Severity.WARN, AUDIT_MSG_TYPE);
                 }
-                auditService.saveMessage("Message processing done!", Severity.INFO, AUDIT_MSG_TYPE);
+                auditService.saveMessage("Process Value in InstrumentService processing done!", Severity.DEBUG, AUDIT_MSG_TYPE);
             } catch (MFException e) {
                 // no need to throw mfExceptions. These are Validation-Errors and retry the
                 // message makes no sense.

@@ -44,4 +44,12 @@ public class InstrumentService {
     public Flux<Instrument> listInstrumentsByType(String tenantkey, InstrumentType instrumentType) {
         return instrumentFactory.getTenantHandler(tenantkey).listInstrumentChilds(instrumentType, true);
     }
+
+    public Flux<Instrument> listAccounts(String tenantkey){
+        return instrumentFactory.getTenantHandler(tenantkey).getAccounts();
+    }
+
+    public Flux<Instrument> listBudgets(String tenantkey){
+        return instrumentFactory.getTenantHandler(tenantkey).getBudgets();
+    }
 }

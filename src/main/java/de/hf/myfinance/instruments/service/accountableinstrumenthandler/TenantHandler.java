@@ -60,7 +60,10 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
 
     public Flux<Instrument> getAccounts() {
         return filterActiveInstrumentChilds( listInstrumentChilds(getAccountPortfolio(), 1));
+    }
 
+    public Flux<Instrument> getBudgets() {
+        return filterActiveInstrumentChilds( listInstrumentChilds(getBudgetPortfolio(), 2));
     }
 
     @Override

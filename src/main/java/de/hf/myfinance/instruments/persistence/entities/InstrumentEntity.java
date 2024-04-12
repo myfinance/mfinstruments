@@ -25,6 +25,8 @@ import java.util.Map;
 import de.hf.myfinance.restmodel.AdditionalMaps;
 import de.hf.myfinance.restmodel.AdditionalProperties;
 import de.hf.myfinance.restmodel.InstrumentType;
+import de.hf.myfinance.restmodel.LiquidityType;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -49,6 +51,7 @@ public class InstrumentEntity implements java.io.Serializable {
     private String businesskey;
     private String parentBusinesskey;
     private String tenantBusinesskey;
+    private LiquidityType liquidityType;
 
     private Map<AdditionalMaps, Map<String, String>> additionalMaps = new HashMap<>();
     private Map<AdditionalProperties, String> additionalProperties = new HashMap<>();
@@ -148,5 +151,12 @@ public class InstrumentEntity implements java.io.Serializable {
     }
     public void setTenantBusinesskey(String tenantBusinesskey) {
         this.tenantBusinesskey = tenantBusinesskey;
+    }
+
+    public LiquidityType getLiquidityType() {
+        return liquidityType;
+    }
+    public void setLiquidityType(LiquidityType liquidityType) {
+        this.liquidityType = liquidityType;
     }
 }

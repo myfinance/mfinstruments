@@ -10,6 +10,7 @@ import de.hf.myfinance.instruments.persistence.DataReader;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
+import de.hf.myfinance.restmodel.LiquidityType;
 import reactor.core.publisher.Mono;
 
 /**
@@ -98,6 +99,7 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
     public Mono<String> save() {
         return loadInstrument()
                 .flatMap(this::setBasicValues)
+                .flatMap(this::setLiquidityType)
                 .flatMap(this::setAdditionalValues)
                 .flatMap(this::validateIsActive)
                 .flatMap(this::validateInstrument)
@@ -141,6 +143,11 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
     }
 
     protected Mono<Instrument> setAdditionalValues(Instrument instrument) {
+        return Mono.just(instrument);
+    }
+
+    protected Mono<Instrument> setLiquidityType(Instrument instrument) {
+        instrument.setLiquidityType(LiquidityType.LIQUIDE);
         return Mono.just(instrument);
     }
 

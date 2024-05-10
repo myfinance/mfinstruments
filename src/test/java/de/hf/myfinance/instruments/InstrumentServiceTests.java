@@ -465,4 +465,29 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals("EQUITY", data.get("instrumentType"));
 
     }
+
+    @Test
+    void listAllAccounts() {
+
+        setupTestTenant();
+        var newGiro = new Instrument(giroDesc, InstrumentType.GIRO);
+        newGiro.setParentBusinesskey(accPfKey);
+        Event creatEvent = new Event(Event.Type.CREATE, giroKey, newGiro);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+        StepVerifier.create(instrumentService.listAccounts(tenantKey)).expectNextCount(1).verifyComplete();
+        
+    }
+
+
+    @Test
+    void listAllBudgets() {
+
+        setupTestTenant();
+
+
+        StepVerifier.create(instrumentService.listBudgets(tenantKey)).expectNextCount(1).verifyComplete();
+        
+    }
 }

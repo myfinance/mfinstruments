@@ -56,6 +56,15 @@ public class InstrumentApiImpl implements InstrumentApi {
         return instrumentService.listInstruments();
     }
 
+
+    @Override
+    public Flux<Instrument> listSecurities() {
+        return instrumentService.listInstruments().filter(i->i.getInstrumentType().equals(InstrumentType.CURRENCY)
+                                                || i.getInstrumentType().equals(InstrumentType.BOND)
+                                                || i.getInstrumentType().equals(InstrumentType.EQUITY)
+                                                || i.getInstrumentType().equals(InstrumentType.ETF));
+    }
+
     @Override
     public Flux<Instrument> listInstrumentsForTenant(String tenantbusinesskey) {
         if(tenantbusinesskey==null || tenantbusinesskey.isEmpty()){
@@ -101,4 +110,5 @@ public class InstrumentApiImpl implements InstrumentApi {
         e.setServiceAddress(serviceUtil.getServiceAddress());
         return e;
     }
+
 }

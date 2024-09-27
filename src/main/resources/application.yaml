@@ -58,18 +58,6 @@ spring.cloud.stream:
     producer:
       required-groups: mflogauditGroup
 
-spring.cloud.stream.rabbit.bindings:
-  validateInstrumentProcessor-in-0:
-    autoBindDlq: true
-    republishToDlq: true
-  saveInstrumentProcessor-in-0:
-    autoBindDlq: true
-    republishToDlq: true
-  saveInstrumentTreeProcessor-in-0:
-    autoBindDlq: true
-    republishToDlq: true
-
-
 spring.rabbitmq:
   host: ${env.host}
   port: 30021

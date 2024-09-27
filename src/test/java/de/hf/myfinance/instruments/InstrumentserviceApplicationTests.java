@@ -1,12 +1,9 @@
 package de.hf.myfinance.instruments;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import de.hf.myfinance.event.Event;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
-import de.hf.testhelper.JsonHelper;
-import de.hf.testhelper.MongoDbTestBase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;

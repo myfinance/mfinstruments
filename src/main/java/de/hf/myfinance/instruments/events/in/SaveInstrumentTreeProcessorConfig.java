@@ -9,7 +9,6 @@ import de.hf.myfinance.instruments.persistence.entities.InstrumentGraphEntry;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Flux;
@@ -24,7 +23,6 @@ public class SaveInstrumentTreeProcessorConfig {
     private final AuditService auditService;
     protected static final String AUDIT_MSG_TYPE="ValidateInstrumentTreeProcessor_Event";
 
-    @Autowired
     public SaveInstrumentTreeProcessorConfig(InstrumentGraphRepository instrumentGraphRepository, AuditService auditService) {
         this.instrumentGraphRepository = instrumentGraphRepository;
         this.auditService = auditService;

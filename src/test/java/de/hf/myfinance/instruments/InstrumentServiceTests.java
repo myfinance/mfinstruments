@@ -43,6 +43,8 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     String giroKey = "newGiro@1";
     String currencyDesc = "newCurrency";
     String currencyCode = "USD";
+    String depotDesc = "newDepot";
+    String depotKey = "newDepot@11";
 
     @Autowired
     InstrumentService instrumentService;
@@ -489,5 +491,50 @@ class InstrumentServiceTests extends EventProcessorTestBase {
 
         StepVerifier.create(instrumentService.listBudgets(tenantKey)).expectNextCount(1).verifyComplete();
         
+    }
+
+    @Test
+    void createDepot() {
+
+        setupTestTenant();
+
+        var tenants = instrumentService.listTenants().collectList().block();
+        assertEquals(1, tenants.size());
+        var tenant = tenants.get(0);
+        assertEquals(tenantKey, tenant.getBusinesskey());
+        assertEquals(tenantDesc, tenant.getDescription());
+        assertTrue(tenant.isActive());
+
+        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
+        assertEquals(1, accPfs.size());
+        var accPf = accPfs.get(0);
+        assertEquals(accPfKey, accPf.getBusinesskey());
+        assertEquals(accPfdesc, accPf.getDescription());
+        assertTrue(accPf.isActive());
+
+
+        var newDepot = new Instrument(depotDesc, InstrumentType.DEPOT);
+        newDepot.setParentBusinesskey(accPf.getBusinesskey());
+        instrumentService.saveInstrument(newDepot).block();
+        final List<String> messages = getMessages("instrumentApproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        Event<String, Instrument> createEvent = new Event<>(Event.Type.CREATE, depotKey, newDepot);
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(depotKey, data.get("businesskey"));
+        assertEquals(depotDesc, data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("DEPOT", data.get("instrumentType"));
+        assertEquals(accPfKey, data.get("parentBusinesskey"));
+        assertEquals("aTest@6", data.get("tenantBusinesskey"));
+
+        saveInstrumentProcessor.accept(createEvent);
+        saveInstrumentTreeProcessor.accept(createEvent);
+
+
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(6).verifyComplete();
+
+        StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(5).verifyComplete();
     }
 }

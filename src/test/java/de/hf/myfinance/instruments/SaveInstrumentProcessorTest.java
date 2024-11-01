@@ -25,8 +25,8 @@ public class SaveInstrumentProcessorTest extends EventProcessorTestBase {
         var desc = "aTest";
         var newInstrument = new Instrument(desc, InstrumentType.TENANT);
         newInstrument.setBusinesskey(businessKey);
-        Event creatEvent = new Event(Event.Type.CREATE, businessKey, newInstrument);
-        saveInstrumentProcessor.accept(creatEvent);
+        Event<String, Instrument> createEvent = new Event<>(Event.Type.CREATE, businessKey, newInstrument);
+        saveInstrumentProcessor.accept(createEvent);
 
         var instruments = instrumentRepository.findAll().collectList().block();
         assertEquals(1, instruments.size());
@@ -44,7 +44,7 @@ public class SaveInstrumentProcessorTest extends EventProcessorTestBase {
         var desc = "aTest";
         var newInstrument = new Instrument(desc, InstrumentType.BUDGET);
         newInstrument.setBusinesskey(businessKey);
-        Event createEvent = new Event(Event.Type.CREATE, businessKey, newInstrument);
+        Event<String, Instrument> createEvent = new Event<>(Event.Type.CREATE, businessKey, newInstrument);
         saveInstrumentProcessor.accept(createEvent);
 
         var instruments = instrumentRepository.findAll().collectList().block();
@@ -63,7 +63,7 @@ public class SaveInstrumentProcessorTest extends EventProcessorTestBase {
         var desc = "aTest";
         var newInstrument = new Instrument(desc, InstrumentType.TENANT);
         newInstrument.setBusinesskey(businessKey);
-        Event creatEvent = new Event(Event.Type.CREATE, businessKey, newInstrument);
+        Event<String, Instrument> creatEvent = new Event<>(Event.Type.CREATE, businessKey, newInstrument);
         saveInstrumentProcessor.accept(creatEvent);
 
         var instruments = instrumentRepository.findAll().collectList().block();
@@ -75,10 +75,29 @@ public class SaveInstrumentProcessorTest extends EventProcessorTestBase {
         assertTrue(savedInstrument.isActive());
         assertEquals(InstrumentType.TENANT, savedInstrument.getInstrumentType());
 
-        creatEvent = new Event(Event.Type.CREATE, businessKey, newInstrument);
+        creatEvent = new Event<>(Event.Type.CREATE, businessKey, newInstrument);
         saveInstrumentProcessor.accept(creatEvent);
 
         instruments = instrumentRepository.findAll().collectList().block();
         assertEquals(1, instruments.size());
+    }
+
+    @Test
+    void createDepot() {
+        var businessKey = "adepot@11";
+        var desc = "adepot";
+        var newInstrument = new Instrument(desc, InstrumentType.DEPOT);
+        newInstrument.setBusinesskey(businessKey);
+        Event<String, Instrument> createEvent = new Event<>(Event.Type.CREATE, businessKey, newInstrument);
+        saveInstrumentProcessor.accept(createEvent);
+
+        var instruments = instrumentRepository.findAll().collectList().block();
+        assertEquals(1, instruments.size());
+
+        var savedInstrument = instruments.get(0);
+        assertEquals(businessKey, savedInstrument.getBusinesskey());
+        assertEquals(desc, savedInstrument.getDescription());
+        assertTrue(savedInstrument.isActive());
+        assertEquals(InstrumentType.DEPOT, savedInstrument.getInstrumentType());
     }
 }

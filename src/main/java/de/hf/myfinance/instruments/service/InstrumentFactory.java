@@ -41,6 +41,7 @@ public class InstrumentFactory {
             case GIRO -> new GiroHandler(instrumentEnvironment, instrument);
             case CURRENCY -> new CurrencyHandler(instrumentEnvironment, instrument);
             case EQUITY -> new EquityHandler(instrumentEnvironment, instrument);
+            case DEPOT -> new DepotHandler(instrumentEnvironment, instrument);
             default -> throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:" + instrument.getInstrumentType());
         };
     }

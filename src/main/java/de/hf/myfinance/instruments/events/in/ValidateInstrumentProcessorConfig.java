@@ -6,7 +6,6 @@ import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.event.Event;
 import de.hf.myfinance.instruments.service.InstrumentService;
 import de.hf.myfinance.restmodel.Instrument;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import java.util.function.Consumer;
@@ -18,7 +17,6 @@ public class ValidateInstrumentProcessorConfig {
     private final AuditService auditService;
     protected static final String AUDIT_MSG_TYPE="ValidateInstrumentProcessor_Event";
 
-    @Autowired
     public ValidateInstrumentProcessorConfig(InstrumentService instrumentService, AuditService auditService) {
         this.instrumentService = instrumentService;
         this.auditService = auditService;

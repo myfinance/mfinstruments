@@ -6,7 +6,6 @@ import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.service.InstrumentService;
 import de.hf.myfinance.restapi.InstrumentApi;
 import de.hf.myfinance.restmodel.InstrumentType;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,7 +24,6 @@ public class InstrumentApiImpl implements InstrumentApi {
     @Value("${api.common.version}")
     String apiVersion;
 
-    @Autowired
     public InstrumentApiImpl(InstrumentService instrumentService, ServiceUtil serviceUtil, AuditService auditService) {
         this.serviceUtil = serviceUtil;
         this.instrumentService = instrumentService;

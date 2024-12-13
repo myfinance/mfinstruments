@@ -2,7 +2,6 @@ package de.hf.myfinance.instruments.service;
 
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -11,7 +10,6 @@ import reactor.core.publisher.Mono;
 public class InstrumentService {
     private final InstrumentFactory instrumentFactory;
 
-    @Autowired
     public InstrumentService(InstrumentFactory instrumentFactory){
         this.instrumentFactory = instrumentFactory;
     }

@@ -107,14 +107,14 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
                 .flatMap(this::postApproveAction);
     }
 
-    protected Mono<String> postApproveAction(String msg){
+    protected Mono<String> postApproveAction(Instrument instrument) {
         return Mono.just("post approve action done");
     }
 
-    private Mono<String> instrumentApproved(Instrument validatedInstrument) {
+    private Mono<Instrument> instrumentApproved(Instrument validatedInstrument) {
         auditService.saveMessage("Instrument validated:businesskey=" + validatedInstrument.getBusinesskey() + " desc=" + validatedInstrument.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
         eventHandler.sendInstrumentApprovedEvent(validatedInstrument);
-        return Mono.just("Instrument update with businesskey=" + validatedInstrument.getBusinesskey() +"approved");
+        return Mono.just(validatedInstrument);
     }
 
     protected Mono<Instrument> setBasicValues(Instrument validatedInstrument) {
@@ -169,7 +169,9 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
     public void setIsSimpleValidation(boolean isSimpleValidation) {
         this.isSimpleValidation = isSimpleValidation;
     }
-
-    protected abstract Instrument createDomainObject();
     protected abstract InstrumentType getInstrumentType();
+
+    protected Instrument createDomainObject() {
+        return new Instrument(businesskey, requestedInstrument.getDescription(), getInstrumentType(), true, ts);
+    }
 }

@@ -117,6 +117,10 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
         return InstrumentType.TENANT;
     }
 
+    protected Mono<Instrument> getBudgetPf(String tenantKey){
+        return dataReader.getInstrumentChildIds(tenantKey, EdgeType.TENANTGRAPH, 1).flatMap(dataReader::findByBusinesskey).filter(i->i.getInstrumentType().equals(InstrumentType.BUDGETPORTFOLIO)).next();
+    }
+
     protected Flux<Instrument> getInstrumentChilds(String businesskey, EdgeType edgeType, int pathlength){
         return instrumentGraphHandler.getInstrumentChildIds(businesskey, edgeType, pathlength)
                 .reduce(new ArrayList<String>(), (e1,e2)-> {

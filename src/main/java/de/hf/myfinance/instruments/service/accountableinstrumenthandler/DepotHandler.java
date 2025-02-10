@@ -1,18 +1,16 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
-import de.hf.myfinance.restmodel.AdditionalMaps;
 import de.hf.myfinance.restmodel.AdditionalProperties;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import de.hf.myfinance.restmodel.LiquidityType;
 import reactor.core.publisher.Mono;
 
-public class DepotHandler extends AbsCashInstrumentHandler {
+public class DepotHandler extends AbsAccountHandler {
 
     public DepotHandler(InstrumentEnvironment instrumentEnvironment, Instrument instrument) {
         super(instrumentEnvironment, instrument);

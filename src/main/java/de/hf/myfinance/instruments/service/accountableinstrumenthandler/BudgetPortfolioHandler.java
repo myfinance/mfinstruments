@@ -27,7 +27,7 @@ public class BudgetPortfolioHandler extends AbsAccountableInstrumentHandler {
     }
 
     @Override
-    protected Mono<String> postApproveAction(String msg){
+    protected Mono<String> postApproveAction(Instrument instrument){
         var budgetGroup = new Instrument(DEFAULT_BUDGETGROUP_PREFIX+requestedInstrument.getDescription(), InstrumentType.BUDGETGROUP);
         budgetGroup.setParentBusinesskey(businesskey);
 
@@ -36,7 +36,7 @@ public class BudgetPortfolioHandler extends AbsAccountableInstrumentHandler {
         budgetGroupHandler.setIsSimpleValidation(true);
         if(isSimpleValidation) {
             // block is ok here. Due to the simplevalidate the tenantbusinesskey is not read from the db but create with just
-            budgetGroupHandler.setTenant(this.getTenant().block());
+            budgetGroupHandler.setTenant(instrument.getTenantBusinesskey());
         }
         return budgetGroupHandler.save();
     }

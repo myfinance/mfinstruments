@@ -5,17 +5,16 @@ import de.hf.myfinance.restmodel.AdditionalProperties;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 
-public class GiroHandler extends AbsAccountHandler {
 
-    public GiroHandler(InstrumentEnvironment instrumentEnvironment, Instrument instrument) {
+public class DeprecationObjectHandler  extends AbsAccountHandler {
+
+    public DeprecationObjectHandler(InstrumentEnvironment instrumentEnvironment, Instrument instrument) {
         super(instrumentEnvironment, instrument);
     }
 
-
-
     @Override
     protected InstrumentType getInstrumentType() {
-        return InstrumentType.GIRO;
+        return InstrumentType.DEPRECATIONOBJECT;
     }
 
     @Override

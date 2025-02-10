@@ -2,6 +2,7 @@ package de.hf.myfinance.instruments;
 
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.event.Event;
+import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.service.InstrumentService;
 import de.hf.myfinance.restmodel.*;
 import de.hf.testhelper.JsonHelper;
@@ -45,6 +46,26 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     String currencyCode = "USD";
     String depotDesc = "newDepot";
     String depotKey = "newDepot@11";
+    String realestateDesc = "newRealestate";
+    String realestateKey = realestateDesc+"@21";
+    String deprecationObjectDesc = "newDeprecationObject";
+    String deprecationObjectKey = deprecationObjectDesc+"@20";
+    String lifeInsurenceDesc = "newlifeInsurence";
+    String lifeInsurenceKey = lifeInsurenceDesc+"@19";
+    String loanDesc = "newLoan";
+    String loanKey = loanDesc+"@22";
+    String moneyAtCallDesc = "newMoneyAtCall";
+    String moneyAtCallKey = moneyAtCallDesc+"@2";
+    String timeDepositDesc = "newTimeDeposit";
+    String timeDepositKey = timeDepositDesc+"@3";
+    String buildingsavingAccountDesc = "newBuildingsavingAccount";
+    String buildingsavingAccountKey = buildingsavingAccountDesc+"@4";
+    String etfDesc = "newEtf";
+    String etfKey = etfDesc+"@16";
+    String fondDesc = "newFond";
+    String fondKey = fondDesc+"@15";
+    String bondDesc = "newBond";
+    String bondKey = bondDesc+"@18";
 
     @Autowired
     InstrumentService instrumentService;
@@ -323,6 +344,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         var budgetPf = new Instrument(budgetPfdesc, InstrumentType.BUDGETPORTFOLIO);
         budgetPf.setBusinesskey(budgetPfKey);
         budgetPf.setParentBusinesskey(tenantKey);
+        budgetPf.setTenantBusinesskey(tenantKey);
         creatEvent = new Event(Event.Type.CREATE, budgetPfKey, budgetPf);
         saveInstrumentProcessor.accept(creatEvent);
         saveInstrumentTreeProcessor.accept(creatEvent);
@@ -331,6 +353,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         var bgtGrp = new Instrument(bgtGrpdesc, InstrumentType.BUDGETGROUP);
         bgtGrp.setBusinesskey(bgtGrpKey);
         bgtGrp.setParentBusinesskey(budgetPfKey);
+        bgtGrp.setTenantBusinesskey(tenantKey);
         creatEvent = new Event(Event.Type.CREATE, bgtGrpKey, bgtGrp);
         saveInstrumentProcessor.accept(creatEvent);
         saveInstrumentTreeProcessor.accept(creatEvent);
@@ -338,6 +361,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         var bgt = new Instrument(bgtGrpdesc, InstrumentType.BUDGET);
         bgt.setBusinesskey(bgtKey);
         bgt.setParentBusinesskey(bgtGrpKey);
+        bgt.setTenantBusinesskey(tenantKey);
         creatEvent = new Event(Event.Type.CREATE, bgtKey, bgt);
         saveInstrumentProcessor.accept(creatEvent);
         saveInstrumentTreeProcessor.accept(creatEvent);
@@ -345,6 +369,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         var accPf = new Instrument(accPfdesc, InstrumentType.ACCOUNTPORTFOLIO);
         accPf.setBusinesskey(accPfKey);
         accPf.setParentBusinesskey(tenantKey);
+        accPf.setTenantBusinesskey(tenantKey);
         creatEvent = new Event(Event.Type.CREATE, accPfKey, accPf);
         saveInstrumentProcessor.accept(creatEvent);
         saveInstrumentTreeProcessor.accept(creatEvent);
@@ -607,4 +632,483 @@ class InstrumentServiceTests extends EventProcessorTestBase {
             instrumentService.saveInstrument(newDepot).block();
         });
     }
+
+    @Test
+    void createRealEstate() {
+        setupTestTenant();
+        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
+        assertEquals(1, accPfs.size());
+        var accPf = accPfs.get(0);
+        assertEquals(accPfKey, accPf.getBusinesskey());
+        assertEquals(accPfdesc, accPf.getDescription());
+        assertTrue(accPf.isActive());
+
+        var newRealEstate = new Instrument(realestateDesc, InstrumentType.REALESTATE);
+        newRealEstate.setParentBusinesskey(accPf.getBusinesskey());
+
+        var yieldgoaldate = "2025-02-10";
+        var yieldgoalvalue = "2.5";
+        var yieldgoals = new HashMap<String, String>();
+        yieldgoals.put(yieldgoaldate, yieldgoalvalue);
+        Map<AdditionalMaps, Map<String, String>> additionalMaps = new HashMap<>();
+        additionalMaps.put(AdditionalMaps.YIELDGOAL, yieldgoals);
+        var profitdate = "2025-01-10";
+        var profitvalue = "1000";
+        var profits = new HashMap<String, String>();
+        profits.put(profitdate, profitvalue);
+        additionalMaps.put(AdditionalMaps.REALESTATEPROFITS, profits);
+        newRealEstate.setAdditionalMaps(additionalMaps);
+        var properties = new HashMap<AdditionalProperties, String>();
+        properties.put(AdditionalProperties.VALUEBUDGETID, bgtKey);
+        newRealEstate.setAdditionalProperties(properties);
+
+        instrumentService.saveInstrument(newRealEstate).block();
+        final List<String> messages = getMessages("instrumentApproved-out-0");
+        assertEquals(3, messages.size());
+        LOG.info(messages.get(0));
+        
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(realestateKey, data.get("businesskey"));
+        assertEquals(realestateDesc, data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("REALESTATE", data.get("instrumentType"));
+        assertEquals(accPfKey, data.get("parentBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
+        var propertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(1, propertiesMap.size());
+        assertEquals(bgtKey, (String)propertiesMap.get("VALUEBUDGETID"));
+        var maps = (HashMap)data.get("additionalMaps");
+        assertEquals(2, maps.size());
+        assertEquals(yieldgoalvalue, ((HashMap)maps.get("YIELDGOAL")).get(yieldgoaldate));
+        assertEquals(profitvalue, ((HashMap)maps.get("REALESTATEPROFITS")).get(profitdate));
+
+        data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(1))).get("data");
+        assertEquals("bgtGrp_"+realestateDesc+"@10", data.get("businesskey"));
+        assertEquals("bgtGrp_"+realestateDesc, data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("BUDGETGROUP", data.get("instrumentType"));
+        assertEquals(budgetPfKey, data.get("parentBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
+        var budgetGroupPropertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(1, budgetGroupPropertiesMap.size());
+        assertEquals(realestateKey, (String)budgetGroupPropertiesMap.get("LINKEDINSTRUMENTID"));
+
+        data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(2))).get("data");
+        assertEquals("incomeBgt_bgtGrp_newRealestate@5", data.get("businesskey"));
+        assertEquals("incomeBgt_bgtGrp_newRealestate", data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("BUDGET", data.get("instrumentType"));
+        assertEquals("bgtGrp_"+realestateDesc+"@10", data.get("parentBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
+
+        var createEvent = new Event(Event.Type.CREATE, realestateKey, newRealEstate);
+        saveInstrumentProcessor.accept(createEvent);
+        saveInstrumentTreeProcessor.accept(createEvent);
+
+
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(6).verifyComplete();
+
+        StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(5).verifyComplete();
+
+    }
+
+    /*@Test
+    void createDeprecationObject() {
+        setupTestTenant();
+        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
+        assertEquals(1, accPfs.size());
+        var accPf = accPfs.get(0);
+        assertEquals(accPfKey, accPf.getBusinesskey());
+        assertEquals(accPfdesc, accPf.getDescription());
+        assertTrue(accPf.isActive());
+
+        var deprecationObject = new Instrument(deprecationObjectDesc, InstrumentType.DEPRECATIONOBJECT);
+        deprecationObject.setParentBusinesskey(accPf.getBusinesskey());
+
+        var properties = new HashMap<AdditionalProperties, String>();
+        properties.put(AdditionalProperties.VALUEBUDGETID, bgtKey);
+        var maturitydate = "2030-01-01";
+        properties.put(AdditionalProperties.MATURITYDATE, maturitydate);
+        var acquisitiondate = "2025-01-01";
+        properties.put(AdditionalProperties.ACQUISITIONDATE, acquisitiondate);
+        var acquisitionvalue = "10000";
+        properties.put(AdditionalProperties.ACQUISITIONVALUE, acquisitionvalue);
+        deprecationObject.setAdditionalProperties(properties);
+
+        instrumentService.saveInstrument(deprecationObject).block();
+        final List<String> messages = getMessages("instrumentApproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(deprecationObjectKey, data.get("businesskey"));
+        assertEquals(deprecationObjectDesc, data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("DEPRECATIONOBJECT", data.get("instrumentType"));
+        assertEquals(accPfKey, data.get("parentBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
+        var propertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(4, propertiesMap.size());
+        assertEquals(bgtKey, (String)propertiesMap.get("VALUEBUDGETID"));
+        assertEquals(maturitydate, (String)propertiesMap.get("MATURITYDATE"));
+        assertEquals(acquisitiondate, (String)propertiesMap.get("ACQUISITIONDATE"));
+        assertEquals(acquisitionvalue, (String)propertiesMap.get("ACQUISITIONVALUE"));
+
+
+        var createEvent = new Event(Event.Type.CREATE, deprecationObjectKey, deprecationObject);
+        saveInstrumentProcessor.accept(createEvent);
+        saveInstrumentTreeProcessor.accept(createEvent);
+
+
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(6).verifyComplete();
+
+        StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(5).verifyComplete();
+    }
+
+    @Test
+    void createLifeInsurance() {
+        setupTestTenant();
+        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
+        assertEquals(1, accPfs.size());
+        var accPf = accPfs.get(0);
+        assertEquals(accPfKey, accPf.getBusinesskey());
+        assertEquals(accPfdesc, accPf.getDescription());
+        assertTrue(accPf.isActive());
+
+        var newLifeInsurance = new Instrument(realestateDesc, InstrumentType.LIFEINSURANCE);
+        newLifeInsurance.setParentBusinesskey(accPf.getBusinesskey());
+
+        var surrendervaluedate = "2025-02-10";
+        var surrendervaluevalue = "1000";
+        var surrendervaluevalues = new HashMap<String, String>();
+        surrendervaluevalues.put(surrendervaluedate, surrendervaluevalue);
+        Map<AdditionalMaps, Map<String, String>> additionalMaps = new HashMap<>();
+        additionalMaps.put(AdditionalMaps.SURRENDERVALUES, surrendervaluevalues);
+        newLifeInsurance.setAdditionalMaps(additionalMaps);
+
+        var properties = new HashMap<AdditionalProperties, String>();
+        properties.put(AdditionalProperties.VALUEBUDGETID, bgtKey);
+        var maturitydate = "2030-02-10";
+        properties.put(AdditionalProperties.MATURITYDATE, maturitydate);
+        newLifeInsurance.setAdditionalProperties(properties);
+
+        instrumentService.saveInstrument(newLifeInsurance).block();
+        final List<String> messages = getMessages("instrumentApproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(lifeInsurenceKey, data.get("businesskey"));
+        assertEquals(lifeInsurenceDesc, data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("LIFEINSURANCE", data.get("instrumentType"));
+        assertEquals(accPfKey, data.get("parentBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
+        var propertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(2, propertiesMap.size());
+        assertEquals(bgtKey, (String)propertiesMap.get("VALUEBUDGETID"));
+        assertEquals(maturitydate, (String)propertiesMap.get("MATURITYDATE"));
+        var maps = (HashMap)data.get("additionalMaps");
+        assertEquals(1, maps.size());
+        assertEquals(surrendervaluevalue, ((HashMap)maps.get("SURRENDERVALUES")).get(surrendervaluedate));
+
+
+        var createEvent = new Event(Event.Type.CREATE, lifeInsurenceKey, newLifeInsurance);
+        saveInstrumentProcessor.accept(createEvent);
+        saveInstrumentTreeProcessor.accept(createEvent);
+
+
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(6).verifyComplete();
+
+        StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(5).verifyComplete();
+
+    }
+
+    @Test
+    void createLoan() {
+        setupTestTenant();
+        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
+        assertEquals(1, accPfs.size());
+        var accPf = accPfs.get(0);
+        assertEquals(accPfKey, accPf.getBusinesskey());
+        assertEquals(accPfdesc, accPf.getDescription());
+        assertTrue(accPf.isActive());
+
+        var loan = new Instrument(loanDesc, InstrumentType.LOAN);
+        loan.setParentBusinesskey(accPf.getBusinesskey());
+
+        var properties = new HashMap<AdditionalProperties, String>();
+        var maturitydate = "2030-01-01";
+        properties.put(AdditionalProperties.MATURITYDATE, maturitydate);
+        var interestrate = "2.5";
+        properties.put(AdditionalProperties.INTERESTRATE, interestrate);
+        var annuityrate = "1000";
+        properties.put(AdditionalProperties.ANNUITYRATE, annuityrate);
+        properties.put(AdditionalProperties.REFERENCEGIRO, giroKey);
+        loan.setAdditionalProperties(properties);
+
+        instrumentService.saveInstrument(loan).block();
+        final List<String> messages = getMessages("instrumentApproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(loanKey, data.get("businesskey"));
+        assertEquals(loanDesc, data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("LOAN", data.get("instrumentType"));
+        assertEquals(accPfKey, data.get("parentBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
+        var propertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(4, propertiesMap.size());
+        assertEquals(interestrate, (String)propertiesMap.get("INTERESTRATE"));
+        assertEquals(maturitydate, (String)propertiesMap.get("MATURITYDATE"));
+        assertEquals(annuityrate, (String)propertiesMap.get("ANNUITYRATE"));
+        assertEquals(giroKey, (String)propertiesMap.get("REFERENCEGIRO"));
+
+
+        var createEvent = new Event(Event.Type.CREATE, loanKey, loan);
+        saveInstrumentProcessor.accept(createEvent);
+        saveInstrumentTreeProcessor.accept(createEvent);
+
+
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(6).verifyComplete();
+
+        StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(5).verifyComplete();
+    }
+
+    @Test
+    void createMoneyAtCall() {
+        setupTestTenant();
+        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
+        assertEquals(1, accPfs.size());
+        var accPf = accPfs.get(0);
+        assertEquals(accPfKey, accPf.getBusinesskey());
+        assertEquals(accPfdesc, accPf.getDescription());
+        assertTrue(accPf.isActive());
+
+        var instrument = new Instrument(moneyAtCallDesc, InstrumentType.MONEYATCALL);
+        instrument.setParentBusinesskey(accPf.getBusinesskey());
+
+        var properties = new HashMap<AdditionalProperties, String>();
+        var iban = "de0000000001";
+        properties.put(AdditionalProperties.IBAN, iban);
+        instrument.setAdditionalProperties(properties);
+
+        instrumentService.saveInstrument(instrument).block();
+        final List<String> messages = getMessages("instrumentApproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(moneyAtCallKey, data.get("businesskey"));
+        assertEquals(moneyAtCallDesc, data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("MONEYATCALL", data.get("instrumentType"));
+        assertEquals(accPfKey, data.get("parentBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
+        var propertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(4, propertiesMap.size());
+        assertEquals(iban, (String)propertiesMap.get("IBAN"));
+
+
+        var createEvent = new Event(Event.Type.CREATE, loanKey, instrument);
+        saveInstrumentProcessor.accept(createEvent);
+        saveInstrumentTreeProcessor.accept(createEvent);
+
+
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(6).verifyComplete();
+
+        StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(5).verifyComplete();
+    }
+
+    @Test
+    void createTimeDeposit() {
+        setupTestTenant();
+        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
+        assertEquals(1, accPfs.size());
+        var accPf = accPfs.get(0);
+        assertEquals(accPfKey, accPf.getBusinesskey());
+        assertEquals(accPfdesc, accPf.getDescription());
+        assertTrue(accPf.isActive());
+
+        var instrument = new Instrument(timeDepositDesc, InstrumentType.TIMEDEPOSIT);
+        instrument.setParentBusinesskey(accPf.getBusinesskey());
+
+        var properties = new HashMap<AdditionalProperties, String>();
+        var iban = "de0000000001";
+        properties.put(AdditionalProperties.IBAN, iban);
+        instrument.setAdditionalProperties(properties);
+
+        instrumentService.saveInstrument(instrument).block();
+        final List<String> messages = getMessages("instrumentApproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(timeDepositKey, data.get("businesskey"));
+        assertEquals(timeDepositDesc, data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("TIMEDEPOSIT", data.get("instrumentType"));
+        assertEquals(accPfKey, data.get("parentBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
+        var propertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(4, propertiesMap.size());
+        assertEquals(iban, (String)propertiesMap.get("IBAN"));
+
+
+        var createEvent = new Event(Event.Type.CREATE, loanKey, instrument);
+        saveInstrumentProcessor.accept(createEvent);
+        saveInstrumentTreeProcessor.accept(createEvent);
+
+
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(6).verifyComplete();
+
+        StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(5).verifyComplete();
+    }
+
+    @Test
+    void createBuildingSavingAccount() {
+        setupTestTenant();
+        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
+        assertEquals(1, accPfs.size());
+        var accPf = accPfs.get(0);
+        assertEquals(accPfKey, accPf.getBusinesskey());
+        assertEquals(accPfdesc, accPf.getDescription());
+        assertTrue(accPf.isActive());
+
+        var instrument = new Instrument(buildingsavingAccountDesc, InstrumentType.BUILDINGSAVINGACCOUNT);
+        instrument.setParentBusinesskey(accPf.getBusinesskey());
+
+        var properties = new HashMap<AdditionalProperties, String>();
+        var iban = "de0000000001";
+        properties.put(AdditionalProperties.IBAN, iban);
+        instrument.setAdditionalProperties(properties);
+
+        instrumentService.saveInstrument(instrument).block();
+        final List<String> messages = getMessages("instrumentApproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(buildingsavingAccountKey, data.get("businesskey"));
+        assertEquals(buildingsavingAccountDesc, data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("BUILDINGSAVINGACCOUNT", data.get("instrumentType"));
+        assertEquals(accPfKey, data.get("parentBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
+        var propertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(4, propertiesMap.size());
+        assertEquals(iban, (String)propertiesMap.get("IBAN"));
+
+
+        var createEvent = new Event(Event.Type.CREATE, loanKey, instrument);
+        saveInstrumentProcessor.accept(createEvent);
+        saveInstrumentTreeProcessor.accept(createEvent);
+
+
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(6).verifyComplete();
+
+        StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(5).verifyComplete();
+    }
+
+    @Test
+    void createEtf() {
+        var isin = "de0000000001";
+        var properties = new HashMap<AdditionalProperties, String>();
+        properties.put(AdditionalProperties.ISIN, isin);
+        var instrument = new Instrument(etfDesc, InstrumentType.ETF);
+        instrument.setAdditionalProperties(properties);
+
+        instrumentService.saveInstrument(instrument).block();
+        var messages = getMessages("instrumentApproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        Event createEvent = new Event(Event.Type.CREATE, isin, instrument);
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(etfKey, data.get("businesskey"));
+        assertEquals(etfDesc, data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("ETF", data.get("instrumentType"));
+        assertNull(data.get("parentBusinesskey"));
+        assertNull(data.get("tenantBusinesskey"));
+
+        var propertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(1, propertiesMap.size());
+        assertEquals(isin.toUpperCase(), (String)propertiesMap.get("ISIN"));
+
+        saveInstrumentProcessor.accept(createEvent);
+        saveInstrumentTreeProcessor.accept(createEvent);
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(2).verifyComplete();
+    }
+
+    @Test
+    void createBond() {
+        var isin = "de0000000001";
+        var properties = new HashMap<AdditionalProperties, String>();
+        properties.put(AdditionalProperties.ISIN, isin);
+        var instrument = new Instrument(bondDesc, InstrumentType.BOND);
+        instrument.setAdditionalProperties(properties);
+
+        instrumentService.saveInstrument(instrument).block();
+        var messages = getMessages("instrumentApproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        Event createEvent = new Event(Event.Type.CREATE, isin, instrument);
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(bondKey, data.get("businesskey"));
+        assertEquals(bondDesc, data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("ETF", data.get("instrumentType"));
+        assertNull(data.get("parentBusinesskey"));
+        assertNull(data.get("tenantBusinesskey"));
+
+        var propertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(1, propertiesMap.size());
+        assertEquals(isin.toUpperCase(), (String)propertiesMap.get("ISIN"));
+
+        saveInstrumentProcessor.accept(createEvent);
+        saveInstrumentTreeProcessor.accept(createEvent);
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(2).verifyComplete();
+    }
+
+    @Test
+    void createFond() {
+        var isin = "de0000000001";
+        var properties = new HashMap<AdditionalProperties, String>();
+        properties.put(AdditionalProperties.ISIN, isin);
+        var instrument = new Instrument(bondDesc, InstrumentType.FONDS);
+        instrument.setAdditionalProperties(properties);
+
+        instrumentService.saveInstrument(instrument).block();
+        var messages = getMessages("instrumentApproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        Event createEvent = new Event(Event.Type.CREATE, isin, instrument);
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(fondKey, data.get("businesskey"));
+        assertEquals(fondDesc, data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("ETF", data.get("instrumentType"));
+        assertNull(data.get("parentBusinesskey"));
+        assertNull(data.get("tenantBusinesskey"));
+
+        var propertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(1, propertiesMap.size());
+        assertEquals(isin.toUpperCase(), (String)propertiesMap.get("ISIN"));
+
+        saveInstrumentProcessor.accept(createEvent);
+        saveInstrumentTreeProcessor.accept(createEvent);
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(2).verifyComplete();
+    }*/
 }

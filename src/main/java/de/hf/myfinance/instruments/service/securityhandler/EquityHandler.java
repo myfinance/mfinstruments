@@ -19,11 +19,6 @@ public class EquityHandler extends AbsInstrumentHandler {
     }
 
     @Override
-    protected Instrument createDomainObject() {
-        return new Instrument(businesskey, requestedInstrument.getDescription(), InstrumentType.EQUITY, true, ts);
-    }
-
-    @Override
     protected InstrumentType getInstrumentType() {
         return InstrumentType.EQUITY;
     }

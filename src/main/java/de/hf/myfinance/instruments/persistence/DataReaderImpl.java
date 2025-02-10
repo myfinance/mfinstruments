@@ -7,7 +7,6 @@ import de.hf.myfinance.instruments.persistence.repositories.InActivationInfoRepo
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
 import de.hf.myfinance.restmodel.Instrument;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -19,7 +18,7 @@ public class DataReaderImpl implements DataReader{
     private final InstrumentMapper instrumentMapper;
     private final InActivationInfoRepository inActivationInfoRepository;
 
-    @Autowired
+
     public DataReaderImpl(InstrumentRepository instrumentRepository, InstrumentGraphRepository instrumentGraphRepository, InstrumentMapper instrumentMapper, InActivationInfoRepository inActivationInfoRepository) {
         this.instrumentRepository = instrumentRepository;
         this.instrumentGraphRepository = instrumentGraphRepository;

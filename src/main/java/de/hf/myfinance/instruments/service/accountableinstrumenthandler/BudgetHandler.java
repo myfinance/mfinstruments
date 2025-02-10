@@ -6,15 +6,10 @@ import de.hf.myfinance.restmodel.InstrumentType;
 import de.hf.myfinance.restmodel.LiquidityType;
 import reactor.core.publisher.Mono;
 
-public class BudgetHandler extends AbsCashInstrumentHandler {
+public class BudgetHandler extends AbsAccountHandler {
 
     public BudgetHandler(InstrumentEnvironment instrumentEnvironment, Instrument instrument) {
         super(instrumentEnvironment, instrument);
-    }
-
-    @Override
-    protected Instrument createDomainObject() {
-        return new Instrument(businesskey, requestedInstrument.getDescription(), InstrumentType.BUDGET, true, ts);
     }
 
     @Override

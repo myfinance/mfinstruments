@@ -8,11 +8,13 @@ import de.hf.myfinance.instruments.persistence.DataReader;
 import de.hf.myfinance.instruments.service.accountableinstrumenthandler.*;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentImpl;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithFactory;
+import de.hf.myfinance.instruments.service.securityhandler.BondHandler;
 import de.hf.myfinance.instruments.service.securityhandler.CurrencyHandler;
 import de.hf.myfinance.instruments.service.securityhandler.EquityHandler;
+import de.hf.myfinance.instruments.service.securityhandler.EtfHandler;
+import de.hf.myfinance.instruments.service.securityhandler.FondHandler;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 
@@ -21,7 +23,6 @@ public class InstrumentFactory {
 
     private final InstrumentEnvironmentWithFactory instrumentEnvironment;
 
-    @Autowired
     public InstrumentFactory(DataReader dataReader, AuditService auditService, InstrumentApprovedEventHandler eventHandler) {
         instrumentEnvironment = new InstrumentEnvironmentImpl(dataReader, auditService, this, eventHandler);
     }
@@ -42,6 +43,16 @@ public class InstrumentFactory {
             case CURRENCY -> new CurrencyHandler(instrumentEnvironment, instrument);
             case EQUITY -> new EquityHandler(instrumentEnvironment, instrument);
             case DEPOT -> new DepotHandler(instrumentEnvironment, instrument);
+            case REALESTATE -> new RealestateHandler(instrumentEnvironment, instrument);
+            case DEPRECATIONOBJECT -> new DeprecationObjectHandler(instrumentEnvironment, instrument);
+            case LIFEINSURANCE -> new LifeInsuranceHandler(instrumentEnvironment, instrument);
+            case LOAN -> new LoanHandler(instrumentEnvironment, instrument);
+            case MONEYATCALL -> new MoneyAtCallHandler(instrumentEnvironment, instrument);
+            case TIMEDEPOSIT -> new TimeDepositHandler(instrumentEnvironment, instrument);
+            case BUILDINGSAVINGACCOUNT -> new BuildingsavingAcoountHandler(instrumentEnvironment, instrument);
+            case ETF -> new EtfHandler(instrumentEnvironment, instrument);
+            case FONDS -> new FondHandler(instrumentEnvironment, instrument);
+            case BOND -> new BondHandler(instrumentEnvironment, instrument);
             default -> throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:" + instrument.getInstrumentType());
         };
     }

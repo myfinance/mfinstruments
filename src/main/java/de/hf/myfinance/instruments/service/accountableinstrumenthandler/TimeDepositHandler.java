@@ -12,7 +12,7 @@ public class TimeDepositHandler  extends GiroHandler {
 
     @Override
     protected InstrumentType getInstrumentType() {
-        return InstrumentType.BUILDINGSAVINGACCOUNT;
+        return InstrumentType.TIMEDEPOSIT;
     }
 
 }

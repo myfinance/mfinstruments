@@ -12,7 +12,7 @@ public class MoneyAtCallHandler extends GiroHandler {
 
     @Override
     protected InstrumentType getInstrumentType() {
-        return InstrumentType.BUILDINGSAVINGACCOUNT;
+        return InstrumentType.MONEYATCALL;
     }
 
 }

@@ -2,7 +2,6 @@ package de.hf.myfinance.instruments;
 
 import de.hf.framework.exceptions.MFException;
 import de.hf.myfinance.event.Event;
-import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.service.InstrumentService;
 import de.hf.myfinance.restmodel.*;
 import de.hf.testhelper.JsonHelper;
@@ -54,18 +53,20 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     String lifeInsurenceKey = lifeInsurenceDesc+"@19";
     String loanDesc = "newLoan";
     String loanKey = loanDesc+"@22";
+    String iban = "de0000000001";
     String moneyAtCallDesc = "newMoneyAtCall";
-    String moneyAtCallKey = moneyAtCallDesc+"@2";
+    String moneyAtCallKey = iban+"@2";
     String timeDepositDesc = "newTimeDeposit";
-    String timeDepositKey = timeDepositDesc+"@3";
+    String timeDepositKey = iban+"@3";
     String buildingsavingAccountDesc = "newBuildingsavingAccount";
-    String buildingsavingAccountKey = buildingsavingAccountDesc+"@4";
+    String buildingsavingAccountKey = iban+"@4";
+    String isin = "de0000000001";
     String etfDesc = "newEtf";
-    String etfKey = etfDesc+"@16";
+    String etfKey = isin.toUpperCase()+"@16";
     String fondDesc = "newFond";
-    String fondKey = fondDesc+"@15";
+    String fondKey = isin.toUpperCase()+"@15";
     String bondDesc = "newBond";
-    String bondKey = bondDesc+"@18";
+    String bondKey = isin.toUpperCase()+"@18";
 
     @Autowired
     InstrumentService instrumentService;
@@ -713,7 +714,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
 
     }
 
-    /*@Test
+    @Test
     void createDeprecationObject() {
         setupTestTenant();
         var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
@@ -777,7 +778,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(accPfdesc, accPf.getDescription());
         assertTrue(accPf.isActive());
 
-        var newLifeInsurance = new Instrument(realestateDesc, InstrumentType.LIFEINSURANCE);
+        var newLifeInsurance = new Instrument(lifeInsurenceDesc, InstrumentType.LIFEINSURANCE);
         newLifeInsurance.setParentBusinesskey(accPf.getBusinesskey());
 
         var surrendervaluedate = "2025-02-10";
@@ -895,7 +896,6 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         instrument.setParentBusinesskey(accPf.getBusinesskey());
 
         var properties = new HashMap<AdditionalProperties, String>();
-        var iban = "de0000000001";
         properties.put(AdditionalProperties.IBAN, iban);
         instrument.setAdditionalProperties(properties);
 
@@ -913,7 +913,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(accPfKey, data.get("parentBusinesskey"));
         assertEquals(tenantKey, data.get("tenantBusinesskey"));
         var propertiesMap = (HashMap)data.get("additionalProperties");
-        assertEquals(4, propertiesMap.size());
+        assertEquals(1, propertiesMap.size());
         assertEquals(iban, (String)propertiesMap.get("IBAN"));
 
 
@@ -959,7 +959,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(accPfKey, data.get("parentBusinesskey"));
         assertEquals(tenantKey, data.get("tenantBusinesskey"));
         var propertiesMap = (HashMap)data.get("additionalProperties");
-        assertEquals(4, propertiesMap.size());
+        assertEquals(1, propertiesMap.size());
         assertEquals(iban, (String)propertiesMap.get("IBAN"));
 
 
@@ -1005,7 +1005,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(accPfKey, data.get("parentBusinesskey"));
         assertEquals(tenantKey, data.get("tenantBusinesskey"));
         var propertiesMap = (HashMap)data.get("additionalProperties");
-        assertEquals(4, propertiesMap.size());
+        assertEquals(1, propertiesMap.size());
         assertEquals(iban, (String)propertiesMap.get("IBAN"));
 
 
@@ -1021,7 +1021,6 @@ class InstrumentServiceTests extends EventProcessorTestBase {
 
     @Test
     void createEtf() {
-        var isin = "de0000000001";
         var properties = new HashMap<AdditionalProperties, String>();
         properties.put(AdditionalProperties.ISIN, isin);
         var instrument = new Instrument(etfDesc, InstrumentType.ETF);
@@ -1046,8 +1045,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(isin.toUpperCase(), (String)propertiesMap.get("ISIN"));
 
         saveInstrumentProcessor.accept(createEvent);
-        saveInstrumentTreeProcessor.accept(createEvent);
-        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(2).verifyComplete();
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(1).verifyComplete();
     }
 
     @Test
@@ -1068,7 +1066,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(bondKey, data.get("businesskey"));
         assertEquals(bondDesc, data.get("description"));
         assertEquals(true, data.get("active"));
-        assertEquals("ETF", data.get("instrumentType"));
+        assertEquals("BOND", data.get("instrumentType"));
         assertNull(data.get("parentBusinesskey"));
         assertNull(data.get("tenantBusinesskey"));
 
@@ -1077,8 +1075,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(isin.toUpperCase(), (String)propertiesMap.get("ISIN"));
 
         saveInstrumentProcessor.accept(createEvent);
-        saveInstrumentTreeProcessor.accept(createEvent);
-        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(2).verifyComplete();
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(1).verifyComplete();
     }
 
     @Test
@@ -1086,7 +1083,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         var isin = "de0000000001";
         var properties = new HashMap<AdditionalProperties, String>();
         properties.put(AdditionalProperties.ISIN, isin);
-        var instrument = new Instrument(bondDesc, InstrumentType.FONDS);
+        var instrument = new Instrument(fondDesc, InstrumentType.FONDS);
         instrument.setAdditionalProperties(properties);
 
         instrumentService.saveInstrument(instrument).block();
@@ -1099,7 +1096,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(fondKey, data.get("businesskey"));
         assertEquals(fondDesc, data.get("description"));
         assertEquals(true, data.get("active"));
-        assertEquals("ETF", data.get("instrumentType"));
+        assertEquals("FONDS", data.get("instrumentType"));
         assertNull(data.get("parentBusinesskey"));
         assertNull(data.get("tenantBusinesskey"));
 
@@ -1108,7 +1105,6 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(isin.toUpperCase(), (String)propertiesMap.get("ISIN"));
 
         saveInstrumentProcessor.accept(createEvent);
-        saveInstrumentTreeProcessor.accept(createEvent);
-        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(2).verifyComplete();
-    }*/
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(1).verifyComplete();
+    }
 }

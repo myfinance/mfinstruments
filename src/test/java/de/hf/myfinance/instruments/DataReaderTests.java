@@ -5,7 +5,6 @@ import de.hf.myfinance.instruments.persistence.DataReaderImpl;
 import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
-import de.hf.myfinance.instruments.service.InstrumentService;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.junit.jupiter.api.BeforeEach;

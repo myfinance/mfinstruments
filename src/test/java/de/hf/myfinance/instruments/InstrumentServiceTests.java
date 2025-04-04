@@ -17,6 +17,7 @@ import reactor.test.StepVerifier;
 
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -216,6 +217,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(giroDesc, data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("GIRO", data.get("instrumentType"));
+        assertEquals("LIQUIDE", data.get("liquidityType"));
         assertEquals(accPfKey, data.get("parentBusinesskey"));
         assertEquals("aTest@6", data.get("tenantBusinesskey"));
 
@@ -555,6 +557,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(depotDesc, data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("DEPOT", data.get("instrumentType"));
+        assertEquals("MIDTERM", data.get("liquidityType"));
         assertEquals(accPfKey, data.get("parentBusinesskey"));
         assertEquals("aTest@6", data.get("tenantBusinesskey"));
 
@@ -674,6 +677,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(realestateDesc, data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("REALESTATE", data.get("instrumentType"));
+        assertEquals("LONGTERM", data.get("liquidityType"));
         assertEquals(accPfKey, data.get("parentBusinesskey"));
         assertEquals(tenantKey, data.get("tenantBusinesskey"));
         var propertiesMap = (HashMap)data.get("additionalProperties");
@@ -747,7 +751,9 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(deprecationObjectKey, data.get("businesskey"));
         assertEquals(deprecationObjectDesc, data.get("description"));
         assertEquals(true, data.get("active"));
+        assertEquals(true, data.get("liquidityTypeCalculated"));
         assertEquals("DEPRECATIONOBJECT", data.get("instrumentType"));
+        assertEquals("UNKNOWN", data.get("liquidityType"));
         assertEquals(accPfKey, data.get("parentBusinesskey"));
         assertEquals(tenantKey, data.get("tenantBusinesskey"));
         var propertiesMap = (HashMap)data.get("additionalProperties");
@@ -805,7 +811,9 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(lifeInsurenceKey, data.get("businesskey"));
         assertEquals(lifeInsurenceDesc, data.get("description"));
         assertEquals(true, data.get("active"));
+        assertEquals(true, data.get("liquidityTypeCalculated"));
         assertEquals("LIFEINSURANCE", data.get("instrumentType"));
+        assertEquals("UNKNOWN", data.get("liquidityType"));
         assertEquals(accPfKey, data.get("parentBusinesskey"));
         assertEquals(tenantKey, data.get("tenantBusinesskey"));
         var propertiesMap = (HashMap)data.get("additionalProperties");
@@ -861,6 +869,8 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(loanKey, data.get("businesskey"));
         assertEquals(loanDesc, data.get("description"));
         assertEquals(true, data.get("active"));
+        assertEquals(true, data.get("liquidityTypeCalculated"));
+        assertEquals("UNKNOWN", data.get("liquidityType"));
         assertEquals("LOAN", data.get("instrumentType"));
         assertEquals(accPfKey, data.get("parentBusinesskey"));
         assertEquals(tenantKey, data.get("tenantBusinesskey"));
@@ -910,6 +920,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(moneyAtCallDesc, data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("MONEYATCALL", data.get("instrumentType"));
+        assertEquals("SHORTTERM", data.get("liquidityType"));
         assertEquals(accPfKey, data.get("parentBusinesskey"));
         assertEquals(tenantKey, data.get("tenantBusinesskey"));
         var propertiesMap = (HashMap)data.get("additionalProperties");
@@ -956,6 +967,8 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(timeDepositDesc, data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("TIMEDEPOSIT", data.get("instrumentType"));
+        assertEquals("UNKNOWN", data.get("liquidityType"));
+        assertEquals(true, data.get("liquidityTypeCalculated"));
         assertEquals(accPfKey, data.get("parentBusinesskey"));
         assertEquals(tenantKey, data.get("tenantBusinesskey"));
         var propertiesMap = (HashMap)data.get("additionalProperties");
@@ -1002,6 +1015,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(buildingsavingAccountDesc, data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("BUILDINGSAVINGACCOUNT", data.get("instrumentType"));
+        assertEquals("MIDTERM", data.get("liquidityType"));
         assertEquals(accPfKey, data.get("parentBusinesskey"));
         assertEquals(tenantKey, data.get("tenantBusinesskey"));
         var propertiesMap = (HashMap)data.get("additionalProperties");
@@ -1106,5 +1120,63 @@ class InstrumentServiceTests extends EventProcessorTestBase {
 
         saveInstrumentProcessor.accept(createEvent);
         StepVerifier.create(instrumentService.listInstruments()).expectNextCount(1).verifyComplete();
+    }
+
+    @Test
+    void getInstrumentsWithLiquidityType() {
+        setupTestTenant();
+
+        var newGiro = new Instrument(giroDesc, InstrumentType.GIRO);
+        newGiro.setParentBusinesskey(accPfKey);
+        newGiro.setBusinesskey(giroKey);
+        newGiro.setLiquidityType(LiquidityType.LIQUIDE);
+        Event creatEvent = new Event(Event.Type.CREATE, giroKey, newGiro);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+        var newDepot = new Instrument(depotDesc, InstrumentType.DEPOT);
+        newDepot.setParentBusinesskey(accPfKey);
+        var propertyMap = new HashMap<AdditionalProperties, String>();
+        propertyMap.put(AdditionalProperties.VALUEBUDGETID, bgtKey);
+        newDepot.setAdditionalProperties(propertyMap);
+        newDepot.setBusinesskey(depotKey);
+        newDepot.setLiquidityType(LiquidityType.MIDTERM);
+        creatEvent = new Event(Event.Type.CREATE, depotKey, newDepot);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+        var deprecationObject = new Instrument(deprecationObjectDesc, InstrumentType.DEPRECATIONOBJECT);
+        deprecationObject.setParentBusinesskey(accPfKey);
+        var properties = new HashMap<AdditionalProperties, String>();
+        properties.put(AdditionalProperties.VALUEBUDGETID, bgtKey);
+        var now = LocalDate.now().plusMonths(6);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String maturitydate = now.format(formatter);
+        properties.put(AdditionalProperties.MATURITYDATE, maturitydate);
+        var acquisitiondate = "2025-01-01";
+        properties.put(AdditionalProperties.ACQUISITIONDATE, acquisitiondate);
+        var acquisitionvalue = "10000";
+        properties.put(AdditionalProperties.ACQUISITIONVALUE, acquisitionvalue);
+        deprecationObject.setAdditionalProperties(properties);
+        deprecationObject.setBusinesskey(deprecationObjectKey);
+        deprecationObject.setLiquidityTypeCalculated(true);
+        deprecationObject.setLiquidityType(LiquidityType.UNKNOWN);
+        creatEvent = new Event(Event.Type.CREATE, deprecationObjectKey, deprecationObject);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+        
+
+        var instruments = instrumentService.listInstruments().collectList().block();
+        assertEquals(8, instruments.size());
+        instruments.forEach(i->{
+            if(i.getInstrumentType().equals(InstrumentType.GIRO)){
+                assertEquals(LiquidityType.LIQUIDE, i.getLiquidityType());
+            } else if(i.getInstrumentType().equals(InstrumentType.DEPOT)){
+                assertEquals(LiquidityType.MIDTERM, i.getLiquidityType());
+            } else if(i.getInstrumentType().equals(InstrumentType.DEPRECATIONOBJECT)){
+                assertEquals(LiquidityType.MIDTERM, i.getLiquidityType());
+            }
+        });
     }
 }

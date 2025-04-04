@@ -20,10 +20,12 @@
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 
 import de.hf.myfinance.restmodel.AdditionalMaps;
 import de.hf.myfinance.restmodel.AdditionalProperties;
+import de.hf.myfinance.restmodel.AdditionalLists;
 import de.hf.myfinance.restmodel.InstrumentType;
 import de.hf.myfinance.restmodel.LiquidityType;
 
@@ -52,9 +54,11 @@ public class InstrumentEntity implements java.io.Serializable {
     private String parentBusinesskey;
     private String tenantBusinesskey;
     private LiquidityType liquidityType;
+    private Boolean liquidityTypeCalculated=false;
 
     private Map<AdditionalMaps, Map<String, String>> additionalMaps = new HashMap<>();
     private Map<AdditionalProperties, String> additionalProperties = new HashMap<>();
+    private Map<AdditionalLists, List<String>> additionalLists = new HashMap<>();
 
     public InstrumentEntity() {
     }
@@ -131,6 +135,13 @@ public class InstrumentEntity implements java.io.Serializable {
         this.additionalMaps = additionalMaps;
     }
 
+    public Map<AdditionalLists, List<String>> getAdditionalLists() {
+        return additionalLists;
+    }
+    public void setAdditionalLists(Map<AdditionalLists, List<String>> additionalLists) {
+        this.additionalLists = additionalLists;
+    }
+
     public Integer getVersion() {
         return version;
     }
@@ -158,5 +169,12 @@ public class InstrumentEntity implements java.io.Serializable {
     }
     public void setLiquidityType(LiquidityType liquidityType) {
         this.liquidityType = liquidityType;
+    }
+
+    public Boolean getLiquidityTypeCalculated() {
+        return liquidityTypeCalculated;
+    }
+    public void setLiquidityTypeCalculated(Boolean liquidityTypeCalculated) {
+        this.liquidityTypeCalculated = liquidityTypeCalculated;
     }
 }

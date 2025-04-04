@@ -7,6 +7,7 @@ import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
 import de.hf.myfinance.restmodel.AdditionalProperties;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
+import de.hf.myfinance.restmodel.LiquidityType;
 import reactor.core.publisher.Mono;
 
 public class LoanHandler extends AbsAccountHandler {
@@ -18,6 +19,13 @@ public class LoanHandler extends AbsAccountHandler {
     @Override
     protected InstrumentType getInstrumentType() {
         return InstrumentType.LOAN;
+    }
+
+    @Override
+    protected Mono<Instrument> setLiquidityType(Instrument instrument) {
+        instrument.setLiquidityTypeCalculated(true);
+        instrument.setLiquidityType(LiquidityType.UNKNOWN);
+        return Mono.just(instrument);
     }
 
     @Override
@@ -57,7 +65,6 @@ public class LoanHandler extends AbsAccountHandler {
             } else {
                 return auditService.handleMonoError("for Loan it is not allowed to have no MATURITYDATE", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT).cast(Instrument.class);
             }
-
             instrument.setAdditionalProperties(properties);
         } else {
             return auditService.handleMonoError("for Loan it is not allowed to have no additional properties", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT).cast(Instrument.class);

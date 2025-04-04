@@ -16,7 +16,8 @@ public interface InstrumentMapper {
     Instrument entityToApi(InstrumentEntity entity);
 
     @Mappings({
-            @Mapping(target = "instrumentid", ignore = true)
+            @Mapping(target = "instrumentid", ignore = true),
+            @Mapping(target = "version", ignore = true)
     })
     InstrumentEntity apiToEntity(Instrument api);
 

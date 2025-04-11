@@ -6,7 +6,7 @@ import de.hf.myfinance.restmodel.InstrumentType;
 import de.hf.myfinance.restmodel.LiquidityType;
 import reactor.core.publisher.Mono;
 
-public class BudgetHandler extends AbsAccountHandler {
+public class BudgetHandler extends AbsAccountableInstrumentHandler {
 
     public BudgetHandler(InstrumentEnvironment instrumentEnvironment, Instrument instrument) {
         super(instrumentEnvironment, instrument);

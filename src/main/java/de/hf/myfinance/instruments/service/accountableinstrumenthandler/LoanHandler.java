@@ -10,7 +10,7 @@ import de.hf.myfinance.restmodel.InstrumentType;
 import de.hf.myfinance.restmodel.LiquidityType;
 import reactor.core.publisher.Mono;
 
-public class LoanHandler extends AbsAccountHandler {
+public class LoanHandler extends GiroHandler {
 
     public LoanHandler(InstrumentEnvironment instrumentEnvironment, Instrument instrument) {
         super(instrumentEnvironment, instrument);

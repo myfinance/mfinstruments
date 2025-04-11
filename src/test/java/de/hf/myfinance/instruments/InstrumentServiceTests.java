@@ -15,7 +15,6 @@ import org.springframework.context.annotation.Import;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import reactor.test.StepVerifier;
 
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -29,45 +28,50 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @Testcontainers
 @Import({TestChannelBinderConfiguration.class})
 class InstrumentServiceTests extends EventProcessorTestBase {
-
-    String tenantKey = "aTest@6";
+    
     String tenantDesc = "aTest";
+    String tenantKey = getSimpleKey(tenantDesc, InstrumentType.TENANT);
     String budgetPfdesc = "bgtPf_"+tenantDesc;
-    String budgetPfKey = budgetPfdesc+"@23";
+    String budgetPfKey =  getSimpleKeyWithParent(budgetPfdesc, InstrumentType.BUDGETPORTFOLIO, tenantKey);
     String bgtGrpdesc = "bgtGrp_"+budgetPfdesc;
-    String bgtGrpKey = bgtGrpdesc+"@10";
+    String bgtGrpKey  = getSimpleKeyWithParent(bgtGrpdesc, InstrumentType.BUDGETGROUP, budgetPfKey);
     String bgtdesc = "incomeBgt_"+bgtGrpdesc;
-    String bgtKey = bgtdesc+"@10";
+    String bgtKey = getSimpleKeyWithParent(bgtdesc, InstrumentType.BUDGET, bgtGrpKey);
     String accPfdesc = "accPf_"+tenantDesc;
-    String accPfKey = accPfdesc+"@8";
+    String accPfKey = getSimpleKeyWithParent(accPfdesc, InstrumentType.ACCOUNTPORTFOLIO, tenantKey);
     String giroDesc = "newGiro";
-    String giroKey = "newGiro@1";
+    String iban = "de0000000001";
+    String giroKey = getSimpleKeyWithParent(iban, InstrumentType.GIRO, accPfKey);
     String currencyDesc = "newCurrency";
     String currencyCode = "USD";
+    String currencyKey = getSimpleKey(currencyCode, InstrumentType.CURRENCY);
     String depotDesc = "newDepot";
-    String depotKey = "newDepot@11";
+    String depotKey = getSimpleKeyWithParent(depotDesc, InstrumentType.DEPOT, accPfKey);
     String realestateDesc = "newRealestate";
-    String realestateKey = realestateDesc+"@21";
+    String realestateKey = getSimpleKeyWithParent(realestateDesc, InstrumentType.REALESTATE, accPfKey);
     String deprecationObjectDesc = "newDeprecationObject";
-    String deprecationObjectKey = deprecationObjectDesc+"@20";
+    String deprecationObjectAcqDate = "2025-01-01";
+    String deprecationObjectAcqValue = "10000";
+    String deprecationObjectKey = getDeprecationKey(deprecationObjectAcqDate, deprecationObjectAcqValue, InstrumentType.DEPRECATIONOBJECT, accPfKey);
     String lifeInsurenceDesc = "newlifeInsurence";
-    String lifeInsurenceKey = lifeInsurenceDesc+"@19";
+    String lifeInsurenceKey = getSimpleKeyWithParent(lifeInsurenceDesc, InstrumentType.LIFEINSURANCE, accPfKey);
     String loanDesc = "newLoan";
-    String loanKey = loanDesc+"@22";
-    String iban = "de0000000001";
+    String loanKey = getSimpleKeyWithParent(iban, InstrumentType.LOAN, accPfKey);
     String moneyAtCallDesc = "newMoneyAtCall";
-    String moneyAtCallKey = iban+"@2";
+    String moneyAtCallKey = getSimpleKeyWithParent(iban, InstrumentType.MONEYATCALL, accPfKey);
     String timeDepositDesc = "newTimeDeposit";
-    String timeDepositKey = iban+"@3";
+    String timeDepositKey = getSimpleKeyWithParent(iban, InstrumentType.TIMEDEPOSIT, accPfKey);
     String buildingsavingAccountDesc = "newBuildingsavingAccount";
-    String buildingsavingAccountKey = iban+"@4";
+    String buildingsavingAccountKey = getSimpleKeyWithParent(iban, InstrumentType.BUILDINGSAVINGACCOUNT, accPfKey);
     String isin = "de0000000001";
     String etfDesc = "newEtf";
-    String etfKey = isin.toUpperCase()+"@16";
+    String etfKey = getSimpleKey(isin, InstrumentType.ETF);
     String fondDesc = "newFond";
-    String fondKey = isin.toUpperCase()+"@15";
+    String fondKey = getSimpleKey(isin, InstrumentType.FONDS);
     String bondDesc = "newBond";
-    String bondKey = isin.toUpperCase()+"@18";
+    String bondKey = getSimpleKey(isin, InstrumentType.BOND);
+    String eqDesc = "neweq";
+    String eqKey = getSimpleKey(isin, InstrumentType.EQUITY);
 
     @Autowired
     InstrumentService instrumentService;
@@ -87,6 +91,36 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     @Qualifier("valueProcessor")
     protected Consumer<Event<String, ValueCurve>> valueProcessor;
 
+    private String generateUUID(List<String> keyProperties){
+        StringBuilder keyString = new StringBuilder();
+        keyProperties.forEach(p -> keyString.append("|").append(p));
+        return UUID.nameUUIDFromBytes(keyString.toString().getBytes()).toString();
+    }
+
+    private String getSimpleKey(String desc, InstrumentType instrumentType){
+        var keyProperties = new ArrayList<String>();
+        keyProperties.add(desc);
+        keyProperties.add(instrumentType.getValue().toString());
+        return this.generateUUID(keyProperties);
+    }
+
+    private String getSimpleKeyWithParent(String desc, InstrumentType instrumentType, String parentId){
+        var keyProperties = new ArrayList<String>();
+        keyProperties.add(parentId);
+        keyProperties.add(desc);
+        keyProperties.add(instrumentType.getValue().toString());
+        return this.generateUUID(keyProperties);
+    }
+
+    private String getDeprecationKey(String acqDate, String acqValue, InstrumentType instrumentType, String parentId){
+        var keyProperties = new ArrayList<String>();
+        keyProperties.add(parentId);
+        keyProperties.add(acqDate);
+        keyProperties.add(acqValue);
+        keyProperties.add(instrumentType.getValue().toString());
+        return this.generateUUID(keyProperties);
+    }
+
     @Test
     void createTenant() {
         var newTenant = new Instrument(tenantDesc, InstrumentType.TENANT);
@@ -105,36 +139,71 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertNull(data.get("tenantBusinesskey"));
 
         data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(1))).get("data");
-        assertEquals("bgtPf_aTest@23", data.get("businesskey"));
+        assertEquals(budgetPfKey, data.get("businesskey"));
         assertEquals("bgtPf_aTest", data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("BUDGETPORTFOLIO", data.get("instrumentType"));
-        assertEquals("aTest@6", data.get("parentBusinesskey"));
-        assertEquals("aTest@6", data.get("tenantBusinesskey"));
+        assertEquals(tenantKey, data.get("parentBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
 
         data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(2))).get("data");
-        assertEquals("bgtGrp_bgtPf_aTest@10", data.get("businesskey"));
+        assertEquals(bgtGrpKey, data.get("businesskey"));
         assertEquals("bgtGrp_bgtPf_aTest", data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("BUDGETGROUP", data.get("instrumentType"));
-        assertEquals("bgtPf_aTest@23", data.get("parentBusinesskey"));
-        assertEquals("aTest@6", data.get("tenantBusinesskey"));
+        assertEquals(budgetPfKey, data.get("parentBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
 
         data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(3))).get("data");
-        assertEquals("incomeBgt_bgtGrp_bgtPf_aTest@5", data.get("businesskey"));
+        assertEquals(bgtKey, data.get("businesskey"));
         assertEquals("incomeBgt_bgtGrp_bgtPf_aTest", data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("BUDGET", data.get("instrumentType"));
-        assertEquals("bgtGrp_bgtPf_aTest@10", data.get("parentBusinesskey"));
-        assertEquals("aTest@6", data.get("tenantBusinesskey"));
+        assertEquals(bgtGrpKey, data.get("parentBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
 
         data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(4))).get("data");
-        assertEquals("accPf_aTest@8", data.get("businesskey"));
+        assertEquals(accPfKey, data.get("businesskey"));
         assertEquals("accPf_aTest", data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("ACCOUNTPORTFOLIO", data.get("instrumentType"));
-        assertEquals("aTest@6", data.get("parentBusinesskey"));
-        assertEquals("aTest@6", data.get("tenantBusinesskey"));
+        assertEquals(tenantKey, data.get("parentBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
+    }
+
+
+    @Test
+    void updateTenantAlwaysFailes() {
+
+        setupTestTenant();
+
+        var newTenant = new Instrument("blub", InstrumentType.TENANT);   
+        newTenant.setBusinesskey(tenantKey);  
+
+        assertThrows(MFException.class, () -> {
+            instrumentService.saveInstrument(newTenant).block();
+        });
+
+        var newBGTPF = new Instrument("blub", InstrumentType.BUDGETPORTFOLIO);   
+        newBGTPF.setBusinesskey(budgetPfKey);  
+
+        assertThrows(MFException.class, () -> {
+            instrumentService.saveInstrument(newBGTPF).block();
+        });
+
+        var newBGTGRP = new Instrument("blub", InstrumentType.BUDGETGROUP);   
+        newBGTGRP.setBusinesskey(bgtGrpKey);  
+
+        assertThrows(MFException.class, () -> {
+            instrumentService.saveInstrument(newBGTGRP).block();
+        });
+
+        var newAccPF = new Instrument("blub", InstrumentType.ACCOUNTPORTFOLIO);   
+        newAccPF.setBusinesskey(accPfKey);  
+
+        assertThrows(MFException.class, () -> {
+            instrumentService.saveInstrument(newAccPF).block();
+        });
     }
 
     @Test
@@ -203,10 +272,17 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(accPfdesc, accPf.getDescription());
         assertTrue(accPf.isActive());
 
+        
 
         var newGiro = new Instrument(giroDesc, InstrumentType.GIRO);
         newGiro.setParentBusinesskey(accPf.getBusinesskey());
+        var properties = new HashMap<AdditionalProperties, String>();
+        properties.put(AdditionalProperties.IBAN, iban);
+        newGiro.setAdditionalProperties(properties);
         instrumentService.saveInstrument(newGiro).block();
+
+
+          
         final List<String> messages = getMessages("instrumentApproved-out-0");
         assertEquals(1, messages.size());
         LOG.info(messages.get(0));
@@ -219,7 +295,10 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals("GIRO", data.get("instrumentType"));
         assertEquals("LIQUIDE", data.get("liquidityType"));
         assertEquals(accPfKey, data.get("parentBusinesskey"));
-        assertEquals("aTest@6", data.get("tenantBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
+        var propertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(1, propertiesMap.size());
+        assertEquals(iban, (String)propertiesMap.get("IBAN"));
 
         saveInstrumentProcessor.accept(createEvent);
         saveInstrumentTreeProcessor.accept(createEvent);
@@ -228,6 +307,86 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         StepVerifier.create(instrumentService.listInstruments()).expectNextCount(6).verifyComplete();
 
         StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(5).verifyComplete();
+    }
+
+    @Test
+    void createGiroWithoutIbanFailed() {
+
+        setupTestTenant();        
+
+        var newGiro = new Instrument(giroDesc, InstrumentType.GIRO);
+        newGiro.setParentBusinesskey(accPfKey);
+        assertThrows(MFException.class, () -> {
+            instrumentService.saveInstrument(newGiro).block();
+        });
+    }
+
+
+    @Test
+    void updateGiro() {
+
+        setupTestTenant();
+        
+        var newGiro = new Instrument(giroDesc, InstrumentType.GIRO);
+        newGiro.setParentBusinesskey(accPfKey);
+        var properties = new HashMap<AdditionalProperties, String>();
+        properties.put(AdditionalProperties.IBAN, iban);
+        newGiro.setAdditionalProperties(properties);
+        newGiro.setBusinesskey(giroKey);
+        newGiro.setTenantBusinesskey(tenantKey);
+        Event creatEvent = new Event(Event.Type.CREATE, giroKey, newGiro);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+        newGiro.setBusinesskey(giroKey);
+        newGiro.setDescription("bla");
+        instrumentService.saveInstrument(newGiro).block();
+          
+        final List<String> messages = getMessages("instrumentApproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        Event createEvent = new Event(Event.Type.CREATE, giroKey, newGiro);
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(giroKey, data.get("businesskey"));
+        assertEquals("bla", data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("GIRO", data.get("instrumentType"));
+        assertEquals("LIQUIDE", data.get("liquidityType"));
+        assertEquals(accPfKey, data.get("parentBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
+        var propertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(1, propertiesMap.size());
+        assertEquals(iban, (String)propertiesMap.get("IBAN"));
+
+        saveInstrumentProcessor.accept(createEvent);
+        saveInstrumentTreeProcessor.accept(createEvent);
+
+    }
+
+    @Test
+    void updateGiroWtihIbanChangedFailed() {
+
+        setupTestTenant();
+        
+        var newGiro = new Instrument(giroDesc, InstrumentType.GIRO);
+        newGiro.setParentBusinesskey(accPfKey);
+        var properties = new HashMap<AdditionalProperties, String>();
+        properties.put(AdditionalProperties.IBAN, iban);
+        newGiro.setAdditionalProperties(properties);
+        newGiro.setBusinesskey(giroKey);
+        newGiro.setTenantBusinesskey(tenantKey);
+        Event creatEvent = new Event(Event.Type.CREATE, giroKey, newGiro);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+        newGiro.setBusinesskey(giroKey);
+        properties.put(AdditionalProperties.IBAN, "bla");
+        newGiro.setAdditionalProperties(properties);
+        newGiro.setBusinesskey(giroKey);
+        assertThrows(MFException.class, () -> {
+            instrumentService.saveInstrument(newGiro).block();
+        });
     }
 
     @Test
@@ -244,7 +403,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         Event createEvent = new Event(Event.Type.CREATE, currencyCode, currency);
         JsonHelper jsonHelper = new JsonHelper();
         var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
-        assertEquals(currencyCode+"@13", data.get("businesskey"));
+        assertEquals(currencyKey, data.get("businesskey"));
         assertEquals(currencyDesc, data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("CURRENCY", data.get("instrumentType"));
@@ -269,23 +428,73 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     }
 
     @Test
+    void updateCurrency() {
+       
+        var currency = new Instrument(currencyDesc, InstrumentType.CURRENCY);
+        var properties = new HashMap<AdditionalProperties, String>();
+        properties.put(AdditionalProperties.CURRENCYCODE, currencyCode);
+        currency.setAdditionalProperties(properties);
+        currency.setBusinesskey(currencyKey);
+        Event creatEvent = new Event(Event.Type.CREATE, currencyKey, currency);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+        currency.setDescription("bla");
+        instrumentService.saveInstrument(currency).block();
+          
+        final List<String> messages = getMessages("instrumentApproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        Event createEvent = new Event(Event.Type.CREATE, currencyKey, currency);
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(currencyKey, data.get("businesskey"));
+        assertEquals("bla", data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("CURRENCY", data.get("instrumentType"));
+        assertNull(data.get("parentBusinesskey"));
+        assertNull(data.get("tenantBusinesskey"));
+        var propertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(1, propertiesMap.size());
+        assertEquals("USD", (String)propertiesMap.get("CURRENCYCODE"));
+
+    }
+
+    @Test
+    void updateCurrencyWithCodeChangedFailed() {        
+        var currency = new Instrument(currencyDesc, InstrumentType.CURRENCY);
+        var properties = new HashMap<AdditionalProperties, String>();
+        properties.put(AdditionalProperties.CURRENCYCODE, currencyCode);
+        currency.setAdditionalProperties(properties);
+        Event creatEvent = new Event(Event.Type.CREATE, currencyKey, currency);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+        currency.setBusinesskey(currencyKey);
+        properties.put(AdditionalProperties.CURRENCYCODE, "bla");
+        currency.setAdditionalProperties(properties);
+
+        assertThrows(MFException.class, () -> {
+            instrumentService.saveInstrument(currency).block();
+        });
+    }
+
+    @Test
     void createEquity() {
 
         var currency = new Instrument(currencyDesc, InstrumentType.CURRENCY);
         var properties = new HashMap<AdditionalProperties, String>();
         properties.put(AdditionalProperties.CURRENCYCODE, currencyCode);
         currency.setAdditionalProperties(properties);
-        currency.setBusinesskey("USD"+"@13");
-        Event creatEvent = new Event(Event.Type.CREATE, "USD"+"@13", currency);
+        currency.setBusinesskey(currencyKey);
+        Event creatEvent = new Event(Event.Type.CREATE, currencyKey, currency);
         saveInstrumentProcessor.accept(creatEvent);
 
-        var desc = "newEquity";
-        var isin = "de0000000001";
         var symbols = new HashMap<String, String>();
-        symbols.put("MYSYMBOL", "USD"+"@13");
+        symbols.put("MYSYMBOL", currencyKey);
         Map<AdditionalMaps, Map<String, String>> additionalMaps = new HashMap<>();
         additionalMaps.put(AdditionalMaps.EQUITYSYMBOLS, symbols);
-        var eq = new Instrument(desc, InstrumentType.EQUITY);
+        var eq = new Instrument(eqDesc, InstrumentType.EQUITY);
         eq.setAdditionalMaps(additionalMaps);
         var eqProperties = new HashMap<AdditionalProperties, String>();
         eqProperties.put(AdditionalProperties.ISIN, isin);
@@ -298,15 +507,15 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         Event createEvent = new Event(Event.Type.CREATE, isin, eq);
         JsonHelper jsonHelper = new JsonHelper();
         var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
-        assertEquals(isin.toUpperCase()+"@14", data.get("businesskey"));
-        assertEquals(desc, data.get("description"));
+        assertEquals(eqKey, data.get("businesskey"));
+        assertEquals(eqDesc, data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("EQUITY", data.get("instrumentType"));
         assertNull(data.get("parentBusinesskey"));
         assertNull(data.get("tenantBusinesskey"));
         var maps = (HashMap)data.get("additionalMaps");
         assertEquals(1, maps.size());
-        assertEquals("USD"+"@13", ((HashMap)maps.get("EQUITYSYMBOLS")).get("MYSYMBOL"));
+        assertEquals(currencyKey, ((HashMap)maps.get("EQUITYSYMBOLS")).get("MYSYMBOL"));
 
         var propertiesMap = (HashMap)data.get("additionalProperties");
         assertEquals(1, propertiesMap.size());
@@ -526,23 +735,8 @@ class InstrumentServiceTests extends EventProcessorTestBase {
 
         setupTestTenant();
 
-        var tenants = instrumentService.listTenants().collectList().block();
-        assertEquals(1, tenants.size());
-        var tenant = tenants.get(0);
-        assertEquals(tenantKey, tenant.getBusinesskey());
-        assertEquals(tenantDesc, tenant.getDescription());
-        assertTrue(tenant.isActive());
-
-        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
-        assertEquals(1, accPfs.size());
-        var accPf = accPfs.get(0);
-        assertEquals(accPfKey, accPf.getBusinesskey());
-        assertEquals(accPfdesc, accPf.getDescription());
-        assertTrue(accPf.isActive());
-
-
         var newDepot = new Instrument(depotDesc, InstrumentType.DEPOT);
-        newDepot.setParentBusinesskey(accPf.getBusinesskey());
+        newDepot.setParentBusinesskey(accPfKey);
         var propertyMap = new HashMap<AdditionalProperties, String>();
         propertyMap.put(AdditionalProperties.VALUEBUDGETID, bgtKey);
         newDepot.setAdditionalProperties(propertyMap);
@@ -559,7 +753,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals("DEPOT", data.get("instrumentType"));
         assertEquals("MIDTERM", data.get("liquidityType"));
         assertEquals(accPfKey, data.get("parentBusinesskey"));
-        assertEquals("aTest@6", data.get("tenantBusinesskey"));
+        assertEquals(tenantKey, data.get("tenantBusinesskey"));
 
         var propertiesMap = (HashMap)data.get("additionalProperties");
         assertEquals(1, propertiesMap.size());
@@ -640,15 +834,9 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     @Test
     void createRealEstate() {
         setupTestTenant();
-        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
-        assertEquals(1, accPfs.size());
-        var accPf = accPfs.get(0);
-        assertEquals(accPfKey, accPf.getBusinesskey());
-        assertEquals(accPfdesc, accPf.getDescription());
-        assertTrue(accPf.isActive());
 
         var newRealEstate = new Instrument(realestateDesc, InstrumentType.REALESTATE);
-        newRealEstate.setParentBusinesskey(accPf.getBusinesskey());
+        newRealEstate.setParentBusinesskey(accPfKey);
 
         var yieldgoaldate = "2025-02-10";
         var yieldgoalvalue = "2.5";
@@ -689,7 +877,8 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(profitvalue, ((HashMap)maps.get("REALESTATEPROFITS")).get(profitdate));
 
         data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(1))).get("data");
-        assertEquals("bgtGrp_"+realestateDesc+"@10", data.get("businesskey"));
+        var budgetGrpKey = getSimpleKeyWithParent("bgtGrp_"+realestateDesc, InstrumentType.BUDGETGROUP, budgetPfKey);
+        assertEquals(budgetGrpKey, data.get("businesskey"));
         assertEquals("bgtGrp_"+realestateDesc, data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("BUDGETGROUP", data.get("instrumentType"));
@@ -700,11 +889,12 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(realestateKey, (String)budgetGroupPropertiesMap.get("LINKEDINSTRUMENTID"));
 
         data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(2))).get("data");
-        assertEquals("incomeBgt_bgtGrp_newRealestate@5", data.get("businesskey"));
+        var incomeBgtKey = getSimpleKeyWithParent("incomeBgt_bgtGrp_"+realestateDesc, InstrumentType.BUDGET, budgetGrpKey);
+        assertEquals(incomeBgtKey, data.get("businesskey"));
         assertEquals("incomeBgt_bgtGrp_newRealestate", data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("BUDGET", data.get("instrumentType"));
-        assertEquals("bgtGrp_"+realestateDesc+"@10", data.get("parentBusinesskey"));
+        assertEquals(budgetGrpKey, data.get("parentBusinesskey"));
         assertEquals(tenantKey, data.get("tenantBusinesskey"));
 
         var createEvent = new Event(Event.Type.CREATE, realestateKey, newRealEstate);
@@ -721,24 +911,17 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     @Test
     void createDeprecationObject() {
         setupTestTenant();
-        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
-        assertEquals(1, accPfs.size());
-        var accPf = accPfs.get(0);
-        assertEquals(accPfKey, accPf.getBusinesskey());
-        assertEquals(accPfdesc, accPf.getDescription());
-        assertTrue(accPf.isActive());
 
         var deprecationObject = new Instrument(deprecationObjectDesc, InstrumentType.DEPRECATIONOBJECT);
-        deprecationObject.setParentBusinesskey(accPf.getBusinesskey());
+        deprecationObject.setParentBusinesskey(accPfKey);
 
         var properties = new HashMap<AdditionalProperties, String>();
         properties.put(AdditionalProperties.VALUEBUDGETID, bgtKey);
         var maturitydate = "2030-01-01";
         properties.put(AdditionalProperties.MATURITYDATE, maturitydate);
-        var acquisitiondate = "2025-01-01";
-        properties.put(AdditionalProperties.ACQUISITIONDATE, acquisitiondate);
-        var acquisitionvalue = "10000";
-        properties.put(AdditionalProperties.ACQUISITIONVALUE, acquisitionvalue);
+
+        properties.put(AdditionalProperties.ACQUISITIONDATE, deprecationObjectAcqDate);
+        properties.put(AdditionalProperties.ACQUISITIONVALUE, deprecationObjectAcqValue);
         deprecationObject.setAdditionalProperties(properties);
 
         instrumentService.saveInstrument(deprecationObject).block();
@@ -760,8 +943,8 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(4, propertiesMap.size());
         assertEquals(bgtKey, (String)propertiesMap.get("VALUEBUDGETID"));
         assertEquals(maturitydate, (String)propertiesMap.get("MATURITYDATE"));
-        assertEquals(acquisitiondate, (String)propertiesMap.get("ACQUISITIONDATE"));
-        assertEquals(acquisitionvalue, (String)propertiesMap.get("ACQUISITIONVALUE"));
+        assertEquals(deprecationObjectAcqDate, (String)propertiesMap.get("ACQUISITIONDATE"));
+        assertEquals(deprecationObjectAcqValue, (String)propertiesMap.get("ACQUISITIONVALUE"));
 
 
         var createEvent = new Event(Event.Type.CREATE, deprecationObjectKey, deprecationObject);
@@ -772,6 +955,45 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         StepVerifier.create(instrumentService.listInstruments()).expectNextCount(6).verifyComplete();
 
         StepVerifier.create(instrumentService.listInstruments(tenantKey)).expectNextCount(5).verifyComplete();
+    }
+
+    @Test
+    void updateDeprecationObjectWithKeyFieldChangedFailed() {  
+        
+        setupTestTenant();
+
+        var deprecationObject = new Instrument(deprecationObjectDesc, InstrumentType.DEPRECATIONOBJECT);
+        deprecationObject.setParentBusinesskey(accPfKey);
+
+        var properties = new HashMap<AdditionalProperties, String>();
+        properties.put(AdditionalProperties.VALUEBUDGETID, bgtKey);
+        var maturitydate = "2030-01-01";
+        properties.put(AdditionalProperties.MATURITYDATE, maturitydate);
+
+        properties.put(AdditionalProperties.ACQUISITIONDATE, deprecationObjectAcqDate);
+        properties.put(AdditionalProperties.ACQUISITIONVALUE, deprecationObjectAcqValue);
+        deprecationObject.setAdditionalProperties(properties);
+
+        Event creatEvent = new Event(Event.Type.CREATE, deprecationObjectKey, deprecationObject);
+        saveInstrumentProcessor.accept(creatEvent);
+        saveInstrumentTreeProcessor.accept(creatEvent);
+
+
+        deprecationObject.setBusinesskey(deprecationObjectKey);
+        properties.put(AdditionalProperties.ACQUISITIONDATE, "2025-01-01");
+        deprecationObject.setAdditionalProperties(properties);
+
+        assertThrows(MFException.class, () -> {
+            instrumentService.saveInstrument(deprecationObject).block();
+        });
+
+        properties.put(AdditionalProperties.ACQUISITIONDATE, deprecationObjectAcqDate);
+        properties.put(AdditionalProperties.ACQUISITIONVALUE, "5");
+        deprecationObject.setAdditionalProperties(properties);
+
+        assertThrows(MFException.class, () -> {
+            instrumentService.saveInstrument(deprecationObject).block();
+        });
     }
 
     @Test
@@ -839,15 +1061,9 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     @Test
     void createLoan() {
         setupTestTenant();
-        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
-        assertEquals(1, accPfs.size());
-        var accPf = accPfs.get(0);
-        assertEquals(accPfKey, accPf.getBusinesskey());
-        assertEquals(accPfdesc, accPf.getDescription());
-        assertTrue(accPf.isActive());
 
         var loan = new Instrument(loanDesc, InstrumentType.LOAN);
-        loan.setParentBusinesskey(accPf.getBusinesskey());
+        loan.setParentBusinesskey(accPfKey);
 
         var properties = new HashMap<AdditionalProperties, String>();
         var maturitydate = "2030-01-01";
@@ -857,6 +1073,7 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         var annuityrate = "1000";
         properties.put(AdditionalProperties.ANNUITYRATE, annuityrate);
         properties.put(AdditionalProperties.REFERENCEGIRO, giroKey);
+        properties.put(AdditionalProperties.IBAN, iban);
         loan.setAdditionalProperties(properties);
 
         instrumentService.saveInstrument(loan).block();
@@ -895,15 +1112,9 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     @Test
     void createMoneyAtCall() {
         setupTestTenant();
-        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
-        assertEquals(1, accPfs.size());
-        var accPf = accPfs.get(0);
-        assertEquals(accPfKey, accPf.getBusinesskey());
-        assertEquals(accPfdesc, accPf.getDescription());
-        assertTrue(accPf.isActive());
 
         var instrument = new Instrument(moneyAtCallDesc, InstrumentType.MONEYATCALL);
-        instrument.setParentBusinesskey(accPf.getBusinesskey());
+        instrument.setParentBusinesskey(accPfKey);
 
         var properties = new HashMap<AdditionalProperties, String>();
         properties.put(AdditionalProperties.IBAN, iban);
@@ -941,18 +1152,11 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     @Test
     void createTimeDeposit() {
         setupTestTenant();
-        var accPfs = instrumentService.listInstrumentsByType(tenantKey, InstrumentType.ACCOUNTPORTFOLIO).collectList().block();
-        assertEquals(1, accPfs.size());
-        var accPf = accPfs.get(0);
-        assertEquals(accPfKey, accPf.getBusinesskey());
-        assertEquals(accPfdesc, accPf.getDescription());
-        assertTrue(accPf.isActive());
 
         var instrument = new Instrument(timeDepositDesc, InstrumentType.TIMEDEPOSIT);
-        instrument.setParentBusinesskey(accPf.getBusinesskey());
+        instrument.setParentBusinesskey(accPfKey);
 
         var properties = new HashMap<AdditionalProperties, String>();
-        var iban = "de0000000001";
         properties.put(AdditionalProperties.IBAN, iban);
         instrument.setAdditionalProperties(properties);
 
@@ -1064,7 +1268,6 @@ class InstrumentServiceTests extends EventProcessorTestBase {
 
     @Test
     void createBond() {
-        var isin = "de0000000001";
         var properties = new HashMap<AdditionalProperties, String>();
         properties.put(AdditionalProperties.ISIN, isin);
         var instrument = new Instrument(bondDesc, InstrumentType.BOND);

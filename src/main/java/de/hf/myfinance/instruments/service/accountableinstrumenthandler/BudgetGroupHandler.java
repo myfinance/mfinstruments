@@ -1,13 +1,10 @@
 package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
 import java.util.HashMap;
-import java.util.Map;
 
-import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.InstrumentFactory;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithFactory;
-import de.hf.myfinance.restmodel.AdditionalMaps;
 import de.hf.myfinance.restmodel.AdditionalProperties;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;

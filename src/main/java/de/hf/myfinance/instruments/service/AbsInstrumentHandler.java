@@ -1,6 +1,9 @@
 package de.hf.myfinance.instruments.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import de.hf.framework.audit.AuditService;
 import de.hf.framework.audit.Severity;
@@ -46,9 +49,7 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
     private void setBusinesskey() {
         this.businesskey = requestedInstrument.getBusinesskey();
         if(this.businesskey==null || this.businesskey.isEmpty()) {
-            this.businesskey = initBusinesskey().replace(" ", "").trim();
-            if(this.businesskey.length()> MAX_BUSINESSKEY_SIZE) this.businesskey = this.businesskey.substring(0, MAX_BUSINESSKEY_SIZE);
-            this.businesskey = this.businesskey+"@"+getInstrumentType().getValue();
+            this.businesskey = initBusinesskey();
             isNewInstrument = true;
         } else {
             isNewInstrument = false;
@@ -59,7 +60,13 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
         if(requestedInstrument.getDescription()==null || requestedInstrument.getDescription().isEmpty()){
             auditService.throwException("wether this businesskey nor the description is defined for the instrument", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT);
         }
-        return requestedInstrument.getDescription();
+        var keyProperties = new ArrayList<String>();
+        if(requestedInstrument.getParentBusinesskey()!=null) {
+            keyProperties.add(requestedInstrument.getParentBusinesskey());
+        }
+        keyProperties.add(requestedInstrument.getDescription());
+        keyProperties.add(getInstrumentType().getValue().toString());
+        return this.generateUUID(keyProperties);
     }
 
     public Mono<Instrument> loadInstrument() {
@@ -98,6 +105,7 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
 
     public Mono<String> save() {
         return loadInstrument()
+                .flatMap(this::checkKeyFields)
                 .flatMap(this::setBasicValues)
                 .flatMap(this::setLiquidityType)
                 .flatMap(this::setAdditionalValues)
@@ -114,6 +122,20 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
     private Mono<Instrument> instrumentApproved(Instrument validatedInstrument) {
         auditService.saveMessage("Instrument validated:businesskey=" + validatedInstrument.getBusinesskey() + " desc=" + validatedInstrument.getDescription(), Severity.INFO, AUDIT_MSG_TYPE);
         eventHandler.sendInstrumentApprovedEvent(validatedInstrument);
+        return Mono.just(validatedInstrument);
+    }
+
+    /**
+     * checks the Primarty key fields of the instruments. it is not allowed to change these for an existing instrument, because otherwise the businesskey would not be the same anymore in case of recreation, i.g. during import-export of all data
+     * @param validatedInstrument the exisiting instrument from the Database or a fresh initializied instrument, which will be updated step by step with properties from the instrumen requested to validate
+     * @return the updated Instrument
+     */
+    protected Mono<Instrument> checkKeyFields(Instrument validatedInstrument) {
+        if(!isNewInstrument
+            && requestedInstrument.getDescription() != null && !requestedInstrument.getDescription().isEmpty() 
+            && !requestedInstrument.getDescription().equals(validatedInstrument.getDescription())){
+                return auditService.handleMonoError("you can not change the Description because it is part of the key", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT).cast(Instrument.class);
+        }
         return Mono.just(validatedInstrument);
     }
 
@@ -173,5 +195,11 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
 
     protected Instrument createDomainObject() {
         return new Instrument(businesskey, requestedInstrument.getDescription(), getInstrumentType(), true, ts);
+    }
+
+    protected String generateUUID(List<String> keyProperties){
+        StringBuilder keyString = new StringBuilder();
+        keyProperties.forEach(p -> keyString.append("|").append(p));
+        return UUID.nameUUIDFromBytes(keyString.toString().getBytes()).toString();
     }
 }

@@ -8,6 +8,7 @@ import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class CurrencyHandler extends AbsInstrumentHandler {
@@ -51,6 +52,22 @@ public class CurrencyHandler extends AbsInstrumentHandler {
         if(currencyCode.length()!=3) {
             auditService.throwException("currencycode has the wrong size:"+ currencyCode, AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT);
         }
-        return currencyCode.toUpperCase();
+        var keyProperties = new ArrayList<String>();
+        keyProperties.add(currencyCode);
+        keyProperties.add(getInstrumentType().getValue().toString());
+        return this.generateUUID(keyProperties);
+    }
+
+    @Override
+    protected Mono<Instrument> checkKeyFields(Instrument validatedInstrument) {
+        if(!isNewInstrument
+            && requestedInstrument.getAdditionalProperties() != null 
+            && requestedInstrument.getAdditionalProperties().get(AdditionalProperties.CURRENCYCODE) != null && !requestedInstrument.getAdditionalProperties().get(AdditionalProperties.CURRENCYCODE).isEmpty()){
+                var newCurrencyCode = requestedInstrument.getAdditionalProperties().get(AdditionalProperties.CURRENCYCODE);
+                if(!newCurrencyCode.equals(validatedInstrument.getAdditionalProperties().get(AdditionalProperties.CURRENCYCODE))){
+                    return auditService.handleMonoError("you can not change the currency code because it is part of the key", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT).cast(Instrument.class);
+                }
+        }
+        return Mono.just(validatedInstrument);
     }
 }

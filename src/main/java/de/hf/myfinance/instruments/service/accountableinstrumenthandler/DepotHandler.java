@@ -55,30 +55,7 @@ public class DepotHandler extends AbsAccountHandler {
 
     @Override
     protected Mono<Instrument> validateInstrument(Instrument instrument){
-        var instrumentMono = super.validateInstrument(instrument);
-        if(requestedInstrument.getAdditionalProperties()!=null
-                && requestedInstrument.getAdditionalProperties().size()>0
-                && requestedInstrument.getAdditionalProperties().get(AdditionalProperties.VALUEBUDGETID)!= null) {
-
-            var budgetId = requestedInstrument.getAdditionalProperties().get(AdditionalProperties.VALUEBUDGETID);
-            instrumentMono=Mono.zip(instrumentMono, loadBudget(budgetId), this::validateBudget);
-
-        }else {
-            auditService.throwException("Instrument not saved with Id "+ instrument.getBusinesskey() + " has no value Budget", AUDIT_MSG_TYPE, MFMsgKey.WRONG_INSTRUMENTTYPE_EXCEPTION);
-
-        }
-        return instrumentMono;
+        return validateInstrumentWithValueBudget(super.validateInstrument(instrument));
     }
 
-    protected Instrument validateBudget(Instrument instrument, Instrument budget) {
-        if(budget.getInstrumentType()!=InstrumentType.BUDGET){
-            auditService.throwException("Instrument not saved with Id "+ instrument.getBusinesskey() + ", valueBudget is not a Budget", AUDIT_MSG_TYPE, MFMsgKey.WRONG_INSTRUMENTTYPE_EXCEPTION);
-        }
-        return instrument;
-    }
-
-    private Mono<Instrument> loadBudget(String Businesskey) {
-        return dataReader.findByBusinesskey(Businesskey)
-                .switchIfEmpty(auditService.handleMonoError("Instrument not saved: budget unknown:"+ Businesskey, AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT).cast(Instrument.class));
-    }
 }

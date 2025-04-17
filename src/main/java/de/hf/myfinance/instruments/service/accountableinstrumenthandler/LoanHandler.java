@@ -65,6 +65,15 @@ public class LoanHandler extends GiroHandler {
             } else {
                 return auditService.handleMonoError("for Loan it is not allowed to have no MATURITYDATE", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT).cast(Instrument.class);
             }
+
+            if(requestedInstrument.getAdditionalProperties().get(AdditionalProperties.IBAN)!=null
+            && !requestedInstrument.getAdditionalProperties().get(AdditionalProperties.IBAN).isEmpty()) {
+                var value = requestedInstrument.getAdditionalProperties().get(AdditionalProperties.IBAN);
+                properties.put(AdditionalProperties.IBAN, value);
+            } else {
+                return auditService.handleMonoError("for Loan it is not allowed to have no IBAN", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT).cast(Instrument.class);
+            }
+
             instrument.setAdditionalProperties(properties);
         } else {
             return auditService.handleMonoError("for Loan it is not allowed to have no additional properties", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT).cast(Instrument.class);

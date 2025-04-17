@@ -28,7 +28,11 @@ public class GiroHandler extends AbsAccountHandler {
         var iban = requestedInstrument.getAdditionalProperties().get(AdditionalProperties.IBAN);
 
         if(iban==null || iban.isEmpty()){
-            auditService.throwException("wether this businesskey nor the iban is defined for the instrument", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT);
+            var desc = "NA";
+            if(requestedInstrument!=null && requestedInstrument.getDescription()!=null){
+                desc = requestedInstrument.getDescription();
+            }
+            auditService.throwException("wether this businesskey nor the iban is defined for the instrument with desc:"+desc, AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT);
         }
         var keyProperties = new ArrayList<String>();
         if(requestedInstrument.getParentBusinesskey()!=null) {
@@ -64,6 +68,9 @@ public class GiroHandler extends AbsAccountHandler {
                 var value = requestedInstrument.getAdditionalProperties().get(AdditionalProperties.IBAN);
                 properties.put(AdditionalProperties.IBAN, value);
             } 
+            else {
+                return auditService.handleMonoError("for Giro it is not allowed to have no IBAN", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT).cast(Instrument.class);
+            }
 
             instrument.setAdditionalProperties(properties);
         } 

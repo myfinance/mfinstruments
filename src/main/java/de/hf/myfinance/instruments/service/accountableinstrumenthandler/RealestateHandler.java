@@ -88,4 +88,9 @@ public class RealestateHandler  extends AbsAccountHandler {
         instrument.setLiquidityType(LiquidityType.LONGTERM);
         return Mono.just(instrument);
     }
+
+    @Override
+    protected Mono<Instrument> validateInstrument(Instrument instrument){
+        return validateInstrumentWithValueBudget(super.validateInstrument(instrument));
+    }
 }

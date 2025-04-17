@@ -13,6 +13,7 @@ import de.hf.myfinance.instruments.service.securityhandler.CurrencyHandler;
 import de.hf.myfinance.instruments.service.securityhandler.EquityHandler;
 import de.hf.myfinance.instruments.service.securityhandler.EtfHandler;
 import de.hf.myfinance.instruments.service.securityhandler.FondHandler;
+import de.hf.myfinance.instruments.service.securityhandler.IndexHandler;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import org.springframework.stereotype.Component;
@@ -51,6 +52,7 @@ public class InstrumentFactory {
             case TIMEDEPOSIT -> new TimeDepositHandler(instrumentEnvironment, instrument);
             case BUILDINGSAVINGACCOUNT -> new BuildingsavingAcoountHandler(instrumentEnvironment, instrument);
             case ETF -> new EtfHandler(instrumentEnvironment, instrument);
+            case INDEX -> new IndexHandler(instrumentEnvironment, instrument);
             case FONDS -> new FondHandler(instrumentEnvironment, instrument);
             case BOND -> new BondHandler(instrumentEnvironment, instrument);
             default -> throw new MFException(MFMsgKey.UNKNOWN_INSTRUMENTTYPE_EXCEPTION, "can not create Instrumenthandler for instrumentType:" + instrument.getInstrumentType());

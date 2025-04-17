@@ -69,4 +69,9 @@ public class LifeInsuranceHandler extends AbsAccountHandler {
         return Mono.just(instrument);
     }
 
+    @Override
+    protected Mono<Instrument> validateInstrument(Instrument instrument){
+        return validateInstrumentWithValueBudget(super.validateInstrument(instrument));
+    }
+
 }

@@ -595,6 +595,9 @@ class InstrumentServiceTests extends EventProcessorTestBase {
 
         var newGiro = new Instrument(giroDesc, InstrumentType.GIRO);
         newGiro.setBusinesskey(giroKey);
+        var properties = new HashMap<AdditionalProperties, String>();
+        properties.put(AdditionalProperties.IBAN, iban);
+        newGiro.setAdditionalProperties(properties);
         newGiro.setParentBusinesskey(accPfKey);
 
         Event creatEvent = new Event(Event.Type.CREATE, giroKey, newGiro);
@@ -1092,11 +1095,12 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(accPfKey, data.get("parentBusinesskey"));
         assertEquals(tenantKey, data.get("tenantBusinesskey"));
         var propertiesMap = (HashMap)data.get("additionalProperties");
-        assertEquals(4, propertiesMap.size());
+        assertEquals(5, propertiesMap.size());
         assertEquals(interestrate, (String)propertiesMap.get("INTERESTRATE"));
         assertEquals(maturitydate, (String)propertiesMap.get("MATURITYDATE"));
         assertEquals(annuityrate, (String)propertiesMap.get("ANNUITYRATE"));
         assertEquals(giroKey, (String)propertiesMap.get("REFERENCEGIRO"));
+        assertEquals(iban, (String)propertiesMap.get("IBAN"));
 
 
         var createEvent = new Event(Event.Type.CREATE, loanKey, loan);

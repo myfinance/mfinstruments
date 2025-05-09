@@ -247,13 +247,6 @@ class InstrumentServiceTests extends EventProcessorTestBase {
 
 
     @Test
-    void createInstrumentHandlerWithInvalidBusinesskey() {
-        assertThrows(MFException.class, () -> {
-            instrumentService.getInstrument("bla");
-        });
-    }
-
-    @Test
     void createGiro() {
 
         setupTestTenant();

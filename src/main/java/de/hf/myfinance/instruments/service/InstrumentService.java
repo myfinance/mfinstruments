@@ -22,8 +22,7 @@ public class InstrumentService {
     }
 
     public Mono<Instrument> getInstrument(String businesskey) {
-        var instrumentHandler = instrumentFactory.getInstrumentHandlerForExistingInstrument(businesskey);
-        return instrumentHandler.loadInstrument().map(this::resolveLiquidityType);
+        return instrumentFactory.loadInstrument(businesskey).map(this::resolveLiquidityType);
     }
 
     public Mono<String> saveInstrument(Instrument instrument) {

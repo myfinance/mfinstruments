@@ -5,8 +5,12 @@ import de.hf.myfinance.instruments.persistence.DataReaderImpl;
 import de.hf.myfinance.instruments.persistence.entities.EdgeType;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentGraphRepository;
 import de.hf.myfinance.instruments.persistence.repositories.InstrumentRepository;
+import de.hf.myfinance.restmodel.AdditionalProperties;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
+import net.bytebuddy.dynamic.scaffold.InstrumentedType;
+import reactor.core.publisher.Mono;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +21,8 @@ import org.springframework.cloud.stream.binder.test.TestChannelBinderConfigurati
 import org.springframework.context.annotation.Import;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -76,6 +82,15 @@ public class DataReaderTests extends EventProcessorTestBase {
 
     }
 
+    @Test
+    void getInstrumentChildsTest() {
+        setupTestTenant();
+
+        var result = dataReader.getInstrumentChildIds(tenantKey, EdgeType.TENANTGRAPH, 0)
+        .collectList().block();
+        assertEquals(4, result.size());
+    }
+
     private void setupTestTenant() {
         var newInstrument = new Instrument(tenantDesc, InstrumentType.TENANT);
         newInstrument.setBusinesskey(tenantKey);
@@ -95,9 +110,14 @@ public class DataReaderTests extends EventProcessorTestBase {
         var bgtGrp = new Instrument(bgtGrpdesc, InstrumentType.BUDGETGROUP);
         bgtGrp.setBusinesskey(bgtGrpKey);
         bgtGrp.setParentBusinesskey(budgetPfKey);
+        var properties = new HashMap<AdditionalProperties,String>();
+        properties.put(AdditionalProperties.INCOMEBUDGETID, bgtKey);
+        bgtGrp.setAdditionalProperties(properties);
         creatEvent = new Event(Event.Type.CREATE, bgtGrpKey, bgtGrp);
         saveInstrumentProcessor.accept(creatEvent);
         saveInstrumentTreeProcessor.accept(creatEvent);
+
+
 
         var bgt = new Instrument(bgtGrpdesc, InstrumentType.BUDGET);
         bgt.setBusinesskey(bgtKey);

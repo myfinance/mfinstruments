@@ -2,7 +2,6 @@ package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
 import java.util.HashMap;
 
-import de.hf.myfinance.instruments.persistence.entities.InstrumentEntity;
 import de.hf.myfinance.instruments.service.InstrumentFactory;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithFactory;
 import de.hf.myfinance.restmodel.AdditionalProperties;
@@ -20,24 +19,13 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
         this.instrumentFactory = instrumentEnvironment.getInstrumentFactory();
     }
 
-    public InstrumentEntity getIncomeBudget() {
-        /*var properties = getInstrumentProperties();
-        Optional<InstrumentPropertiesEntity> incomeBudgetIdProperty = properties.stream().filter(i->i.getPropertyname().equals(InstrumentPropertyType.INCOMEBUDGETID.getStringValue())).findFirst();
-        if(!incomeBudgetIdProperty.isPresent()) {
-            throw new MFException(MFMsgKey.NO_INCOMEBUDGET_DEFINED_EXCEPTION, "No IncomeBudget defined for budgetGroupId:"+instrumentId);
-        }
-        String incomeBudgetId = incomeBudgetIdProperty.get().getValue();
-        var incomeBudget = instrumentRepository.findById(incomeBudgetId);
-        if(!incomeBudget.isPresent()) {
-            throw new MFException(MFMsgKey.NO_INCOMEBUDGET_DEFINED_EXCEPTION, "the IncomeBudget with id:"+incomeBudgetId+" does not exists");
-        }
-        
-        return incomeBudget.get();*/
-        return null;
-    }
-
     @Override
     protected Mono<String> postApproveAction(Instrument instrument){
+        var budgetHandler = getBudgetHandler(instrument.getTenantBusinesskey());
+        return budgetHandler.save();
+    }
+
+    private AccountableInstrumentHandler getBudgetHandler(String tenantKey) {
         var budget = new Instrument(DEFAULT_INCOMEBUDGET_PREFIX+requestedInstrument.getDescription(), InstrumentType.BUDGET);
         budget.setParentBusinesskey(businesskey);
         var budgetHandler = (AccountableInstrumentHandler)instrumentFactory.getInstrumentHandler(budget);
@@ -46,9 +34,9 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
 
         if(isSimpleValidation) {
             // block is ok here. Due to the simplevalidate the tenantbusinesskey is not read from the db but create with just
-            budgetHandler.setTenant(instrument.getTenantBusinesskey());
+            budgetHandler.setTenant(tenantKey);
         }
-        return budgetHandler.save();
+        return budgetHandler;
     }
 
     @Override
@@ -67,18 +55,19 @@ public class BudgetGroupHandler extends AbsAccountableInstrumentHandler {
         return InstrumentType.BUDGETPORTFOLIO;
     }
 
-        @Override
+    @Override
     protected Mono<Instrument> setAdditionalValues(Instrument instrument) {
-
+        var properties = new HashMap<AdditionalProperties, String>();
         if(requestedInstrument.getAdditionalProperties()!=null
                 && requestedInstrument.getAdditionalProperties().get(AdditionalProperties.LINKEDINSTRUMENTID)!=null
                 && !requestedInstrument.getAdditionalProperties().get(AdditionalProperties.LINKEDINSTRUMENTID).isEmpty()){
             var linkedInstrumentId = requestedInstrument.getAdditionalProperties().get(AdditionalProperties.LINKEDINSTRUMENTID);
-            var properties = new HashMap<AdditionalProperties, String>();
             properties.put(AdditionalProperties.LINKEDINSTRUMENTID, linkedInstrumentId);
-            instrument.setAdditionalProperties(properties);
+            
         } 
-
+        var budgetKey = getBudgetHandler(instrument.getTenantBusinesskey()).initBusinesskey();
+        properties.put(AdditionalProperties.INCOMEBUDGETID, budgetKey);
+        instrument.setAdditionalProperties(properties);
         return Mono.just(instrument);
     }
 } 

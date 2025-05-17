@@ -153,6 +153,10 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals("BUDGETGROUP", data.get("instrumentType"));
         assertEquals(budgetPfKey, data.get("parentBusinesskey"));
         assertEquals(tenantKey, data.get("tenantBusinesskey"));
+        var propertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(1, propertiesMap.size());
+        assertEquals(bgtKey, (String)propertiesMap.get("INCOMEBUDGETID"));
+
 
         data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(3))).get("data");
         assertEquals(bgtKey, data.get("businesskey"));
@@ -559,6 +563,9 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         bgtGrp.setBusinesskey(bgtGrpKey);
         bgtGrp.setParentBusinesskey(budgetPfKey);
         bgtGrp.setTenantBusinesskey(tenantKey);
+        var properties = new HashMap<AdditionalProperties,String>();
+        properties.put(AdditionalProperties.INCOMEBUDGETID, bgtKey);
+        bgtGrp.setAdditionalProperties(properties);
         creatEvent = new Event(Event.Type.CREATE, bgtGrpKey, bgtGrp);
         saveInstrumentProcessor.accept(creatEvent);
         saveInstrumentTreeProcessor.accept(creatEvent);
@@ -1378,5 +1385,14 @@ class InstrumentServiceTests extends EventProcessorTestBase {
                 assertEquals(LiquidityType.MIDTERM, i.getLiquidityType());
             }
         });
+    }
+
+    @Test
+    void getIncomeBudgetsTest() {
+        setupTestTenant();
+        var instruments = instrumentService.getIncomeBudgets(tenantKey).collectList().block();
+        assertEquals(1, instruments.size());
+        assertEquals(bgtKey, instruments.get(0).getBusinesskey());
+
     }
 }

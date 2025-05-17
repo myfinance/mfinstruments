@@ -2,6 +2,7 @@ package de.hf.myfinance.instruments.service.accountableinstrumenthandler;
 
 import de.hf.myfinance.instruments.service.InstrumentFactory;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironmentWithFactory;
+import de.hf.myfinance.restmodel.AdditionalProperties;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import reactor.core.publisher.Flux;
@@ -64,6 +65,14 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
 
     public Flux<Instrument> getBudgets() {
         return filterActiveInstrumentChilds( listInstrumentChilds(getBudgetPortfolio(), 2));
+    }
+
+    public Flux<Instrument> getIncomeBudgets() {
+        return getAllInstrumentChildsWithType(InstrumentType.BUDGETGROUP)        
+            .flatMap(i->{
+                return Mono.just(i.getAdditionalProperties().get(AdditionalProperties.INCOMEBUDGETID));
+             })
+            .flatMap(dataReader::findByBusinesskey);
     }
 
     @Override

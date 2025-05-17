@@ -29,7 +29,7 @@ public class LoanHandler extends GiroHandler {
     }
 
     @Override
-    protected Mono<Instrument> setAdditionalValues(Instrument instrument) {
+    public Mono<Instrument> setAdditionalValues(Instrument instrument) {
         if(requestedInstrument.getAdditionalProperties()!=null){
 
             var properties = new HashMap<AdditionalProperties, String>();

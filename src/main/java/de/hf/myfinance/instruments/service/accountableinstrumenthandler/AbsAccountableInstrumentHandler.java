@@ -126,7 +126,7 @@ public abstract class AbsAccountableInstrumentHandler extends AbsInstrumentHandl
                 .reduce(new ArrayList<String>(), (e1,e2)-> {
                     e1.add(e2);
                     return e1;
-                }).flatMapMany(dataReader::findAllById);
+                }).flatMapMany(dataReader::findByBusinesskeyIn);
     }
 
     public Flux<String> getAncestorIds() {

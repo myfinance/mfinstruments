@@ -42,7 +42,7 @@ public class CurrencyHandler extends AbsInstrumentHandler {
     }
 
     @Override
-    protected String initBusinesskey() {
+    public String initBusinesskey() {
         if(requestedInstrument.getAdditionalProperties()==null
                 || requestedInstrument.getAdditionalProperties().get(AdditionalProperties.CURRENCYCODE)==null
                 || requestedInstrument.getAdditionalProperties().get(AdditionalProperties.CURRENCYCODE).isEmpty()){

@@ -31,7 +31,7 @@ public class DeprecationObjectHandler  extends AbsAccountHandler {
     }
 
     @Override
-    protected String initBusinesskey() {
+    public String initBusinesskey() {
         var acquisitiondate = requestedInstrument.getAdditionalProperties().get(AdditionalProperties.ACQUISITIONDATE);
         var acquisitionValue = requestedInstrument.getAdditionalProperties().get(AdditionalProperties.ACQUISITIONVALUE);
 

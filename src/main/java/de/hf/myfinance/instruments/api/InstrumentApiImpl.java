@@ -111,4 +111,9 @@ public class InstrumentApiImpl implements InstrumentApi {
         return e;
     }
 
+    @Override
+    public Flux<Instrument> getIncomeBudgets(String tenantbusinesskey) {
+        return instrumentService.getIncomeBudgets(tenantbusinesskey);
+    }
+
 }

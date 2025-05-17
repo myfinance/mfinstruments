@@ -24,7 +24,7 @@ public class GiroHandler extends AbsAccountHandler {
     }
 
     @Override
-    protected String initBusinesskey() {
+    public String initBusinesskey() {
         var iban = requestedInstrument.getAdditionalProperties().get(AdditionalProperties.IBAN);
 
         if(iban==null || iban.isEmpty()){

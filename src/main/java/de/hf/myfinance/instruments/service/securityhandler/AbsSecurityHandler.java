@@ -16,7 +16,7 @@ public abstract class AbsSecurityHandler extends AbsInstrumentHandler {
     }
 
     @Override
-    protected String initBusinesskey() {
+    public String initBusinesskey() {
         var isin = requestedInstrument.getAdditionalProperties().get(AdditionalProperties.ISIN);
 
         if(isin==null || isin.isEmpty()){

@@ -57,6 +57,10 @@ public class InstrumentService {
         return instrumentFactory.getTenantHandler(tenantkey).getBudgets().map(this::resolveLiquidityType);
     }
 
+    public Flux<Instrument> getIncomeBudgets(String tenantbusinesskey) {
+        return instrumentFactory.getTenantHandler(tenantbusinesskey).getIncomeBudgets();
+    }
+
     private Instrument resolveLiquidityType(Instrument instrument){
         if(instrument.getLiquidityTypeCalculated()){
             var properties = instrument.getAdditionalProperties();

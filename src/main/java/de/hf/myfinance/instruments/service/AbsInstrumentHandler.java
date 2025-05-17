@@ -56,7 +56,7 @@ public abstract class AbsInstrumentHandler implements InstrumentHandler{
         }
     }
 
-    protected String initBusinesskey() {
+    public String initBusinesskey() {
         if(requestedInstrument.getDescription()==null || requestedInstrument.getDescription().isEmpty()){
             auditService.throwException("wether this businesskey nor the description is defined for the instrument", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT);
         }

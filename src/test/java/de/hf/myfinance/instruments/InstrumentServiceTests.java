@@ -856,6 +856,8 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         var properties = new HashMap<AdditionalProperties, String>();
         properties.put(AdditionalProperties.VALUEBUDGETID, bgtKey);
         newRealEstate.setAdditionalProperties(properties);
+        var budgetGrpKey = getSimpleKeyWithParent("bgtGrp_"+realestateDesc, InstrumentType.BUDGETGROUP, budgetPfKey);
+        var incomeBgtKey = getSimpleKeyWithParent("incomeBgt_bgtGrp_"+realestateDesc, InstrumentType.BUDGET, budgetGrpKey);
 
         instrumentService.saveInstrument(newRealEstate).block();
         final List<String> messages = getMessages("instrumentApproved-out-0");
@@ -880,7 +882,6 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(profitvalue, ((HashMap)maps.get("REALESTATEPROFITS")).get(profitdate));
 
         data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(1))).get("data");
-        var budgetGrpKey = getSimpleKeyWithParent("bgtGrp_"+realestateDesc, InstrumentType.BUDGETGROUP, budgetPfKey);
         assertEquals(budgetGrpKey, data.get("businesskey"));
         assertEquals("bgtGrp_"+realestateDesc, data.get("description"));
         assertEquals(true, data.get("active"));
@@ -888,11 +889,11 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(budgetPfKey, data.get("parentBusinesskey"));
         assertEquals(tenantKey, data.get("tenantBusinesskey"));
         var budgetGroupPropertiesMap = (HashMap)data.get("additionalProperties");
-        assertEquals(1, budgetGroupPropertiesMap.size());
+        assertEquals(2, budgetGroupPropertiesMap.size());
         assertEquals(realestateKey, (String)budgetGroupPropertiesMap.get("LINKEDINSTRUMENTID"));
+        assertEquals(incomeBgtKey, (String)budgetGroupPropertiesMap.get("INCOMEBUDGETID"));
 
         data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(2))).get("data");
-        var incomeBgtKey = getSimpleKeyWithParent("incomeBgt_bgtGrp_"+realestateDesc, InstrumentType.BUDGET, budgetGrpKey);
         assertEquals(incomeBgtKey, data.get("businesskey"));
         assertEquals("incomeBgt_bgtGrp_newRealestate", data.get("description"));
         assertEquals(true, data.get("active"));

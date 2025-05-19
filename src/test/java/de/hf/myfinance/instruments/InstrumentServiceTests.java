@@ -72,6 +72,8 @@ class InstrumentServiceTests extends EventProcessorTestBase {
     String bondKey = getSimpleKey(isin, InstrumentType.BOND);
     String eqDesc = "neweq";
     String eqKey = getSimpleKey(isin, InstrumentType.EQUITY);
+    String kryptoDesc = "newKrypto";
+    String kryptoKey = getSimpleKey(isin, InstrumentType.KRYPTO);
 
     @Autowired
     InstrumentService instrumentService;
@@ -1289,6 +1291,35 @@ class InstrumentServiceTests extends EventProcessorTestBase {
         assertEquals(bondDesc, data.get("description"));
         assertEquals(true, data.get("active"));
         assertEquals("BOND", data.get("instrumentType"));
+        assertNull(data.get("parentBusinesskey"));
+        assertNull(data.get("tenantBusinesskey"));
+
+        var propertiesMap = (HashMap)data.get("additionalProperties");
+        assertEquals(1, propertiesMap.size());
+        assertEquals(isin.toUpperCase(), (String)propertiesMap.get("ISIN"));
+
+        saveInstrumentProcessor.accept(createEvent);
+        StepVerifier.create(instrumentService.listInstruments()).expectNextCount(1).verifyComplete();
+    }
+
+    @Test
+    void createKrypto() {
+        var properties = new HashMap<AdditionalProperties, String>();
+        properties.put(AdditionalProperties.ISIN, isin);
+        var instrument = new Instrument(kryptoDesc, InstrumentType.KRYPTO);
+        instrument.setAdditionalProperties(properties);
+
+        instrumentService.saveInstrument(instrument).block();
+        var messages = getMessages("instrumentApproved-out-0");
+        assertEquals(1, messages.size());
+        LOG.info(messages.get(0));
+        Event createEvent = new Event(Event.Type.CREATE, isin, instrument);
+        JsonHelper jsonHelper = new JsonHelper();
+        var data = (LinkedHashMap)jsonHelper.convertJsonStringToMap((messages.get(0))).get("data");
+        assertEquals(kryptoKey, data.get("businesskey"));
+        assertEquals(kryptoDesc, data.get("description"));
+        assertEquals(true, data.get("active"));
+        assertEquals("KRYPTO", data.get("instrumentType"));
         assertNull(data.get("parentBusinesskey"));
         assertNull(data.get("tenantBusinesskey"));
 

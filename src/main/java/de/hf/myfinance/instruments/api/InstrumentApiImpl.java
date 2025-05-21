@@ -61,6 +61,7 @@ public class InstrumentApiImpl implements InstrumentApi {
                                                 || i.getInstrumentType().equals(InstrumentType.BOND)
                                                 || i.getInstrumentType().equals(InstrumentType.EQUITY)
                                                 || i.getInstrumentType().equals(InstrumentType.FONDS)
+                                                || i.getInstrumentType().equals(InstrumentType.KRYPTO)
                                                 || i.getInstrumentType().equals(InstrumentType.INDEX)
                                                 || i.getInstrumentType().equals(InstrumentType.ETF));
     }

@@ -45,4 +45,17 @@ public abstract class AbsSecurityHandler extends AbsInstrumentHandler {
 
         return Mono.just(instrument);
     }
+
+    @Override
+    protected Mono<Instrument> checkKeyFields(Instrument validatedInstrument) {
+        if(!isNewInstrument
+            && requestedInstrument.getAdditionalProperties() != null 
+            && requestedInstrument.getAdditionalProperties().get(AdditionalProperties.ISIN) != null && !requestedInstrument.getAdditionalProperties().get(AdditionalProperties.ISIN).isEmpty()){
+                var newCurrencyCode = requestedInstrument.getAdditionalProperties().get(AdditionalProperties.ISIN);
+                if(!newCurrencyCode.equals(validatedInstrument.getAdditionalProperties().get(AdditionalProperties.ISIN))){
+                    return auditService.handleMonoError("you can not change the Isin because it is part of the key", AUDIT_MSG_TYPE, MFMsgKey.NO_VALID_INSTRUMENT).cast(Instrument.class);
+                }
+        }
+        return Mono.just(validatedInstrument);
+    }
 }

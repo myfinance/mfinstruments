@@ -39,7 +39,7 @@ spring.cloud.stream:
   bindings.instrumentApproved-out-0:
     destination: instrumentApproved
     producer:
-      required-groups: instrumentApprovedAuditGroup
+      required-groups: saveInstrumentGroup
   bindings.saveInstrumentProcessor-in-0:
     destination: instrumentApproved
     group: saveInstrumentGroup
@@ -52,11 +52,11 @@ spring.cloud.stream:
   bindings.validateInstrumentRequest-out-0:
     destination: validateInstrumentRequest
     producer:
-      required-groups: validateInstrumentauditGroup
+      required-groups: validateInstrumentsGroup
   bindings.mflog-out-0:
     destination: logStream
     producer:
-      required-groups: mflogauditGroup
+      required-groups: logPublisherGroup
 
 spring.rabbitmq:
   host: ${env.host}

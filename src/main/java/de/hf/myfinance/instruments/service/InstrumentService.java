@@ -50,10 +50,18 @@ public class InstrumentService {
     }
 
     public Flux<Instrument> listAccounts(String tenantkey){
+        return instrumentFactory.getTenantHandler(tenantkey).getActiveAccounts().map(this::resolveLiquidityType);
+    }
+
+    public Flux<Instrument> listAllAccounts(String tenantkey){
         return instrumentFactory.getTenantHandler(tenantkey).getAccounts().map(this::resolveLiquidityType);
     }
 
     public Flux<Instrument> listBudgets(String tenantkey){
+        return instrumentFactory.getTenantHandler(tenantkey).getActiveBudgets().map(this::resolveLiquidityType);
+    }
+
+    public Flux<Instrument> listAllBudgets(String tenantkey){
         return instrumentFactory.getTenantHandler(tenantkey).getBudgets().map(this::resolveLiquidityType);
     }
 

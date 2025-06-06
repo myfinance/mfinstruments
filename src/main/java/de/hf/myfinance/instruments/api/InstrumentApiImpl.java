@@ -93,8 +93,18 @@ public class InstrumentApiImpl implements InstrumentApi {
     }
 
     @Override
+    public Flux<Instrument> listAllAccounts(String tenantbusinesskey) {
+        return instrumentService.listAllAccounts(tenantbusinesskey);
+    }
+
+    @Override
     public Flux<Instrument> listBudgets(String tenantbusinesskey) {
         return instrumentService.listBudgets(tenantbusinesskey);
+    }
+
+    @Override
+    public Flux<Instrument> listAllBudgets(String tenantbusinesskey) {
+        return instrumentService.listAllBudgets(tenantbusinesskey);
     }
 
     @Override

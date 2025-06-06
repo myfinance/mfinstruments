@@ -59,13 +59,22 @@ public class TenantHandler extends AbsAccountableInstrumentHandler {
         return listFirstLevelInstrumentChilds(InstrumentType.BUDGETPORTFOLIO, true).next();
     }
 
-    public Flux<Instrument> getAccounts() {
+    public Flux<Instrument> getActiveAccounts() {
         return filterActiveInstrumentChilds( listInstrumentChilds(getAccountPortfolio(), 1));
     }
 
+    public Flux<Instrument> getAccounts() {
+        return listInstrumentChilds(getAccountPortfolio(), 1);
+    }
+
     public Flux<Instrument> getBudgets() {
+        return listInstrumentChilds(getBudgetPortfolio(), 2);
+    }
+
+    public Flux<Instrument> getActiveBudgets() {
         return filterActiveInstrumentChilds( listInstrumentChilds(getBudgetPortfolio(), 2));
     }
+
 
     public Flux<Instrument> getIncomeBudgets() {
         return getAllInstrumentChildsWithType(InstrumentType.BUDGETGROUP)        

@@ -48,6 +48,7 @@ public class SaveInstrumentProcessorConfig {
                                     e.setAdditionalProperties(instrumentEntity.getAdditionalProperties());
                                     e.setDescription(instrumentEntity.getDescription());
                                     e.setActive(instrumentEntity.isActive());
+                                    e.setLiquidityType(instrumentEntity.getLiquidityType());
                                     e.setTreelastchanged(instrumentEntity.getTreelastchanged());
                                     return e;
                                 })

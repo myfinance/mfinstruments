@@ -10,7 +10,6 @@ import de.hf.myfinance.instruments.persistence.entities.InActivationInfoEntity;
 import de.hf.myfinance.instruments.persistence.repositories.InActivationInfoRepository;
 import de.hf.myfinance.restmodel.InstrumentTypeGroup;
 import de.hf.myfinance.restmodel.ValueCurve;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Mono;
@@ -28,7 +27,6 @@ public class ValueProcessorConfig {
     protected static final String AUDIT_MSG_TYPE = "valueProcessor_Event";
     private final ValidateInstrumentEventHandler eventHandler;
 
-    @Autowired
     public ValueProcessorConfig(AuditService auditService, InActivationInfoRepository inActivationInfoRepository,
             DataReader dataReader, ValidateInstrumentEventHandler eventHandler) {
         this.inActivationInfoRepository = inActivationInfoRepository;

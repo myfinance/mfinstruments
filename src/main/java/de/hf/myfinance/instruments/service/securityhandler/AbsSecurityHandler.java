@@ -37,7 +37,7 @@ public abstract class AbsSecurityHandler extends AbsInstrumentHandler {
                 && requestedInstrument.getAdditionalProperties().get(AdditionalProperties.ISIN)!=null
                 && !requestedInstrument.getAdditionalProperties().get(AdditionalProperties.ISIN).isEmpty()){
             var isin = requestedInstrument.getAdditionalProperties().get(AdditionalProperties.ISIN);
-            var properties = new HashMap<AdditionalProperties, String>();
+            var properties = instrument.getAdditionalProperties()!=null ? instrument.getAdditionalProperties() : new HashMap<AdditionalProperties, String>();
             properties.put(AdditionalProperties.ISIN, isin.toUpperCase());
             instrument.setAdditionalProperties(properties);
         }

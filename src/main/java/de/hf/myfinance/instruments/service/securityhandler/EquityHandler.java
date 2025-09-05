@@ -3,6 +3,7 @@ package de.hf.myfinance.instruments.service.securityhandler;
 import de.hf.myfinance.exception.MFMsgKey;
 import de.hf.myfinance.instruments.service.environment.InstrumentEnvironment;
 import de.hf.myfinance.restmodel.AdditionalMaps;
+import de.hf.myfinance.restmodel.AdditionalProperties;
 import de.hf.myfinance.restmodel.Instrument;
 import de.hf.myfinance.restmodel.InstrumentType;
 import reactor.core.publisher.Mono;
@@ -29,6 +30,14 @@ public class EquityHandler extends AbsSecurityHandler {
             var additionalMap = new HashMap<AdditionalMaps, Map<String,String>>();
             additionalMap.put(AdditionalMaps.EQUITYSYMBOLS, symbols);
             instrument.setAdditionalMaps(additionalMap);
+        }
+        if(requestedInstrument.getAdditionalProperties()!=null
+                && requestedInstrument.getAdditionalProperties().get(AdditionalProperties.SOURCEOFSECURITYMETRICS)!=null
+                && !requestedInstrument.getAdditionalProperties().get(AdditionalProperties.SOURCEOFSECURITYMETRICS).isEmpty()){
+            var sourceOfSecurityMetrics = requestedInstrument.getAdditionalProperties().get(AdditionalProperties.SOURCEOFSECURITYMETRICS);
+            var properties = instrument.getAdditionalProperties()!=null ? instrument.getAdditionalProperties() : new HashMap<AdditionalProperties, String>();
+            properties.put(AdditionalProperties.SOURCEOFSECURITYMETRICS, sourceOfSecurityMetrics);
+            instrument.setAdditionalProperties(properties);
         }
 
         return super.setAdditionalValues(instrument);

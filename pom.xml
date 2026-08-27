@@ -9,12 +9,12 @@
 		<groupId>de.hf.myfinance</groupId>
 		<artifactId>root</artifactId>
         <!--<version>0.0.0-0-SNAPSHOT</version>-->
-        <version>0.24.0-alpha-e4ae03344e2b8a41c2da8e6a98ab9fc705f76c92</version>
+        <version>0.24.0-alpha-7c4cc08c6668b7bc447aa8b46751489b2c75a968</version>
 		<relativePath/> 
 	</parent>
     <properties>
         <NEXUS_URL>192.168.100.73:31001</NEXUS_URL>
-        <MFFrameWork.Version>0.24.0-alpha-e4ae03344e2b8a41c2da8e6a98ab9fc705f76c92</MFFrameWork.Version>
+        <MFFrameWork.Version>0.24.0-alpha-7c4cc08c6668b7bc447aa8b46751489b2c75a968</MFFrameWork.Version>
         <!--<MFFrameWork.Version>0.0.0-0-SNAPSHOT</MFFrameWork.Version>-->
        <jib.container-name>holgerfischer/myfinance-mfinstruments:</jib.container-name>
    </properties>
